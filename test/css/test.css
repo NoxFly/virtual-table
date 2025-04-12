@@ -1,0 +1,131 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: #eee;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#table-container {
+    width: 800px;
+    height: 600px;
+    /* border: 1px solid #aaa; */
+    background: #fff;
+    overflow: auto;
+}
+
+.table {
+    position: relative;
+    width: max-content;
+}
+
+.thead .tr {
+    white-space: nowrap;
+}
+
+/* Si pas element table mais div */
+.th, .td {
+    display: inline-block;
+    padding: 5px;
+}
+
+.tbody .tr {
+    width: 100%;
+    height: var(--row-height);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(var(--x, 0px), var(--y, 0px));
+    white-space: nowrap;
+}
+
+.thead .th {
+    border: 1px solid #666;
+    height: 50px;
+    background-color: #f0f0f0;
+    padding: 5px;
+}
+
+.tbody .td {
+    border: 1px solid #333;
+    height: var(--row-height);
+    overflow: hidden;
+    background-color: var(--bg, transparent);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-top: .1em;
+    width: var(--width);
+    max-width: var(--width);
+}
+
+.tbody .tr .td:not(:last-child),
+.thead .tr .th:not(:last-child) {
+    border-right: none;
+}
+
+.tbody .tr:hover .td {
+    background-color: #f0f0f0;
+}
+
+.tbody .tr .td:first-child .cell-value {
+    display: inline-block;
+    transform: translateX(calc(20px * var(--depth)));
+}
+
+
+.draggable-div {
+    background: #00838f;
+    color: #fff;
+    border: 1px solid transparent;
+    margin: 10px;
+    padding: 10px;
+    cursor: move;
+    user-select: none;
+}
+
+#clone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+.dragging-hover .td {
+    background: color-mix(in srgb, #00838f, transparent 80%);
+}
+
+
+.expand-icon {
+    display: inline-block;
+    height: 8px;
+    aspect-ratio: 1/1;
+    margin: 0 6px 0 5px;
+    border-bottom: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+    transform: translate(calc(20px * var(--depth)), -30%) rotate(45deg);
+    cursor: pointer;
+}
+
+.expand-icon:hover {
+    border-color: #00838f;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
