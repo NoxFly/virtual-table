@@ -1,6 +1,15 @@
-import { generateRandomContacts } from "./faker";
-import { Contact } from "./types";
-import { ColumnDef, TableRow, VirtualTable } from "index";
+import { generateRandomContacts } from "./faker.js";
+import { VirtualTable } from "../../dist/VirtualTable.js";
+
+/**
+ * @typedef {Object} Contact
+ * @property {number} id - Unique identifier for the contact.
+ * @property {string} name - Name of the contact.
+ * @property {string} email - Email address of the contact.
+ * @property {string} phone - Phone number of the contact.
+ * @property {string} address - Address of the contact.
+ * @property {Contact[]} children - Array of child contacts.
+ */
 
 export default function test() {
     const data = generateRandomContacts(100000);
@@ -12,8 +21,9 @@ export default function test() {
 
 
     /* ------- */
-
-    const columnsDef: ColumnDef<Contact>[] = [
+    
+    /** @typedef {ColumnDef<Contact>[]} */
+    const columnsDef = [
         {
             field: 'id',
             title: 'ID',
@@ -52,7 +62,8 @@ export default function test() {
     virtualTable.setData(data);
     virtualTable.makeDroppable();
 
-    virtualTable.onDrop = (data: any, row: TableRow<Contact>) => {
+    /** @typedef {(any, TableRow<Contact>) => void} */
+    virtualTable.onDrop = (data, row) => {
         console.log('Dropped data:', data);
         console.log('Dropped row:', row);
     };
@@ -77,7 +88,7 @@ export default function test() {
 
     // when start dragging the div, create a clone and move the clone to the mouse position when dragging
     draggableDiv.addEventListener('dragstart', (event) => {
-        const clone = draggableDiv.cloneNode(true) as HTMLDivElement;
+        const clone = draggableDiv.cloneNode(true);
         clone.id = 'clone';
 
         const bounds = draggableDiv.getBoundingClientRect();
@@ -85,8 +96,8 @@ export default function test() {
         grabPoint.x = event.clientX - bounds.left;
         grabPoint.y = event.clientY - bounds.top;
 
-        event.dataTransfer!.dropEffect = "copy";
-        event.dataTransfer!.setDragImage(new Image(), 0, 0);
+        event.dataTransfer.dropEffect = "copy";
+        event.dataTransfer.setDragImage(new Image(), 0, 0);
 
         document.body.addEventListener('drag', onDrag);
         document.addEventListener('dragend', onDragEnd, { once: true });
@@ -98,7 +109,7 @@ export default function test() {
         document.body.appendChild(clone);
     });
 
-    function onDrag(event: DragEvent): void {
+    function onDrag(event) {
         const clone = document.getElementById('clone');
         
         if (clone) {
@@ -109,7 +120,7 @@ export default function test() {
         }
     }
 
-    function onDragEnd(event: DragEvent): void {
+    function onDragEnd(event) {
         document.body.removeEventListener('drag', onDrag);
         document.removeEventListener('dragover', onDragOver);
 
@@ -124,7 +135,7 @@ export default function test() {
         }
     }
 
-    function onDragOver(event: DragEvent): void {
+    function onDragOver(event) {
         mouse.x = event.clientX;
         mouse.y = event.clientY;
     }

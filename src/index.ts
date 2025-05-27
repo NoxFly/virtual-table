@@ -1,2 +1,2 @@
-export * from "VirtualTable";
-export * from "./types";
+export { VirtualTable } from "VirtualTable";
+export { ColumnDef, TableRow } from "./types";

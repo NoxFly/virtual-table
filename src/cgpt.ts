@@ -1,4 +1,6 @@
-type Type = { id: any; };
+type Type = {
+    id: any;
+};
 
 type TreeNode<T extends Type> = T & {
     children?: TreeNode<T>[];
@@ -12,30 +14,31 @@ type FlattenedNode<T extends Type> = {
 
 class VirtualizedTree<T extends Type> {
     private flattenedList: FlattenedNode<T>[] = [];
-    private expandedNodes: Set<string> = new Set();
-    private nodeIndexMap: Map<string, number> = new Map();
+    private readonly expandedNodes = new Set<string>();
+    private readonly nodeIndexMap = new Map<string, number>();
 
-    constructor(private treeData: TreeNode<T>[]) {
+    constructor(private readonly treeData: TreeNode<T>[]) {
         this.buildInitialFlattenedList();
     }
 
     /** 🔹 Génère la liste aplatie initiale */
-    private buildInitialFlattenedList() {
+    private buildInitialFlattenedList(): void {
         this.flattenedList = [];
         this.nodeIndexMap.clear();
         this.traverseAndAdd(this.treeData, 0);
     }
 
     /** 🔹 Traverse l'arbre et ajoute uniquement les nœuds visibles */
-    private traverseAndAdd(nodes: TreeNode<T>[], depth: number, parentId?: string, insertAt?: number) {
+    private traverseAndAdd(nodes: TreeNode<T>[], depth: number, parentId?: string, insertAt?: number): number {
         let insertIndex = insertAt ?? this.flattenedList.length;
-        for (const node of nodes) {
+        
+        for(const node of nodes) {
             const nodeId = this.getNodeId(node);
             this.flattenedList.splice(insertIndex, 0, { item: node, depth, parentId });
             this.nodeIndexMap.set(nodeId, insertIndex);
             insertIndex++;
 
-            if (this.expandedNodes.has(nodeId) && node.children?.length) {
+            if(this.expandedNodes.has(nodeId) && node.children?.length) {
                 insertIndex = this.traverseAndAdd(node.children, depth + 1, nodeId, insertIndex);
             }
         }
@@ -43,36 +46,44 @@ class VirtualizedTree<T extends Type> {
     }
 
     /** 🔹 Gère l'expansion/collapse d'un nœud */
-    public toggleExpand(node: TreeNode<T>) {
+    public toggleExpand(node: TreeNode<T>): void {
         const nodeId = this.getNodeId(node);
-        if (this.expandedNodes.has(nodeId)) {
+        
+        if(this.expandedNodes.has(nodeId)) {
             this.expandedNodes.delete(nodeId);
             this.removeSubtree(nodeId);
-        } else {
+        }
+        else {
             this.expandedNodes.add(nodeId);
             this.addSubtree(node);
         }
     }
 
     /** 🔹 Ajoute dynamiquement un sous-arbre dans `flattenedList` */
-    private addSubtree(node: TreeNode<T>) {
+    private addSubtree(node: TreeNode<T>): void {
         const nodeId = this.getNodeId(node);
         const parentIndex = this.nodeIndexMap.get(nodeId);
-        if (parentIndex === undefined || !node.children) return;
+        
+        if(parentIndex === undefined || !node.children)
+            return;
 
         this.traverseAndAdd(node.children, this.flattenedList[parentIndex].depth + 1, nodeId, parentIndex + 1);
     }
 
     /** 🔹 Supprime dynamiquement un sous-arbre de `flattenedList` */
-    private removeSubtree(nodeId: string) {
+    private removeSubtree(nodeId: string): void {
         const startIdx = this.nodeIndexMap.get(nodeId);
-        if (startIdx === undefined) return;
+        
+        if(startIdx === undefined)
+            return;
 
         let deleteCount = 0;
-        for (let i = startIdx + 1; i < this.flattenedList.length; i++) {
-            if (this.flattenedList[i].parentId === nodeId || this.expandedNodes.has(this.flattenedList[i].item.id)) {
+        
+        for(let i = startIdx + 1; i < this.flattenedList.length; i++) {
+            if(this.flattenedList[i].parentId === nodeId || this.expandedNodes.has(this.flattenedList[i].item.id)) {
                 deleteCount++;
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -83,9 +94,10 @@ class VirtualizedTree<T extends Type> {
     }
 
     /** 🔹 Reconstruit la map `nodeIndexMap` après suppression */
-    private rebuildIndexMap() {
+    private rebuildIndexMap(): void {
         this.nodeIndexMap.clear();
-        for (let i = 0; i < this.flattenedList.length; i++) {
+        
+        for(let i = 0; i < this.flattenedList.length; i++) {
             this.nodeIndexMap.set(this.getNodeId(this.flattenedList[i].item), i);
         }
     }

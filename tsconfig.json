@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
         "baseUrl": "./src",
-        "module": "CommonJS",
+        "module": "ES6",
         "skipDefaultLibCheck": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "outDir": "./build",
+        "outDir": "./dist",
         "target": "ES6",
         "lib": [
             "ES6",
@@ -33,7 +33,7 @@
     },
     "include": [
         "src/**/*",
-        "test/ts/**/*.ts",
+        "test/js/**/*.ts",
     ],
     "exclude": [
         "node_modules",

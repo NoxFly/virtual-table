@@ -13,10 +13,9 @@ module.exports = tseslint.config(
         ],
         languageOptions: {
             parserOptions: {
-                browser: true,
-                ecmaVersion: "latest",
+                ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
                 sourceType: "module",
-                project: ["./tsconfig.json"],
+                project: "./tsconfig.json",
                 tsconfigRootDir: __dirname,
             }
         },
@@ -24,27 +23,32 @@ module.exports = tseslint.config(
             "@stylistic": stylistic,
         },
         rules: {
-            // consistent code style (important)
-            "camelcase": "warn",
-            "class-methods-use-this": "off",
-            "eqeqeq": "error",
-            "no-duplicate-imports": "error",
-            "no-empty": "off",
-            "no-empty-function": "off",
-            "no-extra-boolean-cast": "off",
-            "no-inner-declarations": "off",
-            "no-unsafe-finally": "off",
-            "no-unsafe-optional-chaining": "error",
-            "no-unused-vars": "off",
-            "no-var": "error",
-            "@typescript-eslint/explicit-function-return-type": ["error", { "allowExpressions": true }],
-            "@typescript-eslint/explicit-member-accessibility": "error",
+            "@typescript-eslint/no-empty-object-type": "off",
+
+            "@typescript-eslint/explicit-member-accessibility": [
+                "error",
+                {
+                    "overrides": {
+                        "constructors": "no-public",
+                    }
+                }
+            ],
+            "@typescript-eslint/explicit-function-return-type": [
+                "error",
+                {
+                    "allowExpressions": true,
+                    "allowHigherOrderFunctions": true,
+                    "allowIIFEs": true,
+                }
+            ],
+            "@typescript-eslint/consistent-type-definitions": "off",
             "@typescript-eslint/no-explicit-any": "warn",
+            "@typescript-eslint/no-inferrable-types": "off",
             "@typescript-eslint/no-empty-function": "off",
             "@typescript-eslint/no-unused-vars": "off",
             "@typescript-eslint/no-namespace": "off",
+            "@typescript-eslint/prefer-readonly": "warn",
 
-            // stylistic rules
             "@stylistic/object-curly-spacing": ["warn", "always"],
             "@stylistic/no-whitespace-before-property": "error",
             "@stylistic/space-before-blocks": ["warn", "always"],
@@ -71,14 +75,7 @@ module.exports = tseslint.config(
             "@stylistic/semi": [2, "always"],
             "@stylistic/no-extra-semi": "warn",
             "@stylistic/semi-spacing": "warn",
-            "@stylistic/quotes": [
-                2,
-                "double",
-                {
-                    "avoidEscape": true,
-                    "allowTemplateLiterals": true
-                }
-            ],
+            "@stylistic/quotes": "off",
             "@stylistic/keyword-spacing": [
                 "warn",
                 {
@@ -91,7 +88,19 @@ module.exports = tseslint.config(
                         "switch": { "after": false }
                     }
                 }
-            ]
-        }
+            ],
+
+            "eqeqeq": "error",
+            "no-duplicate-imports": "error",
+            "no-empty": "off",
+            "no-empty-function": "off",
+            "no-extra-boolean-cast": "off",
+            "no-inner-declarations": "off",
+            "no-unsafe-finally": "off",
+            "no-unsafe-optional-chaining": "error",
+            "no-unused-vars": "off",
+            "no-var": "error",
+            "no-useless-catch": "off",
+        },
     },
 );

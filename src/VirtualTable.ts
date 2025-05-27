@@ -14,7 +14,7 @@ export class VirtualTable<T extends Type> {
 
     private readonly virtualScroller: HTMLDivElement;
 
-    private columns: ColumnDef<T>[] = [];
+    private readonly columns: ColumnDef<T>[] = [];
     private rows: TableRow<T>[] = [];
     private data: T[] = []; // a tree of data that has not 1 root but a list of roots
     private tree: TreeNode<T>[] = []; // a tree of data that has not 1 root but a list of roots
@@ -144,7 +144,7 @@ export class VirtualTable<T extends Type> {
     private computeInViewVisibleRows(): void {
         this.flatten = [];
 
-        const rec = (node: TreeNode<T>) => {
+        const rec = (node: TreeNode<T>): void => {
             this.flatten.push({ node });
 
             if(node.expanded) {
@@ -412,8 +412,8 @@ export class VirtualTable<T extends Type> {
     }
 
     private resetTableRows(): void {
-        for(let i=0; i < this.rows.length; i++) {
-            this.rows[i].$.remove();
+        for(const row of this.rows) {
+            row.$.remove();
         }
 
         this.rows = [];
@@ -513,7 +513,7 @@ export class VirtualTable<T extends Type> {
             const closestRow = target.closest('.tr') as HTMLElement;
             const isNotHead = !target.closest('.thead');
 
-            if (closestRow && isNotHead && closestRow !== this.lastHighlightedRow) {
+            if(closestRow && isNotHead && closestRow !== this.lastHighlightedRow) {
                 if(this.lastHighlightedRow) {
                     this.lastHighlightedRow.classList.remove('dragging-hover');
                 }
@@ -522,7 +522,7 @@ export class VirtualTable<T extends Type> {
                 this.lastHighlightedRow = closestRow;
             }
             else if(!closestRow || !isNotHead) {
-                if (this.lastHighlightedRow) {
+                if(this.lastHighlightedRow) {
                     this.lastHighlightedRow.classList.remove('dragging-hover');
                     this.lastHighlightedRow = null;
                 }
