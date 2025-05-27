@@ -48,7 +48,7 @@ const configs = {
                 { directory: path.join(__dirname, 'test'), watch: true },
                 { directory: path.join(__dirname, 'dist'), watch: true, publicPath: '/dist' }
             ],
-            hot: true,
+            // hot: true, // not available for ESM modules yet
             liveReload: true,
             open: true,
             client: {

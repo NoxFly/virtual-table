@@ -342,6 +342,18 @@ VirtualTable.DEFAULT_OPTIONS = {
 };
 
 
+/***/ }),
+
+/***/ "./src/types.ts":
+/*!**********************!*\
+  !*** ./src/types.ts ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+
+
+
 /***/ })
 
 /******/ });
@@ -411,6 +423,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   VirtualTable: () => (/* reexport safe */ VirtualTable__WEBPACK_IMPORTED_MODULE_0__.VirtualTable)
 /* harmony export */ });
 /* harmony import */ var VirtualTable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! VirtualTable */ "./src/VirtualTable.ts");
+/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./src/types.ts");
+
 
 
 })();

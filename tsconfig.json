@@ -2,9 +2,6 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "module": "ES6",
-        "skipDefaultLibCheck": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
         "outDir": "./dist",
         "target": "ES6",
         "lib": [
@@ -26,6 +23,12 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
+        "experimentalDecorators": true,
+        "declaration": true,
+        "declarationMap": true,
+        "emitDeclarationOnly": false,
+        "skipDefaultLibCheck": true,
+        "emitDecoratorMetadata": true,
         "typeRoots": [
             "./node_modules/@types",
             "./src/types"
@@ -33,7 +36,7 @@
     },
     "include": [
         "src/**/*",
-        "test/js/**/*.ts",
+        "test/js/**/*.ts", "tmp/cgpt.ts",
     ],
     "exclude": [
         "node_modules",

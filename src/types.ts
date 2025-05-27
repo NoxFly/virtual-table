@@ -1,7 +1,9 @@
+export type Any = string | number | boolean | null | undefined | object;
+
 export type Type = {
-    id: any;
+    id: string | number;
     children?: Type[];
-    [key: string]: any;
+    [key: string]: Any;
 };
 
 export interface TreeNode<T extends Type> {
@@ -33,7 +35,7 @@ export interface TableRow<T extends Type> {
 
 export interface Cell<T extends Type> {
     $: HTMLElement;
-    value: any;
+    value: Any;
     row: TreeNode<T>;
     column: ColumnDef<T>;
     rowIndex: number;
