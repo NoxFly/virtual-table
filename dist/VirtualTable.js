@@ -223,6 +223,7 @@ class VirtualTable {
     onClick(e) {
         const $target = e.target;
         const $closestRow = $target.closest('.tr');
+        console.log($closestRow, $target);
         if ($target.closest('.btn-expand')) {
             this.toggleRowExpand($closestRow);
         }

@@ -63,7 +63,7 @@ body {
     background-color: var(--bg, transparent);
     white-space: nowrap;
     text-overflow: ellipsis;
-    padding-top: .1em;
+    padding-top: .1rem;
     width: var(--width);
     max-width: var(--width);
 }
@@ -104,6 +104,12 @@ body {
     background: color-mix(in srgb, #00838f, transparent 80%);
 }
 
+.btn-expand {
+    transform: translateX(calc(20px * var(--depth)));
+    position: relative;
+    background: none;
+    border: none;
+}
 
 .expand-icon {
     display: inline-block;
@@ -112,7 +118,7 @@ body {
     margin: 0 6px 0 5px;
     border-bottom: 1px solid #aaa;
     border-right: 1px solid #aaa;
-    transform: translate(calc(20px * var(--depth)), -30%) rotate(45deg);
+    transform: translate(0, -30%) rotate(45deg);
     cursor: pointer;
 }
 

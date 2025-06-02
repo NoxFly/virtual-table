@@ -359,7 +359,7 @@ export class VirtualTable<T extends Type> {
     private onClick(e: MouseEvent): void {
         const $target = e.target as HTMLElement;
         const $closestRow = $target.closest('.tr') as HTMLElement;
-
+        console.log($closestRow, $target);
         if($target.closest('.btn-expand')) {
             this.toggleRowExpand($closestRow);
         }
