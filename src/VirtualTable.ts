@@ -22,7 +22,6 @@ export class VirtualTable<T extends Type> {
     private readonly tableHead: HTMLElement;
     private readonly tableBody: HTMLElement;
 
-    private readonly virtualScroller: HTMLDivElement;
 
     private readonly columns: ColumnDef<T>[] = [];
     private rows: TableRow<T>[] = [];
@@ -50,9 +49,6 @@ export class VirtualTable<T extends Type> {
 
         this.columns = columnsDef;
 
-        this.virtualScroller = document.createElement('div');
-        this.virtualScroller.classList.add('virtual-scroller');
-
         this.table = document.createElement('div');
         this.table.classList.add('table');
         
@@ -67,7 +63,6 @@ export class VirtualTable<T extends Type> {
         this.container.classList.add('virtual-table');
 
         this.container.appendChild(this.table);
-        this.container.appendChild(this.virtualScroller);
 
         if(this.options.id) {
             this.table.id = this.options.id;
@@ -213,8 +208,9 @@ export class VirtualTable<T extends Type> {
      */
     private updateViewBoxHeight(): void {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
-        console.log(this.TOTAL_VISIBLE_ROWS);
-        this.virtualScroller.style.height = this.totalVirtualHeight + 'px';
+        console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+        
+        const totalHeight = this.totalVirtualHeight + this.tableHead.clientHeight - 1;
         this.table.style.height = this.totalVirtualHeight + 'px';
     }
 
