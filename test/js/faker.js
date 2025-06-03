@@ -10,7 +10,13 @@
 
 
 function randomContactName() {
-    const names = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ian", "Jack"];
+    const names = [
+        "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hannah", "Ian", "Jack",
+        "Kathy", "Liam", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rita", "Sam", "Tina",
+        "Ursula", "Victor", "Wendy", "Xander", "Yara", "Zane", "Aaron", "Bella", "Carter",
+        "Diana", "Ethan", "Fiona", "George", "Holly", "Isaac", "Jasmine", "Kevin", "Laura",
+        "Michael", "Nicole", "Oscar", "Penny", "Quincy", "Rachel", "Steve", "Tara", "Ulysses",
+    ];
     return names[Math.floor(Math.random() * names.length)];
 }
 

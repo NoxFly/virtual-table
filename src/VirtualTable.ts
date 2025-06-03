@@ -176,21 +176,17 @@ export class VirtualTable<T extends Type> {
 
     /**
      * Retourne le nœud de l'arbre correspondant à la ligne donnée.
+     * en O(1)
      */
     private getNodeFromRow($row: HTMLElement | null | undefined): TableRow<T> | null {
-        if($row === null || $row === undefined) {
+        if($row === null || $row === undefined || this.rows.length === 0) {
             return null;
         }
 
         const index = parseInt($row.dataset.index || '-1', 10);
-        
-        if(isNaN(index) || index < 0 || index >= this.rows.length) {
-            return null;
-        }
+        const firstIndex = +(this.rows[0].$.dataset.index ?? 0);
 
-        return this.rows[index];
-
-        // const row = this.rows.find(r => r.$ === row)!;
+        return this.rows[index - firstIndex] || null;
     }
 
     /**

@@ -2,11 +2,6 @@ import { generateRandomContacts } from "./faker.js";
 import { VirtualTable } from "../../dist/VirtualTable.js";
 
 /**
- * @typedef {import('../../dist/types').ColumnDef} ColumnDef
- * @typedef {import('../../dist/types').TableRow} TableRow
- */
-
-/**
  * @typedef {Object} Contact
  * @property {number} id - Unique identifier for the contact.
  * @property {string} name - Name of the contact.

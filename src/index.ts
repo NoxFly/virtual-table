@@ -6,5 +6,5 @@
  * Exports the main VirtualTable component and related type definitions.
  */
 
-export * from "VirtualTable";
+export * from "./VirtualTable";
 export * from "./types";

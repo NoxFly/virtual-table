@@ -1,543 +1,370 @@
-/******/ var __webpack_modules__ = ({
-
-/***/ "./src/VirtualTable.ts":
-/*!*****************************!*\
-  !*** ./src/VirtualTable.ts ***!
-  \*****************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   VirtualTable: () => (/* binding */ VirtualTable)
-/* harmony export */ });
-class VirtualTable {
-    constructor(container, columnsDef, options = {}) {
-        this.container = container;
-        this.columns = [];
-        this.rows = [];
-        this.data = [];
-        this.tree = [];
-        this.flatten = [];
-        this.ROW_HEIGHT = 30;
-        this.VISIBLE_ROWS_COUNT = 0;
-        this.TOTAL_VISIBLE_ROWS = 0;
-        this.tbodyStartY = 0;
-        this.selectedRows = new Set();
-        this.selectedCells = new Set();
-        this.selectedColumns = new Set();
-        this.lastHighlightedRow = null;
-        this.onDrop = () => { };
-        this.options = Object.assign(Object.assign({}, VirtualTable.DEFAULT_OPTIONS), options);
-        this.columns = columnsDef;
-        this.virtualScroller = document.createElement('div');
-        this.virtualScroller.classList.add('virtual-scroller');
-        this.table = document.createElement('div');
-        this.table.classList.add('table');
-        this.tableHead = document.createElement('div');
-        this.tableHead.classList.add('thead');
-        this.tableBody = document.createElement('div');
-        this.tableBody.classList.add('tbody');
-        this.table.append(this.tableHead, this.tableBody);
-        this.container.appendChild(this.table);
-        this.container.appendChild(this.virtualScroller);
-        if (this.options.id) {
-            this.table.id = this.options.id;
+const a = class a {
+  constructor(t, e, s = {}) {
+    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.ROW_HEIGHT = 30, this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedRows = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {
+    }, this.options = { ...a.DEFAULT_OPTIONS, ...s }, this.columns = e, this.virtualScroller = document.createElement("div"), this.virtualScroller.classList.add("virtual-scroller"), this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.appendChild(this.table), this.container.appendChild(this.virtualScroller), this.options.id && (this.table.id = this.options.id), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (l) => this.onScroll(l)), this.container.addEventListener("click", (l) => this.onClick(l)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+  }
+  /**
+   * Retourne la position actuelle du scroll dans le conteneur.
+   */
+  get scrollTop() {
+    return this.container.scrollTop;
+  }
+  get totalVirtualHeight() {
+    return this.tableHead.clientHeight + (this.TOTAL_VISIBLE_ROWS - 1) * (this.ROW_HEIGHT - 1);
+  }
+  get columnUnits() {
+    return this.options.columnSizeInPercentage ? "%" : "px";
+  }
+  /**
+   * Définit le colonnes de la table et le formattage des cellules
+   * des données appartenant à ces colonnes.
+   */
+  createColumns() {
+    const t = document.createElement("div");
+    t.classList.add("tr");
+    for (const e of this.columns) {
+      const s = document.createElement("div");
+      s.classList.add("th"), s.style.width = e.width + this.columnUnits, s.textContent = e.title, t.appendChild(s);
+    }
+    this.tableHead.appendChild(t);
+  }
+  /**
+   * Sert à recalculer le nombre de lignes visibles dans le conteneur.
+   * Utilisé à l'initialisation et lors d'un redimensionnement du conteneur.
+   * Ajoute ou enlève les lignes nécessaires.
+   * Ensuite, appelle computeInViewVisibleRows.
+   */
+  computeViewbox() {
+    const t = this.container.clientHeight;
+    if (this.VISIBLE_ROWS_COUNT = Math.ceil(t / this.ROW_HEIGHT) + 4, this.flatten.length > 0) {
+      const e = this.flatten.length, s = Math.min(e, this.VISIBLE_ROWS_COUNT);
+      if (this.rows.length < s)
+        for (let l = this.rows.length; l < s; l++)
+          this.createEmptyRow();
+      else if (this.rows.length > s)
+        for (let l = this.rows.length - 1; l >= s; l--)
+          this.removeRow(this.rows[l]);
+    }
+    this.tbodyStartY = this.tableHead.clientHeight - 1;
+  }
+  /**
+   * Calcule les lignes visibles dans le conteneur.
+   * Met à jour la hauteur du conteneur virtuel.
+   * En amont, transforme l'arbre en liste plate.
+   * La liste plate ne contient que les nœuds visibles.
+   * 
+   * Note : recalcule TOUT, pas intelligemment. A n'appeler
+   *        que si on souhaite tout remettre à jour, pas
+   *        seulement une partie.
+   */
+  computeInViewVisibleRows() {
+    this.flatten = [];
+    const t = (e) => {
+      if (this.flatten.push({ node: e }), e.expanded)
+        for (const s of e.children)
+          t(s);
+    };
+    for (const e of this.tree)
+      t(e);
+    this.computeViewbox(), this.updateViewBoxHeight();
+  }
+  /**
+   * Retourne le nœud de l'arbre correspondant à la ligne donnée.
+   * en O(1)
+   */
+  getNodeFromRow(t) {
+    if (t == null || this.rows.length === 0)
+      return null;
+    const e = parseInt(t.dataset.index || "-1", 10), s = +(this.rows[0].$.dataset.index ?? 0);
+    return this.rows[e - s] || null;
+  }
+  /**
+   * Appelé APRES avoir mis à jour this.flatten
+   */
+  updateViewBoxHeight() {
+    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.log(this.TOTAL_VISIBLE_ROWS), this.virtualScroller.style.height = this.totalVirtualHeight + "px";
+  }
+  updateRowsContent() {
+    var t;
+    for (const e of this.rows) {
+      if (!e.node)
+        continue;
+      const s = e.node.children.length > 0;
+      e.$.classList.toggle("has-children", s), e.$.style.setProperty("--depth", `${e.node.depth}`);
+      for (const l in this.columns) {
+        const o = this.columns[l], i = e.$.children.item(+l);
+        if (i) {
+          const n = o.field ? e.node.data[o.field] : void 0, h = {
+            $: e.$,
+            value: n,
+            row: e.node,
+            column: o,
+            rowIndex: e.y,
+            columnIndex: +l
+          }, r = ((t = o.transform) == null ? void 0 : t.call(o, h)) || this.formatCellValue(n);
+          let d = "";
+          if (s && l === "0") {
+            const p = e.node.expanded ? "expanded" : "collapsed";
+            d += `<button class="btn-expand"><span class="expand-icon ${p}"></span></button>`;
+          }
+          d += `<span class="cell-value">${r}</span>`, i.innerHTML = d;
         }
-        this.createColumns();
-        this.computeViewbox();
-        this.container.addEventListener('scroll', (e) => this.onScroll(e));
-        this.container.addEventListener('click', (e) => this.onClick(e));
-        this.table.style.setProperty('--row-height', this.ROW_HEIGHT + 'px');
+      }
     }
-    get scrollTop() {
-        return this.container.scrollTop;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formatCellValue(t) {
+    return (t == null ? void 0 : t.toString()) || "";
+  }
+  // ------------------------------------------------------------------------------
+  // Table DOM manager
+  /**
+   * Créé une <tr> vide et l'ajoute à la fin du <tbody>.
+   * Créé les <td> correspondants aux colonnes.
+   * 
+   * @returns La ligne vide créée.
+   */
+  createEmptyRow(t = !0) {
+    const e = {
+      $: document.createElement("div"),
+      x: 0,
+      y: 0
+    };
+    return e.$.classList.add("tr"), e.nextElement = e, e.previousElement = e, this.rows.length > 0 && (e.previousElement = this.rows[this.rows.length - 1], e.previousElement.nextElement = e, e.nextElement = this.rows[0], e.nextElement.previousElement = e), this.rows.push(e), this.createEmptyCells(e), t && this.tableBody.appendChild(e.$), e;
+  }
+  /**
+   * Créé les <td> vides correspondant aux colonnes.
+   * 
+   * @param row La ligne à laquelle ajouter les cellules vides.
+   */
+  createEmptyCells(t) {
+    const e = document.createDocumentFragment();
+    for (const s in this.columns) {
+      const l = document.createElement("div");
+      l.classList.add("td"), l.style.setProperty("--width", this.columns[s].width + this.columnUnits), e.appendChild(l);
     }
-    get totalVirtualHeight() {
-        return this.tableHead.clientHeight + (this.TOTAL_VISIBLE_ROWS - 1) * (this.ROW_HEIGHT - 1);
+    t.$.appendChild(e);
+  }
+  /**
+   * Supprime la ligne donnée du <tbody> et de la liste des lignes.
+   * 
+   * @param row La ligne à supprimer.
+   */
+  removeRow(t) {
+    t.$.parentNode && t.$.remove();
+    const e = this.rows.findIndex((s) => s === t);
+    e !== -1 && (this.rows.splice(e, 1), t.previousElement && (t.previousElement.nextElement = t.nextElement), t.nextElement && (t.nextElement.previousElement = t.previousElement));
+  }
+  /**
+   * Met à jour la position de la ligne donnée.
+   * Appelé lors d'un scroll.
+   * 
+   * @param row La ligne à mettre à jour.
+   * @param position La nouvelle position de la ligne.
+   */
+  setRowPosition(t, e) {
+    const s = this.tbodyStartY + e.top * (this.ROW_HEIGHT - 1);
+    t.y = e.top, t.node = this.flatten[t.y].node, t.$.dataset.index = `${t.y}`, t.$.style.setProperty("--y", s + "px");
+  }
+  /**
+   * Met à jour la position des lignes visibles.
+   * Appelé lors d'un scroll.
+   */
+  updateScroll() {
+    if (this.rows.length === 0)
+      return;
+    const t = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1), e = t + this.ROW_HEIGHT;
+    if (this.scrollTop >= t && this.scrollTop <= e)
+      return;
+    const s = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
+    if (!(s + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length)) {
+      for (let l = 0; l < this.rows.length; l++) {
+        const o = this.rows[l];
+        this.setRowPosition(o, { top: s + l, left: o.x });
+      }
+      this.updateRowsContent();
     }
-    get columnUnits() {
-        return this.options.columnSizeInPercentage ? '%' : 'px';
+  }
+  /**
+   * Gère l'événement de scroll du conteneur.
+   * Met à jour les positions des lignes visibles.
+   */
+  onScroll(t) {
+    this.updateScroll();
+  }
+  onClick(t) {
+    const e = t.target, s = e.closest(".tr"), l = this.getNodeFromRow(s);
+    console.log(l, e), this.cancelCellEdition(), !t.shiftKey && !t.ctrlKey && (this.unselectAllRows(), this.unselectAllCells(), this.unselectAllColumns()), l && this.onRowClick(l, e);
+  }
+  onRowClick(t, e) {
+    if (e.closest(".btn-expand")) {
+      this.toggleRowExpand(t);
+      return;
     }
-    createColumns() {
-        const $tr = document.createElement('div');
-        $tr.classList.add('tr');
-        for (const columnDef of this.columns) {
-            const $th = document.createElement('div');
-            $th.classList.add('th');
-            $th.style.width = columnDef.width + this.columnUnits;
-            $th.textContent = columnDef.title;
-            $tr.appendChild($th);
-        }
-        this.tableHead.appendChild($tr);
+    if (e.closest(".td")) {
+      const s = e.closest(".td");
+      this.options.allowCellEditing && this.editCell(t, s), this.options.allowCellSelection;
     }
-    computeViewbox() {
-        const CONTAINER_HEIGHT = this.container.clientHeight;
-        this.VISIBLE_ROWS_COUNT = Math.ceil(CONTAINER_HEIGHT / this.ROW_HEIGHT) + 4;
-        if (this.flatten.length > 0) {
-            const rowsCount = this.flatten.length;
-            const max = Math.min(rowsCount, this.VISIBLE_ROWS_COUNT);
-            if (this.rows.length < max) {
-                for (let i = this.rows.length; i < max; i++) {
-                    this.createEmptyRow();
-                }
-            }
-            else if (this.rows.length > max) {
-                for (let i = this.rows.length - 1; i >= max; i--) {
-                    this.removeRow(this.rows[i]);
-                }
-            }
-        }
-        this.tbodyStartY = this.tableHead.clientHeight - 1;
+    this.options.allowRowSelection && this.selectRow(t);
+  }
+  selectRow(t) {
+    this.selectedRows.has(t.node) ? (t.$.classList.remove("selected"), this.selectedRows.delete(t.node)) : (t.$.classList.add("selected"), this.selectedRows.add(t.node)), console.log("Selected rows:", this.selectedRows);
+  }
+  selectAllRows() {
+    this.tableBody.querySelectorAll(".tr").forEach((t) => {
+      t.classList.add("selected");
+    }), this.selectedRows.clear();
+    for (const t of this.rows)
+      this.selectedRows.add(t.node);
+  }
+  unselectAllRows() {
+    this.tableBody.querySelectorAll(".tr.selected").forEach((t) => {
+      t.classList.remove("selected");
+    }), this.selectedRows.clear();
+  }
+  selectCell() {
+  }
+  unselectAllCells() {
+    this.tableBody.querySelectorAll(".td.selected").forEach((t) => {
+      t.classList.remove("selected");
+    }), this.selectedCells.clear();
+  }
+  selectColumn(t) {
+    this.selectedColumns.has(t) ? (this.tableHead.querySelectorAll(".th.selected").forEach((e) => {
+      e.classList.remove("selected");
+    }), this.selectedColumns.delete(t)) : (this.tableHead.querySelectorAll(".th").forEach((e) => {
+      e.textContent === t.title && e.classList.add("selected");
+    }), this.selectedColumns.add(t));
+  }
+  unselectAllColumns() {
+    this.tableHead.querySelectorAll(".th.selected").forEach((t) => {
+      t.classList.remove("selected");
+    }), this.selectedColumns.clear();
+  }
+  editCell(t, e) {
+  }
+  cancelCellEdition() {
+  }
+  /**
+   * Gère l'événement de clic sur une ligne.
+   * Développe ou réduit la ligne si elle a des enfants.
+   * 
+   * @param row La ligne sur laquelle on a cliqué.
+   * @param expandBtn Le bouton d'expansion/réduction.
+   */
+  toggleRowExpand(t) {
+    const e = t.node;
+    e.expanded = !e.expanded, t.$.classList.toggle("expanded", e.expanded);
+    const s = this.flatten.findIndex((l) => l.node === e);
+    if (e.expanded) {
+      const l = e.children.map((o) => this.dataToTreeNode(o.data, e.depth + 1));
+      this.flatten.splice(s + 1, 0, ...l.map((o) => ({ node: o })));
+      for (let o = s + 1; o < s + 1 + l.length; o++)
+        this.createEmptyRow(!1);
+    } else {
+      const l = e.children.length;
+      this.flatten.splice(s + 1, l);
+      for (let o = 0; o < l; o++)
+        this.removeRow(this.rows[s + 1]);
     }
-    computeInViewVisibleRows() {
-        this.flatten = [];
-        const rec = (node) => {
-            this.flatten.push({ node });
-            if (node.expanded) {
-                for (const child of node.children) {
-                    rec(child);
-                }
-            }
-        };
-        for (const node of this.tree) {
-            rec(node);
-        }
-        this.computeViewbox();
-        this.updateViewBoxHeight();
+    this.updateViewBoxHeight(), this.updateScroll(), this.updateRowsContent();
+  }
+  /**
+   * Réinitialise les lignes du tableau.
+   * Supprime toutes les lignes existantes,
+   * puis en recrée un nombre fixe
+   * défini par VISIBLE_ROWS_COUNT.
+   */
+  resetTableRows() {
+    for (const s of this.rows)
+      s.$.remove();
+    this.rows = [];
+    const t = Math.min(this.flatten.length, this.VISIBLE_ROWS_COUNT), e = document.createDocumentFragment();
+    for (let s = 0; s < t; s++) {
+      const l = this.createEmptyRow(!1);
+      e.appendChild(l.$), this.setRowPosition(l, { top: s, left: 0 });
     }
-    getNodeFromRow($row) {
-        if ($row === null || $row === undefined) {
-            return null;
-        }
-        const index = parseInt($row.dataset.index || '-1', 10);
-        if (isNaN(index) || index < 0 || index >= this.rows.length) {
-            return null;
-        }
-        return this.rows[index];
-    }
-    updateViewBoxHeight() {
-        this.TOTAL_VISIBLE_ROWS = this.flatten.length;
-        console.log(this.TOTAL_VISIBLE_ROWS);
-        this.virtualScroller.style.height = this.totalVirtualHeight + 'px';
-    }
-    updateRowsContent() {
-        var _a;
-        for (const row of this.rows) {
-            if (!row.node) {
-                continue;
-            }
-            const hasChildren = row.node.children.length > 0;
-            row.$.classList.toggle('has-children', hasChildren);
-            row.$.style.setProperty('--depth', `${row.node.depth}`);
-            for (const i in this.columns) {
-                const col = this.columns[i];
-                const $cell = row.$.children.item(+i);
-                if ($cell) {
-                    const value = col.field ? row.node.data[col.field] : undefined;
-                    const cell = {
-                        $: row.$,
-                        value,
-                        row: row.node,
-                        column: col,
-                        rowIndex: row.y,
-                        columnIndex: +i,
-                    };
-                    const transformedValue = ((_a = col.transform) === null || _a === void 0 ? void 0 : _a.call(col, cell)) || this.formatCellValue(value);
-                    let html = '';
-                    if (hasChildren && i === '0') {
-                        const cls = row.node.expanded ? 'expanded' : 'collapsed';
-                        html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
-                    }
-                    html += `<span class="cell-value">${transformedValue}</span>`;
-                    $cell.innerHTML = html;
-                }
-            }
-        }
-    }
-    formatCellValue(value) {
-        return (value === null || value === void 0 ? void 0 : value.toString()) || '';
-    }
-    createEmptyRow(shouldAddDirectly = true) {
-        const row = {
-            $: document.createElement('div'),
-            x: 0,
-            y: 0,
-        };
-        row.$.classList.add('tr');
-        row.nextElement = row;
-        row.previousElement = row;
-        if (this.rows.length > 0) {
-            row.previousElement = this.rows[this.rows.length - 1];
-            row.previousElement.nextElement = row;
-            row.nextElement = this.rows[0];
-            row.nextElement.previousElement = row;
-        }
-        this.rows.push(row);
-        this.createEmptyCells(row);
-        if (shouldAddDirectly) {
-            this.tableBody.appendChild(row.$);
-        }
-        return row;
-    }
-    createEmptyCells(row) {
-        const $fragment = document.createDocumentFragment();
-        for (const i in this.columns) {
-            const $td = document.createElement('div');
-            $td.classList.add('td');
-            $td.style.setProperty('--width', this.columns[i].width + this.columnUnits);
-            $fragment.appendChild($td);
-        }
-        row.$.appendChild($fragment);
-    }
-    removeRow(row) {
-        if (row.$.parentNode) {
-            row.$.remove();
-        }
-        const rowIndex = this.rows.findIndex(r => r === row);
-        if (rowIndex !== -1) {
-            this.rows.splice(rowIndex, 1);
-            if (row.previousElement) {
-                row.previousElement.nextElement = row.nextElement;
-            }
-            if (row.nextElement) {
-                row.nextElement.previousElement = row.previousElement;
-            }
-        }
-    }
-    setRowPosition(row, position) {
-        const top = this.tbodyStartY + position.top * (this.ROW_HEIGHT - 1);
-        row.y = position.top;
-        row.node = this.flatten[row.y].node;
-        row.$.dataset.index = `${row.y}`;
-        row.$.style.setProperty('--y', top + 'px');
-    }
-    updateScroll() {
-        if (this.rows.length === 0) {
-            return;
-        }
-        const topMin = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1);
-        const topMax = topMin + this.ROW_HEIGHT;
-        if (this.scrollTop >= topMin && this.scrollTop <= topMax) {
-            return;
-        }
-        const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
-        if (scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
-            return;
-        }
-        for (let i = 0; i < this.rows.length; i++) {
-            const row = this.rows[i];
-            this.setRowPosition(row, { top: scrollTopIndex + i, left: row.x });
-        }
-        this.updateRowsContent();
-    }
-    onScroll(e) {
-        this.updateScroll();
-    }
-    onClick(e) {
-        const $target = e.target;
-        const $closestRow = $target.closest('.tr');
-        const closestRow = this.getNodeFromRow($closestRow);
-        console.log(closestRow, $target);
-        this.cancelCellEdition();
-        if (!e.shiftKey && !e.ctrlKey) {
-            this.unselectAllRows();
-            this.unselectAllCells();
-            this.unselectAllColumns();
-        }
-        if (closestRow) {
-            this.onRowClick(closestRow, $target);
-        }
-    }
-    onRowClick(row, $target) {
-        if ($target.closest('.btn-expand')) {
-            this.toggleRowExpand(row);
-            return;
-        }
-        if ($target.closest('.td')) {
-            const $cell = $target.closest('.td');
-            if (this.options.allowCellEditing) {
-                this.editCell(row, $cell);
-            }
-            if (this.options.allowCellSelection) {
-            }
-        }
-        if (this.options.allowRowSelection) {
-            this.selectRow(row);
-        }
-    }
-    selectRow(row) {
-        if (this.selectedRows.has(row.node)) {
-            row.$.classList.remove('selected');
-            this.selectedRows.delete(row.node);
-        }
-        else {
-            row.$.classList.add('selected');
-            this.selectedRows.add(row.node);
-        }
-        console.log('Selected rows:', this.selectedRows);
-    }
-    selectAllRows() {
-        this.tableBody.querySelectorAll('.tr').forEach($row => {
-            $row.classList.add('selected');
-        });
-        this.selectedRows.clear();
-        for (const row of this.rows) {
-            this.selectedRows.add(row.node);
-        }
-    }
-    unselectAllRows() {
-        this.tableBody.querySelectorAll('.tr.selected').forEach($row => {
-            $row.classList.remove('selected');
-        });
-        this.selectedRows.clear();
-    }
-    selectCell() {
-    }
-    unselectAllCells() {
-        this.tableBody.querySelectorAll('.td.selected').forEach($cell => {
-            $cell.classList.remove('selected');
-        });
-        this.selectedCells.clear();
-    }
-    selectColumn(column) {
-        if (this.selectedColumns.has(column)) {
-            this.tableHead.querySelectorAll('.th.selected').forEach($th => {
-                $th.classList.remove('selected');
-            });
-            this.selectedColumns.delete(column);
-        }
-        else {
-            this.tableHead.querySelectorAll('.th').forEach($th => {
-                if ($th.textContent === column.title) {
-                    $th.classList.add('selected');
-                }
-            });
-            this.selectedColumns.add(column);
-        }
-    }
-    unselectAllColumns() {
-        this.tableHead.querySelectorAll('.th.selected').forEach($th => {
-            $th.classList.remove('selected');
-        });
-        this.selectedColumns.clear();
-    }
-    editCell(row, $cell) {
-    }
-    cancelCellEdition() {
-    }
-    toggleRowExpand(row) {
-        const node = row.node;
-        node.expanded = !node.expanded;
-        row.$.classList.toggle('expanded', node.expanded);
-        const startIndex = this.flatten.findIndex(f => f.node === node);
-        if (node.expanded) {
-            const children = node.children.map(c => this.dataToTreeNode(c.data, node.depth + 1));
-            this.flatten.splice(startIndex + 1, 0, ...children.map(c => ({ node: c })));
-            for (let i = startIndex + 1; i < startIndex + 1 + children.length; i++) {
-                this.createEmptyRow(false);
-            }
-        }
-        else {
-            const childrenCount = node.children.length;
-            this.flatten.splice(startIndex + 1, childrenCount);
-            for (let i = 0; i < childrenCount; i++) {
-                this.removeRow(this.rows[startIndex + 1]);
-            }
-        }
-        this.updateViewBoxHeight();
-        this.updateScroll();
-        this.updateRowsContent();
-    }
-    resetTableRows() {
-        for (const row of this.rows) {
-            row.$.remove();
-        }
-        this.rows = [];
-        const max = Math.min(this.flatten.length, this.VISIBLE_ROWS_COUNT);
-        const $fragment = document.createDocumentFragment();
-        for (let i = 0; i < max; i++) {
-            const row = this.createEmptyRow(false);
-            $fragment.appendChild(row.$);
-            this.setRowPosition(row, { top: i, left: 0 });
-        }
-        this.tableBody.appendChild($fragment);
-        if (this.rows.length > 0) {
-            this.mostTopRow = this.rows[0].nextElement;
-        }
-    }
-    dataToTreeNode(data, depth) {
-        return {
-            data,
-            expanded: this.options.defaultExpanded,
-            depth,
-            children: data.children
-                ? data.children.map(d => this.dataToTreeNode(d, depth + 1))
-                : [],
-        };
-    }
-    scrollTo(index) {
-        this.container.scrollTo({
-            top: this.tbodyStartY + index * (this.ROW_HEIGHT - 1),
-            behavior: 'smooth',
-        });
-    }
-    setData(data) {
-        this.data = data;
-        this.tree = this.data.map(d => this.dataToTreeNode(d, 0));
-        this.computeInViewVisibleRows();
-        this.resetTableRows();
-        this.updateScroll();
-    }
-    allowColumnResizing(allow) {
-        this.options.allowColumnResize = allow;
-    }
-    allowRowSelection(allow) {
-        this.options.allowRowSelection = allow;
-    }
-    allowCellSelection(allow) {
-        this.options.allowCellSelection = allow;
-    }
-    allowCellEditing(allow) {
-        this.options.allowCellEditing = allow;
-    }
-    makeDroppable() {
-        this.container.setAttribute('dropzone', 'move');
-        this.container.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "move";
-            const target = event.target;
-            const closestRow = target.closest('.tr');
-            const isNotHead = !target.closest('.thead');
-            if (closestRow && isNotHead && closestRow !== this.lastHighlightedRow) {
-                if (this.lastHighlightedRow) {
-                    this.lastHighlightedRow.classList.remove('dragging-hover');
-                }
-                closestRow.classList.add('dragging-hover');
-                this.lastHighlightedRow = closestRow;
-            }
-            else if (!closestRow || !isNotHead) {
-                if (this.lastHighlightedRow) {
-                    this.lastHighlightedRow.classList.remove('dragging-hover');
-                    this.lastHighlightedRow = null;
-                }
-            }
-        }, { capture: true });
-        this.container.addEventListener('drop', (event) => {
-            var _a, _b;
-            event.preventDefault();
-            const target = event.target;
-            const closestRow = target.closest('.tr');
-            console.log(event);
-            const data = (_a = event.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData('text/plain');
-            (_b = this.lastHighlightedRow) === null || _b === void 0 ? void 0 : _b.classList.remove('dragging-hover');
-            this.lastHighlightedRow = null;
-            const row = this.rows.find(r => r.$ === closestRow);
-            this.onDrop(data, row);
-        });
-    }
-}
-VirtualTable.DEFAULT_OPTIONS = {
-    id: '',
-    columnSizeInPercentage: false,
-    defaultExpanded: true,
-    allowColumnSelection: false,
-    allowRowSelection: false,
-    allowCellSelection: false,
-    allowCellEditing: false,
-    allowColumnResize: false,
-    allowColumnReorder: false,
-    allowRowReorder: false,
+    this.tableBody.appendChild(e), this.rows.length > 0 && (this.mostTopRow = this.rows[0].nextElement);
+  }
+  /**
+   * Convertit les données d'un nœud en un nœud de l'arbre,
+   * utilisable en interne.
+   */
+  dataToTreeNode(t, e) {
+    return {
+      data: t,
+      expanded: this.options.defaultExpanded,
+      depth: e,
+      children: t.children ? t.children.map((s) => this.dataToTreeNode(s, e + 1)) : []
+    };
+  }
+  // --------
+  /**
+   * Déplace le scroll jusqu'à l'index de la ligne spécifié.
+   */
+  scrollTo(t) {
+    this.container.scrollTo({
+      top: this.tbodyStartY + t * (this.ROW_HEIGHT - 1),
+      behavior: "smooth"
+    });
+  }
+  /**
+   * Reset et redéfini les données de la table.
+   * Recalcule tout, excepté les colonnes.
+   */
+  setData(t) {
+    this.data = t, this.tree = this.data.map((e) => this.dataToTreeNode(e, 0)), this.computeInViewVisibleRows(), this.resetTableRows(), this.updateScroll();
+  }
+  /* --- ADDITIONAL FEATURES --- */
+  allowColumnResizing(t) {
+    this.options.allowColumnResize = t;
+  }
+  allowRowSelection(t) {
+    this.options.allowRowSelection = t;
+  }
+  allowCellSelection(t) {
+    this.options.allowCellSelection = t;
+  }
+  allowCellEditing(t) {
+    this.options.allowCellEditing = t;
+  }
+  /**
+   * Accepts the drop event on the container.
+   * Manages the css classes to update drag over state.
+   * Manages to tell which row has received the drop.
+   */
+  makeDroppable() {
+    this.container.setAttribute("dropzone", "move"), this.container.addEventListener("dragover", (t) => {
+      t.preventDefault(), t.dataTransfer.dropEffect = "move";
+      const e = t.target, s = e.closest(".tr"), l = !e.closest(".thead");
+      s && l && s !== this.lastHighlightedRow ? (this.lastHighlightedRow && this.lastHighlightedRow.classList.remove("dragging-hover"), s.classList.add("dragging-hover"), this.lastHighlightedRow = s) : (!s || !l) && this.lastHighlightedRow && (this.lastHighlightedRow.classList.remove("dragging-hover"), this.lastHighlightedRow = null);
+    }, { capture: !0 }), this.container.addEventListener("drop", (t) => {
+      var i, n;
+      t.preventDefault();
+      const s = t.target.closest(".tr");
+      console.log(t);
+      const l = (i = t.dataTransfer) == null ? void 0 : i.getData("text/plain");
+      (n = this.lastHighlightedRow) == null || n.classList.remove("dragging-hover"), this.lastHighlightedRow = null;
+      const o = this.rows.find((h) => h.$ === s);
+      this.onDrop(l, o);
+    });
+  }
 };
-
-
-/***/ }),
-
-/***/ "./src/types.ts":
-/*!**********************!*\
-  !*** ./src/types.ts ***!
-  \**********************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-
-
-
-/***/ })
-
-/******/ });
-/************************************************************************/
-/******/ // The module cache
-/******/ var __webpack_module_cache__ = {};
-/******/ 
-/******/ // The require function
-/******/ function __webpack_require__(moduleId) {
-/******/ 	// Check if module is in cache
-/******/ 	var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 	if (cachedModule !== undefined) {
-/******/ 		return cachedModule.exports;
-/******/ 	}
-/******/ 	// Create a new module (and put it into the cache)
-/******/ 	var module = __webpack_module_cache__[moduleId] = {
-/******/ 		// no module.id needed
-/******/ 		// no module.loaded needed
-/******/ 		exports: {}
-/******/ 	};
-/******/ 
-/******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 
-/******/ 	// Return the exports of the module
-/******/ 	return module.exports;
-/******/ }
-/******/ 
-/************************************************************************/
-/******/ /* webpack/runtime/define property getters */
-/******/ (() => {
-/******/ 	// define getter functions for harmony exports
-/******/ 	__webpack_require__.d = (exports, definition) => {
-/******/ 		for(var key in definition) {
-/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 			}
-/******/ 		}
-/******/ 	};
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ (() => {
-/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/make namespace object */
-/******/ (() => {
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = (exports) => {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/ })();
-/******/ 
-/************************************************************************/
-var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
-(() => {
-/*!**********************!*\
-  !*** ./src/index.ts ***!
-  \**********************/
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   VirtualTable: () => (/* reexport safe */ VirtualTable__WEBPACK_IMPORTED_MODULE_0__.VirtualTable)
-/* harmony export */ });
-/* harmony import */ var VirtualTable__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! VirtualTable */ "./src/VirtualTable.ts");
-/* harmony import */ var _types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types */ "./src/types.ts");
-
-
-
-})();
-
-var __webpack_exports__VirtualTable = __webpack_exports__.VirtualTable;
-export { __webpack_exports__VirtualTable as VirtualTable };
-
+a.DEFAULT_OPTIONS = {
+  id: "",
+  columnSizeInPercentage: !1,
+  defaultExpanded: !0,
+  // -- allowed actions
+  allowColumnSelection: !1,
+  allowRowSelection: !1,
+  allowCellSelection: !1,
+  allowCellEditing: !1,
+  allowColumnResize: !1,
+  allowColumnReorder: !1,
+  allowRowReorder: !1
+};
+let c = a;
+export {
+  c as VirtualTable
+};
 //# sourceMappingURL=VirtualTable.js.map

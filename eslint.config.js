@@ -6,6 +6,7 @@ const stylistic = require("@stylistic/eslint-plugin");
 module.exports = tseslint.config(
     {
         files: [ "src/**/*.ts" ],
+        ignores: ["**/*.js", "**/*.d.ts", "dist/**", "node_modules/**"],
         extends: [
             eslint.configs.recommended,
             ...tseslint.configs.recommended,
