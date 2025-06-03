@@ -10,6 +10,70 @@ body {
     margin: 0;
     background: #eee;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: stretch;
+    align-items: stretch;
+}
+
+#tests-list-container {
+    width: 300px;
+    height: 100%;
+    border-right: 1px solid #aaa;
+    overflow-y: auto;
+    background: #aaa;
+    color: #222;
+}
+
+#test-container {
+    flex: 1;
+}
+
+#tests-list-container .test-case {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: stretch;
+    align-items: center;
+}
+
+#tests-list-container .test-case:hover {
+    background: #888;
+}
+
+#tests-list-container .test-case h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+#tests-list-container .test-case p {
+    margin: 5px 0 0;
+    font-size: 0.8rem;
+    color: #444;
+}
+
+#tests-list-container .test-case button {
+    margin-left: auto;
+    padding: 5px 10px;
+    background: #00838f;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#test-container .loading-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: .9rem;
+    color: #888;
+    text-align: center;
+    font-style: italic;
 }
 
 .test-container {
@@ -17,27 +81,18 @@ body {
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    height: 100dvh;
-    width: 100dvw;
-    border-bottom: 1px solid #aaa;
+    height: 100%;
 }
 
-.virtual-table {
+
+/* Test 1 */
+
+#table-container {
     width: 800px;
     height: 600px;
     /* border: 1px solid #aaa; */
     background: #fff;
     overflow: auto;
-}
-
-#table-container {
-    width: 800px;
-    height: 600px;
-}
-
-#table-container2 {
-    width: 1200px;
-    height: 400px;
 }
 
 #table-container .thead .tr {
@@ -54,19 +109,15 @@ body {
 }
 
 #table-container .thead .th {
-    border: 1px solid #666;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     height: 50px;
-    background-color: #f0f0f0;
+    background-color: #ddd;
     padding: 5px;
+    user-select: none;
 }
 
 #table-container .tbody .td {
-    overflow: hidden;
-}
-
-#table-container .tbody .tr .td:not(:last-child),
-#table-container .thead .tr .th:not(:last-child) {
-    border-right: none;
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 #table-container .tbody .tr:not(.selected):hover .td {
@@ -81,8 +132,6 @@ body {
     border-color: #00838f;
 }
 
-
-/* Test 1 - Drag & Drop feature */
 
 .draggable-div {
     background: #00838f;
@@ -105,6 +154,7 @@ body {
 
 #table-container2 {
     width: fit-content;
+    height: 400px;
 }
 
 

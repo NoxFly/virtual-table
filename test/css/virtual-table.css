@@ -1,3 +1,7 @@
+.virtual-table {
+    overflow: auto;
+}
+
 .virtual-table .table {
     position: relative;
     width: max-content;
@@ -18,19 +22,33 @@
     white-space: nowrap;
 }
 
-.virtual-table .tbody .td {
+.virtual-table .tbody .tr .td {
     border: 1px solid #444;
     height: var(--row-height);
     background-color: var(--bg, transparent);
     white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
     padding-top: .1rem;
     width: var(--width);
     max-width: var(--width);
 }
 
+.virtual-table .thead .tr .th {
+    border: 1px solid #666;
+    font-weight: 600;
+}
+
+.virtual-table .tbody .tr .td:not(:last-child),
+.virtual-table .thead .tr .th:not(:last-child) {
+    border-right: none;
+}
+
+.virtual-table .tbody .tr .td {
+    border-bottom: none;
+}
+
 .virtual-table .tbody .td .cell-value {
-    display: inline-block;
     height: 100%;
     vertical-align: top;
     padding: 0;
