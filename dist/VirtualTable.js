@@ -94,7 +94,7 @@ const m = class m {
       if (!e.ref)
         continue;
       const s = e.ref.node.children.length > 0;
-      e.$.classList.toggle("has-children", s), e.$.style.setProperty("--depth", `${e.ref.node.depth}`);
+      e.$.classList.toggle("has-children", s), e.$.classList.toggle("expanded", e.ref.node.expanded), e.$.classList.toggle("selected", this.selectedNodes.has(e.ref.index)), e.$.style.setProperty("--depth", `${e.ref.node.depth}`);
       for (const l in this.columns) {
         const i = this.columns[l], o = e.$.children.item(+l);
         if (o) {
@@ -233,6 +233,7 @@ const m = class m {
           console.log(`Selecting row ${n - p} (${c.index})`, u), u == null || u.classList.add("selected");
         }
       }
+      return;
     }
     this.selectedNodes.has(e.ref.index) ? (e.$.classList.remove("selected"), this.selectedNodes.delete(e.ref.index)) : (e.$.classList.add("selected"), this.selectedNodes.add(e.ref.index));
   }

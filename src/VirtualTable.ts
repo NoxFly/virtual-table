@@ -218,6 +218,8 @@ export class VirtualTable<T extends Type> {
             const hasChildren = row.ref.node.children.length > 0;
 
             row.$.classList.toggle('has-children', hasChildren);
+            row.$.classList.toggle('expanded', row.ref.node.expanded);
+            row.$.classList.toggle('selected', this.selectedNodes.has(row.ref.index));
             row.$.style.setProperty('--depth', `${row.ref.node.depth}`);
 
             for(const i in this.columns) {
@@ -475,13 +477,15 @@ export class VirtualTable<T extends Type> {
             for(let i=from; i <= to; i++) {
                 const rowToSelect = this.flatten[i];
                 this.selectedNodes.add(rowToSelect.index);
-                
+                                                
                 if(i >= firstElIndex && i <= lastElIndex) {
                     const $row = this.rows[i - firstElIndex]?.$;
                     console.log(`Selecting row ${i - firstElIndex} (${rowToSelect.index})`, $row);
                     $row?.classList.add('selected');
                 }
             }
+
+            return;
         }
         
         // unit selection
