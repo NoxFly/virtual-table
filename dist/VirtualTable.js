@@ -1,7 +1,7 @@
-const m = class m {
+const f = class f {
   constructor(t, e, s = {}) {
     this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.ROW_HEIGHT = 30, this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {
-    }, this.options = { ...m.DEFAULT_OPTIONS, ...s }, this.columns = e, this.virtualScroller = document.createElement("div"), this.virtualScroller.classList.add("virtual-scroller"), this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.appendChild(this.table), this.container.appendChild(this.virtualScroller), this.options.id && (this.table.id = this.options.id), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (l) => this.onScroll(l)), this.container.addEventListener("click", (l) => this.onClick(l)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+    }, this.options = { ...f.DEFAULT_OPTIONS, ...s }, this.columns = e, this.virtualScroller = document.createElement("div"), this.virtualScroller.classList.add("virtual-scroller"), this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.appendChild(this.table), this.container.appendChild(this.virtualScroller), this.options.id && (this.table.id = this.options.id), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (l) => this.onScroll(l)), this.container.addEventListener("click", (l) => this.onClick(l)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   /**
    * Retourne la position actuelle du scroll dans le conteneur.
@@ -108,8 +108,8 @@ const m = class m {
           }, h = ((t = i.transform) == null ? void 0 : t.call(i, d)) || this.formatCellValue(a);
           let r = "";
           if (s && l === "0") {
-            const f = e.ref.node.expanded ? "expanded" : "collapsed";
-            r += `<button class="btn-expand"><span class="expand-icon ${f}"></span></button>`;
+            const p = e.ref.node.expanded ? "expanded" : "collapsed";
+            r += `<button class="btn-expand"><span class="expand-icon ${p}"></span></button>`;
           }
           r += `<span class="cell-value">${h}</span>`, o.innerHTML = r;
         }
@@ -224,13 +224,12 @@ const m = class m {
         console.warn("No nearest selected index found.");
         return;
       }
-      const r = Math.min(h, d.index), f = Math.max(h, d.index), p = ((l = (s = this.rows[0]) == null ? void 0 : s.ref) == null ? void 0 : l.index) || -1, g = ((o = (i = this.rows[this.rows.length - 1]) == null ? void 0 : i.ref) == null ? void 0 : o.index) || -1;
-      console.log(`Selecting range from ${r} to ${f} (nearest: ${h})`), console.log(`First element index: ${p}, Last element index: ${g}`);
-      for (let n = r; n <= f; n++) {
+      const r = Math.min(h, d.index), p = Math.max(h, d.index), m = ((l = (s = this.rows[0]) == null ? void 0 : s.ref) == null ? void 0 : l.index) || -1, g = ((o = (i = this.rows[this.rows.length - 1]) == null ? void 0 : i.ref) == null ? void 0 : o.index) || -1;
+      for (let n = r; n <= p; n++) {
         const c = this.flatten[n];
-        if (this.selectedNodes.add(c.index), n >= p && n <= g) {
-          const u = (a = this.rows[n - p]) == null ? void 0 : a.$;
-          console.log(`Selecting row ${n - p} (${c.index})`, u), u == null || u.classList.add("selected");
+        if (this.selectedNodes.add(c.index), n >= m && n <= g) {
+          const u = (a = this.rows[n - m]) == null ? void 0 : a.$;
+          u == null || u.classList.add("selected");
         }
       }
       return;
@@ -389,7 +388,7 @@ const m = class m {
     });
   }
 };
-m.DEFAULT_OPTIONS = {
+f.DEFAULT_OPTIONS = {
   id: "",
   columnSizeInPercentage: !1,
   defaultExpanded: !0,
@@ -402,7 +401,7 @@ m.DEFAULT_OPTIONS = {
   allowColumnReorder: !1,
   allowRowReorder: !1
 };
-let w = m;
+let w = f;
 export {
   w as VirtualTable
 };

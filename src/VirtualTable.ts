@@ -471,16 +471,12 @@ export class VirtualTable<T extends Type> {
             const firstElIndex = this.rows[0]?.ref?.index || -1;
             const lastElIndex = this.rows[this.rows.length - 1]?.ref?.index || -1;
 
-            console.log(`Selecting range from ${from} to ${to} (nearest: ${nearestSelectedIndex})`);
-            console.log(`First element index: ${firstElIndex}, Last element index: ${lastElIndex}`);
-
             for(let i=from; i <= to; i++) {
                 const rowToSelect = this.flatten[i];
                 this.selectedNodes.add(rowToSelect.index);
                                                 
                 if(i >= firstElIndex && i <= lastElIndex) {
                     const $row = this.rows[i - firstElIndex]?.$;
-                    console.log(`Selecting row ${i - firstElIndex} (${rowToSelect.index})`, $row);
                     $row?.classList.add('selected');
                 }
             }
