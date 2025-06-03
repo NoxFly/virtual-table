@@ -54,4 +54,13 @@ export interface VirtualTableOptions {
     id: string;
     defaultExpanded: boolean;
     columnSizeInPercentage: boolean;
+    // -- allowed actions
+    allowColumnSelection: boolean;
+    allowRowSelection: boolean;
+    allowCellSelection: boolean;
+    allowCellEditing: boolean;
+    allowColumnResize: boolean;
+    allowColumnReorder: boolean;
+    allowRowReorder: boolean;
+    // --
 }

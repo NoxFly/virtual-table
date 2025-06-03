@@ -1,6 +1,5 @@
 const path = require('path');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const { experiments } = require('webpack');
 
 const name = "VirtualTable";
 
@@ -48,7 +47,7 @@ const configs = {
                 { directory: path.join(__dirname, 'test'), watch: true },
                 { directory: path.join(__dirname, 'dist'), watch: true, publicPath: '/dist' }
             ],
-            // hot: true, // not available for ESM modules yet
+            hot: false, // not available for ESM modules yet
             liveReload: true,
             open: true,
             client: {

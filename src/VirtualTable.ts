@@ -1,10 +1,18 @@
-import { ColumnDef, FlatNode, Position, TableRow, TreeNode, Type, VirtualTableOptions } from './types';
+import { /* Cell,  */ColumnDef, FlatNode, Position, TableRow, TreeNode, Type, VirtualTableOptions } from './types';
 
 export class VirtualTable<T extends Type> {
     protected static readonly DEFAULT_OPTIONS: VirtualTableOptions = {
         id: '',
         columnSizeInPercentage: false,
         defaultExpanded: true,
+        // -- allowed actions
+        allowColumnSelection: false,
+        allowRowSelection: false,
+        allowCellSelection: false,
+        allowCellEditing: false,
+        allowColumnResize: false,
+        allowColumnReorder: false,
+        allowRowReorder: false,
     };
 
 
@@ -25,6 +33,10 @@ export class VirtualTable<T extends Type> {
 
     private TOTAL_VISIBLE_ROWS = 0;
     private tbodyStartY = 0;
+
+    private readonly selectedRows = new Set<TreeNode<T>>();
+    private readonly selectedCells = new Set<{ row: TreeNode<T>; index: number; }>();
+    private readonly selectedColumns = new Set<ColumnDef<T>>();
 
     private mostTopRow!: TableRow<T>;
 
@@ -163,6 +175,25 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
+     * Retourne le nœud de l'arbre correspondant à la ligne donnée.
+     */
+    private getNodeFromRow($row: HTMLElement | null | undefined): TableRow<T> | null {
+        if($row === null || $row === undefined) {
+            return null;
+        }
+
+        const index = parseInt($row.dataset.index || '-1', 10);
+        
+        if(isNaN(index) || index < 0 || index >= this.rows.length) {
+            return null;
+        }
+
+        return this.rows[index];
+
+        // const row = this.rows.find(r => r.$ === row)!;
+    }
+
+    /**
      * Appelé APRES avoir mis à jour this.flatten
      */
     private updateViewBoxHeight(): void {
@@ -214,6 +245,7 @@ export class VirtualTable<T extends Type> {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private formatCellValue(value: any): string {
         return value?.toString() || '';
     }
@@ -359,11 +391,126 @@ export class VirtualTable<T extends Type> {
     private onClick(e: MouseEvent): void {
         const $target = e.target as HTMLElement;
         const $closestRow = $target.closest('.tr') as HTMLElement;
-        console.log($closestRow, $target);
-        if($target.closest('.btn-expand')) {
-            this.toggleRowExpand($closestRow);
+
+        const closestRow = this.getNodeFromRow($closestRow);
+
+        console.log(closestRow, $target);
+
+        this.cancelCellEdition();
+
+        // this.checkElementStateWhenClick(this.states.selectedRow, $closestRow);
+        // this.checkElementStateWhenClick(this.states.selectedCell, $target);
+        if(!e.shiftKey && !e.ctrlKey) {
+            this.unselectAllRows();
+            this.unselectAllCells();
+            this.unselectAllColumns();
         }
 
+
+        if(closestRow) {
+            this.onRowClick(closestRow, $target);
+        }
+    }
+
+    private onRowClick(row: TableRow<T>, $target: HTMLElement): void {
+        if($target.closest('.btn-expand')) {
+            this.toggleRowExpand(row);
+            return;
+        }
+        
+        if($target.closest('.td')) {
+            const $cell = $target.closest('.td') as HTMLElement;
+
+            if(this.options.allowCellEditing) {
+                this.editCell(row, $cell);
+            }
+
+            if(this.options.allowCellSelection) {
+                // this.selectCell(row, $cell);
+            }
+        }
+
+        if(this.options.allowRowSelection) {
+            this.selectRow(row);
+        }
+    }
+
+    public selectRow(row: TableRow<T>): void {
+        if(this.selectedRows.has(row.node!)) {
+            row.$.classList.remove('selected');
+            this.selectedRows.delete(row.node!);
+        }
+        else {
+            row.$.classList.add('selected');
+            this.selectedRows.add(row.node!);
+        }
+        console.log('Selected rows:', this.selectedRows);
+    }
+
+    public selectAllRows(): void {
+        this.tableBody.querySelectorAll('.tr').forEach($row => {
+            $row.classList.add('selected');
+        });
+
+        this.selectedRows.clear();
+
+        for(const row of this.rows) {
+            this.selectedRows.add(row.node!);
+        }
+    }
+
+    public unselectAllRows(): void {
+        this.tableBody.querySelectorAll('.tr.selected').forEach($row => {
+            $row.classList.remove('selected');
+        });
+
+        this.selectedRows.clear();
+    }
+
+    public selectCell(): void {
+        // TODO
+    }
+
+    public unselectAllCells(): void {
+        this.tableBody.querySelectorAll('.td.selected').forEach($cell => {
+            $cell.classList.remove('selected');
+        });
+
+        this.selectedCells.clear();
+    }
+
+    public selectColumn(column: ColumnDef<T>): void {
+        if(this.selectedColumns.has(column)) {
+            this.tableHead.querySelectorAll('.th.selected').forEach($th => {
+                $th.classList.remove('selected');
+            });
+            this.selectedColumns.delete(column);
+        }
+        else {
+            this.tableHead.querySelectorAll('.th').forEach($th => {
+                if($th.textContent === column.title) {
+                    $th.classList.add('selected');
+                }
+            });
+            this.selectedColumns.add(column);
+        }
+    }
+
+    public unselectAllColumns(): void {
+        this.tableHead.querySelectorAll('.th.selected').forEach($th => {
+            $th.classList.remove('selected');
+        });
+
+        this.selectedColumns.clear();
+    }
+
+    public editCell(row: TableRow<T>, $cell: HTMLElement): void {
+        // TODO: créer input
+    }
+
+    public cancelCellEdition(): void {
+        // this.states.$editedCellInput?.remove();
+        // this.states.$editedCellInput = null;
     }
 
 
@@ -375,13 +522,12 @@ export class VirtualTable<T extends Type> {
      * @param row La ligne sur laquelle on a cliqué.
      * @param expandBtn Le bouton d'expansion/réduction.
      */
-    private toggleRowExpand($row: HTMLElement): void {
-        const row = this.rows.find(r => r.$ === $row)!;
+    private toggleRowExpand(row: TableRow<T>): void {
         const node = row.node!;
 
         node.expanded = !node.expanded;
 
-        $row.classList.toggle('expanded', node.expanded);
+        row.$.classList.toggle('expanded', node.expanded);
 
         // recompute the flattened list just in that area
         // remove all the recursive children of the node
@@ -411,6 +557,12 @@ export class VirtualTable<T extends Type> {
         this.updateRowsContent();
     }
 
+    /**
+     * Réinitialise les lignes du tableau.
+     * Supprime toutes les lignes existantes,
+     * puis en recrée un nombre fixe
+     * défini par VISIBLE_ROWS_COUNT.
+     */
     private resetTableRows(): void {
         for(const row of this.rows) {
             row.$.remove();
@@ -435,6 +587,10 @@ export class VirtualTable<T extends Type> {
         }
     }
 
+    /**
+     * Convertit les données d'un nœud en un nœud de l'arbre,
+     * utilisable en interne.
+     */
     private dataToTreeNode(data: T, depth: number): TreeNode<T> {
         return {
             data,
@@ -476,20 +632,20 @@ export class VirtualTable<T extends Type> {
 
     /* --- ADDITIONAL FEATURES --- */
 
-    public allowColumnResizing(): void {
-        // TODO
+    public allowColumnResizing(allow: boolean): void {
+        this.options.allowColumnResize = allow;
     }
 
-    public disallowColumnResizing(): void {
-        // TODO
+    public allowRowSelection(allow: boolean): void {
+        this.options.allowRowSelection = allow;
     }
 
-    public allowSelection(): void {
-        // TODO
+    public allowCellSelection(allow: boolean): void {
+        this.options.allowCellSelection = allow;
     }
 
-    public disallowSelection(): void {
-        // TODO
+    public allowCellEditing(allow: boolean): void {
+        this.options.allowCellEditing = allow;
     }
 
     /* --- DRAG & DROP FEATURE --- */

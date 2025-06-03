@@ -22,6 +22,9 @@ class VirtualTable {
         this.VISIBLE_ROWS_COUNT = 0;
         this.TOTAL_VISIBLE_ROWS = 0;
         this.tbodyStartY = 0;
+        this.selectedRows = new Set();
+        this.selectedCells = new Set();
+        this.selectedColumns = new Set();
         this.lastHighlightedRow = null;
         this.onDrop = () => { };
         this.options = Object.assign(Object.assign({}, VirtualTable.DEFAULT_OPTIONS), options);
@@ -101,6 +104,16 @@ class VirtualTable {
         }
         this.computeViewbox();
         this.updateViewBoxHeight();
+    }
+    getNodeFromRow($row) {
+        if ($row === null || $row === undefined) {
+            return null;
+        }
+        const index = parseInt($row.dataset.index || '-1', 10);
+        if (isNaN(index) || index < 0 || index >= this.rows.length) {
+            return null;
+        }
+        return this.rows[index];
     }
     updateViewBoxHeight() {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
@@ -223,16 +236,99 @@ class VirtualTable {
     onClick(e) {
         const $target = e.target;
         const $closestRow = $target.closest('.tr');
-        console.log($closestRow, $target);
-        if ($target.closest('.btn-expand')) {
-            this.toggleRowExpand($closestRow);
+        const closestRow = this.getNodeFromRow($closestRow);
+        console.log(closestRow, $target);
+        this.cancelCellEdition();
+        if (!e.shiftKey && !e.ctrlKey) {
+            this.unselectAllRows();
+            this.unselectAllCells();
+            this.unselectAllColumns();
+        }
+        if (closestRow) {
+            this.onRowClick(closestRow, $target);
         }
     }
-    toggleRowExpand($row) {
-        const row = this.rows.find(r => r.$ === $row);
+    onRowClick(row, $target) {
+        if ($target.closest('.btn-expand')) {
+            this.toggleRowExpand(row);
+            return;
+        }
+        if ($target.closest('.td')) {
+            const $cell = $target.closest('.td');
+            if (this.options.allowCellEditing) {
+                this.editCell(row, $cell);
+            }
+            if (this.options.allowCellSelection) {
+            }
+        }
+        if (this.options.allowRowSelection) {
+            this.selectRow(row);
+        }
+    }
+    selectRow(row) {
+        if (this.selectedRows.has(row.node)) {
+            row.$.classList.remove('selected');
+            this.selectedRows.delete(row.node);
+        }
+        else {
+            row.$.classList.add('selected');
+            this.selectedRows.add(row.node);
+        }
+        console.log('Selected rows:', this.selectedRows);
+    }
+    selectAllRows() {
+        this.tableBody.querySelectorAll('.tr').forEach($row => {
+            $row.classList.add('selected');
+        });
+        this.selectedRows.clear();
+        for (const row of this.rows) {
+            this.selectedRows.add(row.node);
+        }
+    }
+    unselectAllRows() {
+        this.tableBody.querySelectorAll('.tr.selected').forEach($row => {
+            $row.classList.remove('selected');
+        });
+        this.selectedRows.clear();
+    }
+    selectCell() {
+    }
+    unselectAllCells() {
+        this.tableBody.querySelectorAll('.td.selected').forEach($cell => {
+            $cell.classList.remove('selected');
+        });
+        this.selectedCells.clear();
+    }
+    selectColumn(column) {
+        if (this.selectedColumns.has(column)) {
+            this.tableHead.querySelectorAll('.th.selected').forEach($th => {
+                $th.classList.remove('selected');
+            });
+            this.selectedColumns.delete(column);
+        }
+        else {
+            this.tableHead.querySelectorAll('.th').forEach($th => {
+                if ($th.textContent === column.title) {
+                    $th.classList.add('selected');
+                }
+            });
+            this.selectedColumns.add(column);
+        }
+    }
+    unselectAllColumns() {
+        this.tableHead.querySelectorAll('.th.selected').forEach($th => {
+            $th.classList.remove('selected');
+        });
+        this.selectedColumns.clear();
+    }
+    editCell(row, $cell) {
+    }
+    cancelCellEdition() {
+    }
+    toggleRowExpand(row) {
         const node = row.node;
         node.expanded = !node.expanded;
-        $row.classList.toggle('expanded', node.expanded);
+        row.$.classList.toggle('expanded', node.expanded);
         const startIndex = this.flatten.findIndex(f => f.node === node);
         if (node.expanded) {
             const children = node.children.map(c => this.dataToTreeNode(c.data, node.depth + 1));
@@ -292,13 +388,17 @@ class VirtualTable {
         this.resetTableRows();
         this.updateScroll();
     }
-    allowColumnResizing() {
+    allowColumnResizing(allow) {
+        this.options.allowColumnResize = allow;
     }
-    disallowColumnResizing() {
+    allowRowSelection(allow) {
+        this.options.allowRowSelection = allow;
     }
-    allowSelection() {
+    allowCellSelection(allow) {
+        this.options.allowCellSelection = allow;
     }
-    disallowSelection() {
+    allowCellEditing(allow) {
+        this.options.allowCellEditing = allow;
     }
     makeDroppable() {
         this.container.setAttribute('dropzone', 'move');
@@ -340,6 +440,13 @@ VirtualTable.DEFAULT_OPTIONS = {
     id: '',
     columnSizeInPercentage: false,
     defaultExpanded: true,
+    allowColumnSelection: false,
+    allowRowSelection: false,
+    allowCellSelection: false,
+    allowCellEditing: false,
+    allowColumnResize: false,
+    allowColumnReorder: false,
+    allowRowReorder: false,
 };
 
 
