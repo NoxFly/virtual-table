@@ -7,11 +7,15 @@ let testCount = 0;
 
 /* ----- */
 
-function main() {
+function main(queries, testId) {
     layout = createLayout();
 
     generateTest(tests.test1, "100 000 entries for first level, children, drag & drop, basic styling, some options.");
-    generateTest(tests.test2, "No options, no children and no styling.");
+    generateTest(tests.test2, "100 entries, no options, no children and no styling.");
+
+    if(testId > 0) {
+        executeTest(tests[`test${testId}`]);
+    }
 }
 
 function createLayout() {
@@ -57,6 +61,11 @@ function generateTest(fn, description="") {
 }
 
 function executeTest(fn) {
+    if(!fn) {
+        console.error("No test function provided.");
+        return;
+    }
+
     layout.$testContainer.innerHTML = '<p class="loading-msg">loading...</p>';
 
     setTimeout(() => {
@@ -66,4 +75,11 @@ function executeTest(fn) {
 }
 
 
-main();
+
+
+const url = new URL(window.location.href);
+const testId = url.hash ? parseInt(url.hash.replace('#', '')) : 0;
+
+const queries = new URLSearchParams(window.location.search);
+
+main(queries, testId);
