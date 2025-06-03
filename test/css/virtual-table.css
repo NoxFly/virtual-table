@@ -1,0 +1,85 @@
+.virtual-table .table {
+    position: relative;
+    width: max-content;
+    height: max-content;
+}
+
+.virtual-table :where(.th, .td) {
+    display: inline-block;
+}
+
+.virtual-table .tbody .tr {
+    width: 100%;
+    height: var(--row-height);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(var(--x, 0px), var(--y, 0px));
+    white-space: nowrap;
+}
+
+.virtual-table .tbody .td {
+    border: 1px solid #444;
+    height: var(--row-height);
+    background-color: var(--bg, transparent);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-top: .1rem;
+    width: var(--width);
+    max-width: var(--width);
+}
+
+.virtual-table .tbody .td .cell-value {
+    display: inline-block;
+    height: 100%;
+    vertical-align: top;
+    padding: 0;
+    margin: 0;
+    line-height: 1rem;
+}
+
+.virtual-table .tbody .tr .td:first-child .cell-value {
+    display: inline-block;
+    transform: translateX(calc(20px * var(--depth)));
+}
+
+.virtual-table .tbody .tr.selected {
+    background-color: #ddeeff;
+    color: #000;
+}
+
+.virtual-table .btn-expand {
+    --r: .6;
+    --s: calc(var(--row-height) * var(--r));
+    --p: calc(var(--s) / 2);
+
+    transform: translateX(calc(20px * var(--depth)));
+    position: relative;
+    background: none;
+    border: none;
+    height: var(--s);
+    width: var(--s);
+    margin: 0 var(--p) 0 0;
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.virtual-table .expand-icon {
+    display: inline-block;
+    width: 60%;
+    aspect-ratio: 1/1;
+    border-bottom: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+    transform: translate(0, -0.2rem) rotate(45deg);
+}
+
+.virtual-table .btn-expand:hover .expand-icon {
+    border-color: #000;
+}
+
+.virtual-table .table.sticky-header .thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}

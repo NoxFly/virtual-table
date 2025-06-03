@@ -55,6 +55,8 @@ export interface VirtualTableOptions {
     id: string;
     defaultExpanded: boolean;
     columnSizeInPercentage: boolean;
+    // --
+    stickyHeader: boolean;
     // -- allowed actions
     allowColumnSelection: boolean;
     allowRowSelection: boolean;

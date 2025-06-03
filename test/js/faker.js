@@ -43,13 +43,13 @@ function randomAddress() {
  * 
  * @returns {Contact} A randomly generated contact object.
  */
-export function generateRandomContact() {
+export function generateRandomContact(withChildren = true) {
     const name = randomContactName();
     const email = randomEmail(name);
     const phone = randomPhone();
     const address = randomAddress();
 
-    const children = Math.random() > .33
+    const children = !withChildren || Math.random() > .33
         ? []
         : Array.from({
             length: Math.floor(Math.random() * 5)
@@ -70,12 +70,12 @@ export function generateRandomContact() {
  * @param {number} count 
  * @returns {Contact[]} An array of randomly generated contact objects.
  */
-export function generateRandomContacts(count) {
+export function generateRandomContacts(count, withChildren = true) {
     /** @type {Contact[]} */
     const contacts = [];
 
     for (let i = 0; i < count; i++) {
-        contacts.push(generateRandomContact());
+        contacts.push(generateRandomContact(withChildren));
     }
 
     return contacts;

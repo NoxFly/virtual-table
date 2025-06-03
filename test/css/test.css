@@ -9,14 +9,20 @@ html, body {
 body {
     margin: 0;
     background: #eee;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.test-container {
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100dvh;
+    width: 100dvw;
+    border-bottom: 1px solid #aaa;
 }
 
-#table-container {
+.virtual-table {
     width: 800px;
     height: 600px;
     /* border: 1px solid #aaa; */
@@ -24,68 +30,59 @@ body {
     overflow: auto;
 }
 
-.table {
-    position: relative;
-    width: max-content;
+#table-container {
+    width: 800px;
+    height: 600px;
 }
 
-.thead .tr {
+#table-container2 {
+    width: 1200px;
+    height: 400px;
+}
+
+#table-container .thead .tr {
     white-space: nowrap;
 }
 
-/* Si pas element table mais div */
-.th, .td {
-    display: inline-block;
+#table-container :where(.th, .td) {
     padding: 5px;
 }
 
-.tbody .tr {
-    width: 100%;
-    height: var(--row-height);
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: translate(var(--x, 0px), var(--y, 0px));
-    white-space: nowrap;
+#table-container .tbody .tr.selected {
+    background-color: #6da6ab;
+    color: #fff;
 }
 
-.tbody .tr.selected {
-    background-color: red;
-}
-
-.thead .th {
+#table-container .thead .th {
     border: 1px solid #666;
     height: 50px;
     background-color: #f0f0f0;
     padding: 5px;
 }
 
-.tbody .td {
-    border: 1px solid #333;
-    height: var(--row-height);
+#table-container .tbody .td {
     overflow: hidden;
-    background-color: var(--bg, transparent);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    padding-top: .1rem;
-    width: var(--width);
-    max-width: var(--width);
 }
 
-.tbody .tr .td:not(:last-child),
-.thead .tr .th:not(:last-child) {
+#table-container .tbody .tr .td:not(:last-child),
+#table-container .thead .tr .th:not(:last-child) {
     border-right: none;
 }
 
-.tbody .tr:not(.selected):hover .td {
+#table-container .tbody .tr:not(.selected):hover .td {
     background-color: #f0f0f0;
 }
 
-.tbody .tr .td:first-child .cell-value {
-    display: inline-block;
-    transform: translateX(calc(20px * var(--depth)));
+#table-container .dragging-hover .td {
+    background: color-mix(in srgb, #00838f, transparent 80%);
 }
 
+#table-container .btn-expand:hover .expand-icon {
+    border-color: #00838f;
+}
+
+
+/* Test 1 - Drag & Drop feature */
 
 .draggable-div {
     background: #00838f;
@@ -104,31 +101,14 @@ body {
     pointer-events: none;
 }
 
-.dragging-hover .td {
-    background: color-mix(in srgb, #00838f, transparent 80%);
+/* Test 2 */
+
+#table-container2 {
+    width: fit-content;
 }
 
-.btn-expand {
-    transform: translateX(calc(20px * var(--depth)));
-    position: relative;
-    background: none;
-    border: none;
-}
 
-.expand-icon {
-    display: inline-block;
-    height: 8px;
-    aspect-ratio: 1/1;
-    margin: 0 6px 0 5px;
-    border-bottom: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-    transform: translate(0, -30%) rotate(45deg);
-    cursor: pointer;
-}
-
-.expand-icon:hover {
-    border-color: #00838f;
-}
+/*  */
 
 @keyframes fadeIn {
     from {

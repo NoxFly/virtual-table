@@ -1,7 +1,7 @@
 const f = class f {
   constructor(t, e, s = {}) {
     this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.ROW_HEIGHT = 30, this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {
-    }, this.options = { ...f.DEFAULT_OPTIONS, ...s }, this.columns = e, this.virtualScroller = document.createElement("div"), this.virtualScroller.classList.add("virtual-scroller"), this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.appendChild(this.table), this.container.appendChild(this.virtualScroller), this.options.id && (this.table.id = this.options.id), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (l) => this.onScroll(l)), this.container.addEventListener("click", (l) => this.onClick(l)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+    }, this.options = { ...f.DEFAULT_OPTIONS, ...s }, this.columns = e, this.virtualScroller = document.createElement("div"), this.virtualScroller.classList.add("virtual-scroller"), this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.table), this.container.appendChild(this.virtualScroller), this.options.id && (this.table.id = this.options.id), this.options.stickyHeader && this.table.classList.add("sticky-header"), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (l) => this.onScroll(l)), this.container.addEventListener("click", (l) => this.onClick(l)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   /**
    * Retourne la position actuelle du scroll dans le conteneur.
@@ -86,7 +86,7 @@ const f = class f {
    * Appelé APRES avoir mis à jour this.flatten
    */
   updateViewBoxHeight() {
-    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.log(this.TOTAL_VISIBLE_ROWS), this.virtualScroller.style.height = this.totalVirtualHeight + "px";
+    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.log(this.TOTAL_VISIBLE_ROWS), this.virtualScroller.style.height = this.totalVirtualHeight + "px", this.table.style.height = this.totalVirtualHeight + "px";
   }
   updateRowsContent() {
     var t;
@@ -224,10 +224,10 @@ const f = class f {
         console.warn("No nearest selected index found.");
         return;
       }
-      const r = Math.min(h, d.index), p = Math.max(h, d.index), m = ((l = (s = this.rows[0]) == null ? void 0 : s.ref) == null ? void 0 : l.index) || -1, g = ((o = (i = this.rows[this.rows.length - 1]) == null ? void 0 : i.ref) == null ? void 0 : o.index) || -1;
+      const r = Math.min(h, d.index), p = Math.max(h, d.index), m = ((l = (s = this.rows[0]) == null ? void 0 : s.ref) == null ? void 0 : l.index) || -1, w = ((o = (i = this.rows[this.rows.length - 1]) == null ? void 0 : i.ref) == null ? void 0 : o.index) || -1;
       for (let n = r; n <= p; n++) {
         const c = this.flatten[n];
-        if (this.selectedNodes.add(c.index), n >= m && n <= g) {
+        if (this.selectedNodes.add(c.index), n >= m && n <= w) {
           const u = (a = this.rows[n - m]) == null ? void 0 : a.$;
           u == null || u.classList.add("selected");
         }
@@ -392,6 +392,8 @@ f.DEFAULT_OPTIONS = {
   id: "",
   columnSizeInPercentage: !1,
   defaultExpanded: !0,
+  // --
+  stickyHeader: !1,
   // -- allowed actions
   allowColumnSelection: !1,
   allowRowSelection: !1,
@@ -401,8 +403,8 @@ f.DEFAULT_OPTIONS = {
   allowColumnReorder: !1,
   allowRowReorder: !1
 };
-let w = f;
+let g = f;
 export {
-  w as VirtualTable
+  g as VirtualTable
 };
 //# sourceMappingURL=VirtualTable.js.map

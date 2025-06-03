@@ -12,12 +12,28 @@ import { VirtualTable, } from "../../src/VirtualTable.ts";
  */
 
 export default function test() {
+    generateTable1();
+    generateTable2();
+}
+
+
+function createTestContainer() {
+    const container = document.createElement('section');
+    container.classList.add('test-container');
+    document.body.appendChild(container);
+    return container;
+}
+
+
+function generateTable1() {
+    const container = createTestContainer();
+
     const data = generateRandomContacts(100000);
     console.log(data);
 
     const tableContainer = document.createElement('div');
     tableContainer.id = 'table-container';
-    document.body.appendChild(tableContainer);
+    container.appendChild(tableContainer);
 
 
     /* ------- */
@@ -58,6 +74,7 @@ export default function test() {
     const virtualTable = new VirtualTable(tableContainer, columnsDef, {
         columnSizeInPercentage: false,
         allowRowSelection: true,
+        stickyHeader: true,
     });
 
     virtualTable.setData(data);
@@ -82,7 +99,7 @@ export default function test() {
     draggableDiv.classList.add('draggable-div');
     draggableDiv.textContent = 'Drag me!';
     draggableDiv.setAttribute('draggable', 'true');
-    document.body.appendChild(draggableDiv);
+    container.appendChild(draggableDiv);
 
     const mouse = { x: 0, y: 0 };
     const grabPoint = { x: 0, y: 0 };
@@ -140,4 +157,38 @@ export default function test() {
         mouse.x = event.clientX;
         mouse.y = event.clientY;
     }
+}
+
+function generateTable2() {
+    const container = createTestContainer();
+
+    const data = generateRandomContacts(100, false);
+
+    const tableContainer = document.createElement('div');
+    tableContainer.id = 'table-container2';
+    container.appendChild(tableContainer);
+
+    /** @typedef {ColumnDef<Contact>[]} */
+    const columnsDef = [
+        {
+            field: 'id',
+            title: 'ID',
+            width: 150,
+            transform: (cell) => cell.rowIndex.toString(),
+        },
+        {
+            field: 'name',
+            title: 'Name',
+            width: 300,
+        },
+        {
+            field: 'email',
+            title: 'Email',
+            width: 300,
+        },
+    ];
+
+    const virtualTable = new VirtualTable(tableContainer, columnsDef);
+
+    virtualTable.setData(data);
 }

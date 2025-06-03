@@ -5,6 +5,8 @@ export class VirtualTable<T extends Type> {
         id: '',
         columnSizeInPercentage: false,
         defaultExpanded: true,
+        // --
+        stickyHeader: false,
         // -- allowed actions
         allowColumnSelection: false,
         allowRowSelection: false,
@@ -62,11 +64,17 @@ export class VirtualTable<T extends Type> {
 
         this.table.append(this.tableHead, this.tableBody);
 
+        this.container.classList.add('virtual-table');
+
         this.container.appendChild(this.table);
         this.container.appendChild(this.virtualScroller);
 
         if(this.options.id) {
             this.table.id = this.options.id;
+        }
+
+        if(this.options.stickyHeader) {
+            this.table.classList.add('sticky-header');
         }
 
         this.createColumns();
@@ -207,6 +215,7 @@ export class VirtualTable<T extends Type> {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
         console.log(this.TOTAL_VISIBLE_ROWS);
         this.virtualScroller.style.height = this.totalVirtualHeight + 'px';
+        this.table.style.height = this.totalVirtualHeight + 'px';
     }
 
     private updateRowsContent(): void {
