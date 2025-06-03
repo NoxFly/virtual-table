@@ -29,6 +29,7 @@ export default defineConfig({
             allow: [
                 resolve(__dirname, 'test'),
                 resolve(__dirname, 'dist'),
+                resolve(__dirname, 'src'),
             ]
         },
         watch: {

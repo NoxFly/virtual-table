@@ -1,5 +1,5 @@
 import { generateRandomContacts } from "./faker.js";
-import { VirtualTable } from "../../dist/VirtualTable.js";
+import { VirtualTable, } from "../../src/VirtualTable.ts";
 
 /**
  * @typedef {Object} Contact
@@ -56,7 +56,8 @@ export default function test() {
     /* ------- */
 
     const virtualTable = new VirtualTable(tableContainer, columnsDef, {
-        columnSizeInPercentage: false
+        columnSizeInPercentage: false,
+        allowRowSelection: true,
     });
 
     virtualTable.setData(data);

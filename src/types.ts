@@ -15,6 +15,7 @@ export interface TreeNode<T extends Type> {
 
 export interface FlatNode<T extends Type> {
     node: TreeNode<T>;
+    index: number; // Index dans la liste aplatie
 }
 
 export interface Position {
@@ -24,7 +25,7 @@ export interface Position {
 
 export interface TableRow<T extends Type> {
     $: HTMLElement; // Référence à la ligne html (dom)
-    node?: TreeNode<T>; // Contenu des cellules
+    ref?: FlatNode<T>; // Contenu des cellules
 
     previousElement?: TableRow<T>;
     nextElement?: TableRow<T>;
