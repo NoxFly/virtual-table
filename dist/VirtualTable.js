@@ -1,7 +1,7 @@
 const f = class f {
   constructor(t, e, s = {}) {
-    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.ROW_HEIGHT = 30, this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {
-    }, this.options = { ...f.DEFAULT_OPTIONS, ...s }, this.columns = e, this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.table), this.options.id && (this.table.id = this.options.id), this.options.stickyHeader && this.table.classList.add("sticky-header"), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (i) => this.onScroll(i)), this.container.addEventListener("click", (i) => this.onClick(i)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {
+    }, this.options = { ...f.DEFAULT_OPTIONS, ...s }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = e, this.table = document.createElement("div"), this.table.classList.add("table"), this.tableHead = document.createElement("div"), this.tableHead.classList.add("thead"), this.tableBody = document.createElement("div"), this.tableBody.classList.add("tbody"), this.table.append(this.tableHead, this.tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.table), this.options.id && (this.table.id = this.options.id), this.options.stickyHeader && this.table.classList.add("sticky-header"), this.createColumns(), this.computeViewbox(), this.container.addEventListener("scroll", (i) => this.onScroll(i)), this.container.addEventListener("click", (i) => this.onClick(i)), this.table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   /**
    * Retourne la position actuelle du scroll dans le conteneur.
@@ -86,7 +86,9 @@ const f = class f {
    * Appelé APRES avoir mis à jour this.flatten
    */
   updateViewBoxHeight() {
-    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS), this.totalVirtualHeight + this.tableHead.clientHeight - 1, this.table.style.height = this.totalVirtualHeight + "px";
+    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+    const t = this.totalVirtualHeight + this.tableHead.clientHeight - 1;
+    this.table.style.height = t + "px";
   }
   updateRowsContent() {
     var t;
@@ -390,6 +392,7 @@ const f = class f {
 };
 f.DEFAULT_OPTIONS = {
   id: "",
+  rowHeight: 30,
   columnSizeInPercentage: !1,
   defaultExpanded: !0,
   // --

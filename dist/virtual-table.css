@@ -44,7 +44,7 @@
     border-right: none;
 }
 
-.virtual-table .tbody .tr .td {
+.virtual-table .tbody .tr:not(:last-child) .td {
     border-bottom: none;
 }
 

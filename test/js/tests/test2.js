@@ -1,18 +1,12 @@
 import { VirtualTable, } from "../../../src/VirtualTable.ts";
-import { createTestContainer } from "../utils";
 import { generateRandomContacts } from "../faker.js";
+import { Test } from "../Test.js";
 
-export default function($container) {
-    const container = createTestContainer($container);
+export class Test2 extends Test {
+    static id = 2;
+    static description = "100 entries, no options, no children and no styling.";
 
-    const data = generateRandomContacts(100, false);
-
-    const tableContainer = document.createElement('div');
-    tableContainer.id = 'table-container2';
-    container.appendChild(tableContainer);
-
-    /** @typedef {ColumnDef<Contact>[]} */
-    const columnsDef = [
+    columnsDef = [
         {
             field: 'id',
             title: 'ID',
@@ -31,7 +25,14 @@ export default function($container) {
         },
     ];
 
-    const virtualTable = new VirtualTable(tableContainer, columnsDef);
+    constructor(parentElement) {
+        super(Test2.id, parentElement);
+    }
 
-    virtualTable.setData(data);
+    execute() {
+        const data = generateRandomContacts(100, false);
+
+        const virtualTable = new VirtualTable(this.table, this.columnsDef);
+        virtualTable.setData(data);
+    }
 }

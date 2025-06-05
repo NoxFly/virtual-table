@@ -3,6 +3,7 @@ import { /* Cell,  */Cell, ColumnDef, FlatNode, Position, TableRow, TreeNode, Ty
 export class VirtualTable<T extends Type> {
     protected static readonly DEFAULT_OPTIONS: VirtualTableOptions = {
         id: '',
+        rowHeight: 30,
         columnSizeInPercentage: false,
         defaultExpanded: true,
         // --
@@ -29,7 +30,7 @@ export class VirtualTable<T extends Type> {
     private tree: TreeNode<T>[] = []; // a tree of data that has not 1 root but a list of roots
     private flatten: FlatNode<T>[] = []; // a flat list coming from data, preorder traversal, with invisible elements removed
 
-    private readonly ROW_HEIGHT = 30;
+    private readonly ROW_HEIGHT: number;
     private VISIBLE_ROWS_COUNT = 0;
 
     private TOTAL_VISIBLE_ROWS = 0;
@@ -46,6 +47,8 @@ export class VirtualTable<T extends Type> {
 
     constructor(private readonly container: HTMLElement, columnsDef: ColumnDef<T>[], options: Partial<VirtualTableOptions> = {}) {
         this.options = { ...VirtualTable.DEFAULT_OPTIONS, ...options };
+
+        this.ROW_HEIGHT = this.options.rowHeight;
 
         this.columns = columnsDef;
 
@@ -211,7 +214,7 @@ export class VirtualTable<T extends Type> {
         console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
         
         const totalHeight = this.totalVirtualHeight + this.tableHead.clientHeight - 1;
-        this.table.style.height = this.totalVirtualHeight + 'px';
+        this.table.style.height = totalHeight + 'px';
     }
 
     private updateRowsContent(): void {

@@ -1,12 +1,46 @@
-/**
- * @typedef {Object} Contact
- * @property {number} id - Unique identifier for the contact.
- * @property {string} name - Name of the contact.
- * @property {string} email - Email address of the contact.
- * @property {string} phone - Phone number of the contact.
- * @property {string} address - Address of the contact.
- * @property {Contact[]} children - Array of child contacts.
- */
+import { VirtualTable } from "../../src/VirtualTable.ts";
 
-export { default as test1 } from './tests/test1.js';
-export { default as test2 } from './tests/test2.js';
+export class Test {
+    /** @type {'light'|'dark'} */
+    theme = 'light';
+
+    /** @type {HTMLElement} */
+    container;
+
+    /** @type {HTMLElement} */
+    table;
+
+    /** @type {object[]} */
+    data;
+
+    /** @type {import("../../src/types.ts").ColumnDef[]} */
+    columns;
+
+    /** @type {VirtualTable} */
+    virtualTable;
+
+    constructor(id, $parentElement) {
+        this.createTestContainer(id, $parentElement);
+    }
+
+    execute() {
+        throw new Error("Method 'execute' must be implemented.");
+    }
+
+    /**
+     * 
+     * @param {number} id
+     * @param {HTMLElement} parentElement 
+     * @returns {HTMLElement}
+     */
+    createTestContainer(id, parentElement) {
+        console.log(this);
+        this.container = document.createElement('section');
+        this.container.classList.add('test-container');
+        parentElement.appendChild(this.container);
+        
+        this.table = document.createElement('div');
+        this.table.id = 'table-container-' + id;
+        this.container.appendChild(this.table);
+    }
+}

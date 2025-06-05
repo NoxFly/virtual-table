@@ -53,6 +53,7 @@ export interface ColumnDef<T extends Type> {
 
 export interface VirtualTableOptions {
     id: string;
+    rowHeight: number;
     defaultExpanded: boolean;
     columnSizeInPercentage: boolean;
     // --

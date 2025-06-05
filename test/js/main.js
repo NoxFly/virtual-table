@@ -1,4 +1,4 @@
-import * as tests from './test.js';
+import tests from './tests.js';
 
 /* ----- */
 
@@ -10,11 +10,12 @@ let testCount = 0;
 function main(queries, testId) {
     layout = createLayout();
 
-    generateTest(tests.test1, "100 000 entries for first level, children, drag & drop, basic styling, some options.");
-    generateTest(tests.test2, "100 entries, no options, no children and no styling.");
+    for(const test of tests) {
+        generateTest(test);
+    }
 
     if(testId > 0) {
-        executeTest(tests[`test${testId}`]);
+        executeTest(testId);
     }
 }
 
@@ -33,9 +34,9 @@ function createLayout() {
 /**
  * Generates a test case.
  * @param {string} name 
- * @param {Function} fn 
+ * @param {any} test 
  */
-function generateTest(fn, description="") {
+function generateTest(test) {
     const testContainer = document.createElement('div');
     testContainer.classList.add('test-case');
 
@@ -43,11 +44,11 @@ function generateTest(fn, description="") {
     testContainer.appendChild(div);
     
     const testName = document.createElement('h2');
-    testName.textContent = `Test ${++testCount}`;
+    testName.textContent = `Test ${test.id}`;
     div.appendChild(testName);
 
     const testDescription = document.createElement('p');
-    testDescription.textContent = description;
+    testDescription.textContent = test.description;
     div.appendChild(testDescription);
 
     const testButton = document.createElement('button');
@@ -55,22 +56,32 @@ function generateTest(fn, description="") {
     testButton.textContent = 'Run';
     testContainer.appendChild(testButton);
 
-    testContainer.addEventListener('click', executeTest.bind(null, fn));
+    testContainer.addEventListener('click', executeTest.bind(null, test.id));
 
     layout.$testsListContainer.appendChild(testContainer);
 }
 
-function executeTest(fn) {
-    if(!fn) {
+function executeTest(testId) {
+    if(isNaN(testId) || testId < 1 || testId > tests.length) {
         console.error("No test function provided.");
         return;
     }
 
+    const test = tests.find(t => t.id === testId);
+
+    // change the url #n where n is the test number
+    const url = new URL(window.location.href);
+    url.hash = `#${test.id}`;
+    window.history.pushState({}, '', url);
+
     layout.$testContainer.innerHTML = '<p class="loading-msg">loading...</p>';
 
+    
     setTimeout(() => {
         layout.$testContainer.innerHTML = '';
-        fn(layout.$testContainer);
+        const testInstance = new test(layout.$testContainer);
+        document.documentElement.classList.toggle('dark-theme', testInstance.theme === 'dark');
+        testInstance.execute();
     }, 50);
 }
 

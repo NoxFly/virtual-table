@@ -5,6 +5,10 @@
  * @property {string} email - Email address of the contact.
  * @property {string} phone - Phone number of the contact.
  * @property {string} address - Address of the contact.
+ * @property {string} company - Company name of the contact.
+ * @property {string} jobTitle - Job title of the contact.
+ * @property {string} birthday - Birthday of the contact in ISO format.
+ * @property {string} website - Website URL of the contact.
  * @property {Contact[]} children - Array of child contacts.
  */
 
@@ -39,6 +43,36 @@ function randomAddress() {
     return `${Math.floor(Math.random() * 1000)} ${streets[Math.floor(Math.random() * streets.length)]}, ${cities[Math.floor(Math.random() * cities.length)]}`;
 }
 
+function randomCompany() {
+    const companies = [
+        "Tech Solutions", "Innovatech", "Global Corp", "Future Enterprises",
+        "Creative Minds", "Synergy Systems", "Visionary Ventures", "Dynamic Dynamics",
+        "NextGen Technologies", "Pioneering Partners"
+    ];
+    return companies[Math.floor(Math.random() * companies.length)];
+}
+
+function randomJobTitle() {
+    const jobTitles = [
+        "Software Engineer", "Product Manager", "Data Scientist", "UX Designer",
+        "Marketing Specialist", "Sales Executive", "Project Coordinator", "Business Analyst",
+        "Customer Support Representative", "HR Manager"
+    ];
+    return jobTitles[Math.floor(Math.random() * jobTitles.length)];
+}
+
+function randomBirthday() {
+    const year = Math.floor(Math.random() * 50) + 1970; // Random year between 1970 and 2020
+    const month = Math.floor(Math.random() * 12) + 1; // Random month between 1 and 12
+    const day = Math.floor(Math.random() * 28) + 1; // Random day between 1 and 28 (to avoid month-end issues)
+    return new Date(year, month - 1, day).toISOString().split('T')[0]; // Return in YYYY-MM-DD format
+}
+
+function randomWebsite() {
+    const domains = ["example.com", "test.com", "demo.com", "sample.com"];
+    return `https://${domains[Math.floor(Math.random() * domains.length)]}`;
+}
+
 /**
  * 
  * @returns {Contact} A randomly generated contact object.
@@ -48,6 +82,10 @@ export function generateRandomContact(withChildren = true) {
     const email = randomEmail(name);
     const phone = randomPhone();
     const address = randomAddress();
+    const company = randomCompany();
+    const jobTitle = randomJobTitle();
+    const birthday = randomBirthday();
+    const website = randomWebsite();
 
     const children = !withChildren || Math.random() > .33
         ? []
@@ -62,6 +100,10 @@ export function generateRandomContact(withChildren = true) {
         phone,
         address,
         children,
+        company,
+        jobTitle,
+        birthday,
+        website,
     };
 }
 
