@@ -24,7 +24,9 @@ const f = class f {
     t.classList.add("tr");
     for (const e of this.columns) {
       const s = document.createElement("div");
-      s.classList.add("th"), s.style.width = e.width + this.columnUnits, s.textContent = e.title, t.appendChild(s);
+      s.classList.add("th"), s.style.width = e.width + this.columnUnits;
+      const i = document.createElement("span");
+      i.classList.add("cell-value"), i.textContent = e.title, s.appendChild(i), t.appendChild(s);
     }
     this.tableHead.appendChild(t);
   }
@@ -180,14 +182,15 @@ const f = class f {
   updateScroll() {
     if (this.rows.length === 0)
       return;
-    const t = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1), e = t + this.ROW_HEIGHT;
-    if (this.scrollTop >= t && this.scrollTop <= e)
-      return;
-    const s = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
-    if (!(s + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length)) {
+    const t = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), e = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1), s = e + this.ROW_HEIGHT;
+    if (!(this.scrollTop >= e && this.scrollTop <= s)) {
+      if (t + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+        console.warn("no");
+        return;
+      }
       for (let i = 0; i < this.rows.length; i++) {
         const l = this.rows[i];
-        this.setRowPosition(l, { top: s + i, left: l.x });
+        this.setRowPosition(l, { top: t + i, left: l.x });
       }
       this.updateRowsContent();
     }
@@ -200,8 +203,12 @@ const f = class f {
     this.updateScroll();
   }
   onClick(t) {
-    const e = t.target, s = e.closest(".tr"), i = this.getNodeFromRow(s);
-    console.log(i, e), this.cancelCellEdition(), !t.shiftKey && !t.ctrlKey && this.resetSelections(), i && this.onRowClick(t, i, e);
+    !t.shiftKey && !t.ctrlKey && this.resetSelections(), this.cancelCellEdition();
+    const e = t.target;
+    if (!e.closest(".th")) {
+      const s = e.closest(".tr"), i = this.getNodeFromRow(s);
+      i && this.onRowClick(t, i, e);
+    }
   }
   onRowClick(t, e, s) {
     if (s.closest(".btn-expand")) {
@@ -210,9 +217,8 @@ const f = class f {
     }
     if (s.closest(".td")) {
       const i = s.closest(".td");
-      this.options.allowCellEditing && this.editCell(e, i), this.options.allowCellSelection;
+      this.options.allowCellEditing && this.editCell(e, i), this.options.allowCellSelection, this.options.allowRowSelection && this.selectRow(t, e);
     }
-    this.options.allowRowSelection && this.selectRow(t, e);
   }
   selectRow(t, e) {
     var s, i, l, o, a;
@@ -353,7 +359,7 @@ const f = class f {
    * Recalcule tout, excepté les colonnes.
    */
   setData(t) {
-    this.data = t, this.tree = this.data.map((e) => this.dataToTreeNode(e, 0)), this.computeInViewVisibleRows(), this.resetTableRows(), this.updateScroll();
+    this.data = t, this.tree = this.data.map((e) => this.dataToTreeNode(e, 0)), this.computeInViewVisibleRows(), this.resetTableRows(), this.updateRowsContent();
   }
   /* --- ADDITIONAL FEATURES --- */
   allowColumnResizing(t) {

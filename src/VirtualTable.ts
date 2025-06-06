@@ -112,7 +112,12 @@ export class VirtualTable<T extends Type> {
             const $th = document.createElement('div');
             $th.classList.add('th');
             $th.style.width = columnDef.width + this.columnUnits;
-            $th.textContent = columnDef.title;
+
+            const $span = document.createElement('span');
+            $span.classList.add('cell-value');
+            $span.textContent = columnDef.title;
+
+            $th.appendChild($span);
             $tr.appendChild($th);
         }
 
@@ -380,16 +385,16 @@ export class VirtualTable<T extends Type> {
             return;
         }
 
+        const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
         const topMin = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1);
         const topMax = topMin + this.ROW_HEIGHT;
 
         if(this.scrollTop >= topMin && this.scrollTop <= topMax) {
             return;
         }
-
-        const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
-
+        
         if(scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+            console.warn('no');
             return;
         }
 
@@ -410,21 +415,26 @@ export class VirtualTable<T extends Type> {
     }
 
     private onClick(e: MouseEvent): void {
-        const $target = e.target as HTMLElement;
-        const $closestRow = $target.closest('.tr') as HTMLElement;
-
-        const closestRow = this.getNodeFromRow($closestRow);
-
-        console.log(closestRow, $target);
-
-        this.cancelCellEdition();
-
         if(!e.shiftKey && !e.ctrlKey) {
             this.resetSelections();
         }
 
-        if(closestRow) {
-            this.onRowClick(e, closestRow, $target);
+        this.cancelCellEdition();
+
+        const $target = e.target as HTMLElement;
+
+        if($target.closest('.th')) {
+            
+        }
+        // body
+        else {
+            const $closestRow = $target.closest('.tr') as HTMLElement;
+
+            const closestRow = this.getNodeFromRow($closestRow);
+
+            if(closestRow) {
+                this.onRowClick(e, closestRow, $target);
+            }
         }
     }
 
@@ -444,10 +454,10 @@ export class VirtualTable<T extends Type> {
             if(this.options.allowCellSelection) {
                 // this.selectCell(row, $cell);
             }
-        }
 
-        if(this.options.allowRowSelection) {
-            this.selectRow(e, row);
+            if(this.options.allowRowSelection) {
+                this.selectRow(e, row);
+            }
         }
     }
 
@@ -698,7 +708,7 @@ export class VirtualTable<T extends Type> {
 
         this.computeInViewVisibleRows();
         this.resetTableRows();
-        this.updateScroll();
+        this.updateRowsContent();
     }
 
 

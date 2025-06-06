@@ -4,7 +4,7 @@ import { Test } from "../Test.js";
 
 export class Test3 extends Test {
     static id = 3;
-    static description = "10 entries, styling, large row.";
+    static description = "6 entries, dark theme, large row, percentage column width.";
 
     theme = 'dark';
 
@@ -12,27 +12,27 @@ export class Test3 extends Test {
         {
             field: 'name',
             title: 'Name',
-            width: 150,
+            width: 18,
         },
         {
             field: 'email',
             title: 'Email',
-            width: 200,
+            width: 24,
         },
         {
             field: 'phone',
             title: 'Phone',
-            width: 150,
+            width: 18,
         },
         {
             field: 'address',
             title: 'Address',
-            width: 200,
+            width: 23,
         },
         {
             field: 'company',
             title: 'Company',
-            width: 150,
+            width: 17,
         },
     ];
 
@@ -41,12 +41,13 @@ export class Test3 extends Test {
     }
 
     execute() {
-        const data = generateRandomContacts(10, false);
+        const data = generateRandomContacts(6, false);
         console.log(data);
 
         const virtualTable = new VirtualTable(this.table, this.columnsDef, {
             rowHeight: 60,
             stickyHeader: true,
+            columnSizeInPercentage: true,
         });
 
         virtualTable.setData(data);

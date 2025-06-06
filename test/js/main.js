@@ -76,7 +76,6 @@ function executeTest(testId) {
 
     layout.$testContainer.innerHTML = '<p class="loading-msg">loading...</p>';
 
-    
     setTimeout(() => {
         layout.$testContainer.innerHTML = '';
         const testInstance = new test(layout.$testContainer);
