@@ -30,9 +30,9 @@ export class Test2 extends Test {
     }
 
     execute() {
-        const data = generateRandomContacts(100, false);
+        this.data = generateRandomContacts(100, false);
 
         const virtualTable = new VirtualTable(this.table, this.columnsDef);
-        virtualTable.setData(data);
+        virtualTable.setData(this.data);
     }
 }

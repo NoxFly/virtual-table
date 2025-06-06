@@ -7,6 +7,8 @@ export class Test1 extends Test {
     static id = 1;
     static description = "100 000 entries for first level, children, drag & drop, basic styling, some options.";
 
+    // theme = 'dark';
+
     columnsDef = [
         {
             field: 'id',
@@ -64,8 +66,8 @@ export class Test1 extends Test {
     }
 
     execute() {
-        const data = generateRandomContacts(100000);
-        console.log(data);
+        this.data = generateRandomContacts(100000);
+        console.log(this.data);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             columnSizeInPercentage: false,
@@ -73,17 +75,62 @@ export class Test1 extends Test {
             stickyHeader: true,
         });
 
-        this.virtualTable.setData(data);
+        this.virtualTable.setData(this.data);
         this.virtualTable.makeDroppable();
 
         /** @typedef {(any, TableRow<Contact>) => void} */
         this.virtualTable.onDrop = this.onDrop.bind(this);
+
+        this.generateFilterbar();
 
         // setTimeout(() => {
         //     virtualTable.scrollTo(98000);
         // }, 1000);
 
         this.createDraggableElement();
+    }
+
+    generateFilterbar() {
+        const filterbar = document.createElement('div');
+        filterbar.classList.add('filterbar');
+        this.container.insertBefore(filterbar, this.container.firstChild);
+
+        const filterInput = document.createElement('input');
+        filterInput.classList.add('filter-input');
+        filterInput.type = 'text';
+        filterInput.placeholder = 'Search...';
+        filterbar.appendChild(filterInput);
+
+        filterInput.addEventListener('input', this.onFilterInput.bind(this));
+
+        const filterFieldSelect = document.createElement('select');
+        filterFieldSelect.classList.add('filter-field-select');
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'By Field';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+        filterFieldSelect.appendChild(defaultOption);
+
+        const fields = Object.keys(this.data[0] || {});
+
+        fields.forEach(field => {
+            const option = document.createElement('option');
+            option.value = field;
+            option.textContent = field.charAt(0).toUpperCase() + field.slice(1);
+            filterFieldSelect.appendChild(option);
+        });
+
+        filterbar.appendChild(filterFieldSelect);
+
+        filterFieldSelect.addEventListener('change', this.onFilterFieldChange.bind(this));
+    }
+
+    onFilterInput(event) {
+    }
+
+    onFilterFieldChange(event) {
     }
 
     createDraggableElement() {

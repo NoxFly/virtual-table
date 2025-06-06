@@ -7,12 +7,24 @@
   "author": {
     "name": "NoxFly"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NoxFly/virtual-table"
+  },
+  "keywords": [
+    "virtual-table",
+    "virtual-scrolling"
+  ],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"vite\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts && tsc --noEmit",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.1.0",

@@ -3,6 +3,7 @@
 }
 
 :root {
+    --background-tint: #fff;
     --background-color: #eee;
     --sidebar-background-color: #ccc;
     --text-color: #222;
@@ -12,6 +13,7 @@
 }
 
 html.dark-theme {
+    --background-tint: #2a2a2a;
     --background-color: #121212;
     --sidebar-background-color: #000;
     --text-color: #fff;
@@ -123,7 +125,7 @@ body {
 
 .test-container {
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: column nowrap;
     justify-content: center;
     align-items: center;
     height: 100%;
@@ -133,8 +135,50 @@ body {
 
 /* Test 1 */
 
+.filterbar {
+    /* background: rgba(127, 127, 127, 0.1); */
+    padding: 3px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: stretch;
+    align-items: center;
+    gap: 10px;
+    border-radius: 5px;
+    width: clamp(300px, 50%, 800px);
+    height: 40px;
+}
+
+.filterbar .filter-input {
+    width: 250px;
+    height: 100%;
+    padding: 5px;
+    border: 0px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--background-tint);
+    color: var(--text-color);
+    transition: border-color .1s linear;
+    box-shadow: 0 2px 1px rgba(0, 0, 0, 0.1);
+}
+
+.filterbar .filter-field-select {
+    width: 100px;
+    height: 100%;
+    padding: 5px;
+    border: 0px solid var(--border-color);
+    border-radius: 5px;
+    background: var(--background-tint);
+    color: var(--text-color);
+    transition: border-color .1s linear;
+    box-shadow: 0 2px 1px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.filterbar .filter-field-select:hover {
+    background: #fafafa;
+}
+
 #table-container-1 {
-    width: 800px;
+    width: min(95%, 800px);
     height: 600px;
     /* border: 1px solid #aaa; */
     background: #fff;
@@ -155,15 +199,26 @@ body {
 }
 
 #table-container-1 .thead .th {
-    border-color: rgba(0, 0, 0, 0.2);
+    border-color: transparent;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
     height: 50px;
     background-color: #ddd;
     padding: 5px;
     user-select: none;
 }
 
+#table-container-1 .thead .th:hover {
+    background-color: #c0c0c0;
+}
+
+#table-container-1 .thead .th .cell-value {
+    height: 100%;
+    display: inline-block;
+    line-height: 4;
+}
+
 #table-container-1 .tbody .td {
-    border-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.1);
 }
 
 #table-container-1 .tbody .tr:not(.selected):hover .td {
@@ -220,7 +275,7 @@ body {
 
 #table-container-3 {
     --border-radius: 6px;
-    width: 850px;
+    width: min(95%, 850px);
     height: 460px;
     border-radius: var(--border-radius);
 }

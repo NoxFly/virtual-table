@@ -41,8 +41,8 @@ export class Test3 extends Test {
     }
 
     execute() {
-        const data = generateRandomContacts(6, false);
-        console.log(data);
+        this.data = generateRandomContacts(6, false);
+        console.log(this.data);
 
         const virtualTable = new VirtualTable(this.table, this.columnsDef, {
             rowHeight: 60,
@@ -50,6 +50,6 @@ export class Test3 extends Test {
             columnSizeInPercentage: true,
         });
 
-        virtualTable.setData(data);
+        virtualTable.setData(this.data);
     }
 }
