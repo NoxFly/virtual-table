@@ -224,7 +224,7 @@ export class VirtualTable<T extends Type> {
      */
     private updateViewBoxHeight(): void {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
-        console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+        console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
         
         const totalHeight = this.totalVirtualHeight + this.tableHead.clientHeight - 1;
         this.table.style.height = totalHeight + 'px';
@@ -402,7 +402,6 @@ export class VirtualTable<T extends Type> {
         }
         
         if(scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
-            console.warn('no');
             return;
         }
 
@@ -487,7 +486,6 @@ export class VirtualTable<T extends Type> {
             }, -1);
 
             if(nearestSelectedIndex === -1) {
-                console.warn('No nearest selected index found.');
                 return;
             }
 

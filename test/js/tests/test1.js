@@ -7,14 +7,17 @@ export class Test1 extends Test {
     static id = 1;
     static description = "100 000 entries for first level, children, drag & drop, basic styling, some options.";
 
-    // theme = 'dark';
-
     columnsDef = [
         {
             field: 'id',
             title: 'ID',
             width: 150,
             transform: (cell) => cell.rowIndex.toString(),
+        },
+        {
+            title: '',
+            transform: (cell) => this.createTooltipButton(cell),
+            width: 50,
         },
         {
             field: 'name',
@@ -200,5 +203,18 @@ export class Test1 extends Test {
     onDragOver(event) {
         this.mouse.x = event.clientX;
         this.mouse.y = event.clientY;
+    }
+
+    /**
+     * 
+     * @param {*} cell 
+     * @returns {HTMLButtonElement}
+     */
+    createTooltipButton(cell) {
+        return `<button class="btn-tooltip" onclick="alert('Row: ' + ${cell.rowIndex})" title="Row: ${cell.rowIndex}">`
+                + `<span></span>`
+                + `<span></span>`
+                + `<span></span>`
+            + `</button>`;
     }
 }

@@ -95,7 +95,7 @@ const f = class f {
    * Appelé APRES avoir mis à jour this.flatten
    */
   updateViewBoxHeight() {
-    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.info("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
     const t = this.totalVirtualHeight + this.tableHead.clientHeight - 1;
     this.table.style.height = t + "px";
   }
@@ -190,11 +190,7 @@ const f = class f {
     if (this.rows.length === 0)
       return;
     const t = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), e = this.tbodyStartY + this.mostTopRow.y * (this.ROW_HEIGHT - 1), s = e + this.ROW_HEIGHT;
-    if (!(this.scrollTop >= e && this.scrollTop <= s)) {
-      if (t + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
-        console.warn("no");
-        return;
-      }
+    if (!(this.scrollTop >= e && this.scrollTop <= s) && !(t + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length)) {
       for (let i = 0; i < this.rows.length; i++) {
         const l = this.rows[i];
         this.setRowPosition(l, { top: t + i, left: l.x });
@@ -235,10 +231,8 @@ const f = class f {
     }
     if (t.shiftKey) {
       const d = e.ref, h = Array.from(this.selectedNodes).reduce((n, r) => Math.abs(r - d.index) < Math.abs(n - d.index) ? r : n, -1);
-      if (h === -1) {
-        console.warn("No nearest selected index found.");
+      if (h === -1)
         return;
-      }
       const c = Math.min(h, d.index), p = Math.max(h, d.index), m = ((i = (s = this.rows[0]) == null ? void 0 : s.ref) == null ? void 0 : i.index) || -1, g = ((o = (l = this.rows[this.rows.length - 1]) == null ? void 0 : l.ref) == null ? void 0 : o.index) || -1;
       for (let n = c; n <= p; n++) {
         const r = this.flatten[n];
