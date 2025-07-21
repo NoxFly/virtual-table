@@ -1,3 +1,10 @@
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ * 
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
 const f = class f {
   constructor(t, e, s = {}) {
     this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.tbodyStartY = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.lastHighlightedRow = null, this.onDrop = () => {

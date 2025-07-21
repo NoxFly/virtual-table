@@ -1,3 +1,11 @@
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ * 
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
+
 export type Any = string | number | boolean | null | undefined | object;
 
 export type Type = {
