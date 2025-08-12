@@ -29,11 +29,11 @@ export class VirtualTable<T extends Type> {
 
     private readonly columns: ColumnDef<T>[] = [];
     /** Les lignes de la vue, leur position et la référence vers leur données à afficher */
-    private rows: TableRow<T>[] = [];
+    private readonly rows: TableRow<T>[] = [];
     /** Un arbre multi-root de noeuds ayant des données fournies par `setData` */
     private tree: TreeNode<T>[] = [];
     /** Une liste plate des données filtrées provenant d'un arbre, préservant l'ordre des éléments */
-    private flatten: TreeNode<T>[] = [];
+    private readonly flatten: TreeNode<T>[] = [];
     /** Un hashmap sur les nodes de l'arbre afin d'accéder à n'importe quel noeud en O(1) à partir de son ID */
     private readonly nodeMap: Map<string, TreeNode<T>> = new Map<string, TreeNode<T>>();
 
@@ -208,7 +208,7 @@ export class VirtualTable<T extends Type> {
 
         const t1 = performance.now();
 
-        this.flatten = [];
+        this.flatten.length = 0;
 
         let i = 0;
 
@@ -236,12 +236,12 @@ export class VirtualTable<T extends Type> {
 
         const t3 = performance.now();
 
-        // console.table([
-        //     { step: 'reset tree indexes', time: t1 - t0 },
-        //     { step: 'flatten tree', time: t2 - t1 },
-        //     { step: 'compute viewbox', time: t3 - t2 },
-        //     { step: 'total', time: t3 - t0 },
-        // ]);
+        console.table([
+            { step: 'reset tree indexes', time: t1 - t0 },
+            { step: 'flatten tree', time: t2 - t1 },
+            { step: 'compute viewbox', time: t3 - t2 },
+            { step: 'total', time: t3 - t0 },
+        ]);
     }
 
     /**
@@ -376,7 +376,7 @@ export class VirtualTable<T extends Type> {
             row.$.remove();
         }
 
-        this.rows = [];
+        this.rows.length = 0;
 
         const max = Math.min(this.flatten.length, this.VISIBLE_ROWS_COUNT);
 
@@ -953,6 +953,20 @@ export class VirtualTable<T extends Type> {
         }
 
         this.recomputeDataTree(data);
+
+        this.DOM_computeInViewVisibleRows();
+    }
+
+    /**
+     * 
+     */
+    public clear(): void {
+        this.tree.length = 0;
+        this.flatten.length = 0;
+        this.rows.length = 0;
+        this.nodeMap.clear();
+
+        this.$tableBody.innerHTML = '';
 
         this.DOM_computeInViewVisibleRows();
     }

@@ -123,8 +123,8 @@ export class Test1 extends Test {
         buttonsContainer.appendChild(deleteAllButton);
 
         deleteAllButton.addEventListener('click', () => {
-            this.data = [];
-            this.virtualTable.setData(this.data);
+            this.data.length = 0;
+            this.virtualTable.clear();
         });
     }
 
