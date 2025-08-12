@@ -6,5 +6,6 @@
  * Exports the main VirtualTable component and related type definitions.
  */
 
+export * from "./EventManager";
 export * from "./VirtualTable";
 export * from "./types";

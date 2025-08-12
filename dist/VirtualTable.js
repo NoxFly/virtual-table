@@ -5,13 +5,51 @@
  * Entry point for the virtualization module.
  * Exports the main VirtualTable component and related type definitions.
  */
+class g {
+  constructor() {
+    this.listeners = /* @__PURE__ */ new Map();
+  }
+  /**
+   * Ajoute un écouteur en liant `this` une seule fois.
+   * Retourne le symbol à utiliser pour le remove.
+   */
+  listenTo(t, s, e, i) {
+    const o = Symbol.for(e.name);
+    console.log(this);
+    const l = e.bind(this);
+    return this.listeners.set(o, l), t.addEventListener(s, l, i), o;
+  }
+  /**
+   * Supprime un écouteur à partir de son symbol.
+   */
+  stopListenTo(t, s, e, i) {
+    typeof e == "function" && (e = Symbol.for(e.name));
+    const o = this.listeners.get(e);
+    o && (t.removeEventListener(s, o, i), this.listeners.delete(e));
+  }
+  /**
+   * Supprime tous les écouteurs gérés par cette instance.
+   */
+  removeAllListeners(t, s) {
+    for (const [e, i] of this.listeners)
+      s ? t.removeEventListener(s, i) : console.warn("Impossible de removeAll sans type stocké, il faut étendre la structure.");
+    this.listeners.clear();
+  }
+}
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ * 
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
 const c = class c {
   /**
    * 
    */
   constructor(t, s, e = {}) {
     this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.lastScrollTopIndex = -1, this.onDrop = () => {
-    }, this.options = { ...c.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s, this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i)), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i)), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+    }, this.options = { ...c.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s, this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i), { passive: !0 }), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i), { passive: !0 }), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   getNodes() {
     return this.tree;
@@ -564,9 +602,7 @@ const c = class c {
     }, { capture: !0 }), this.container.addEventListener("drop", (t) => {
       var l, a;
       t.preventDefault();
-      const e = t.target.closest(".tr");
-      console.log(t);
-      const i = (l = t.dataTransfer) == null ? void 0 : l.getData("text/plain");
+      const e = t.target.closest(".tr"), i = (l = t.dataTransfer) == null ? void 0 : l.getData("text/plain");
       (a = this.$lastHighlightedRow) == null || a.classList.remove("dragging-hover"), this.$lastHighlightedRow = null;
       const o = this.rows.find((n) => n.$ === e);
       this.onDrop(i, o);
@@ -591,6 +627,7 @@ c.DEFAULT_OPTIONS = {
 };
 let u = c;
 export {
+  g as EventManager,
   u as VirtualTable
 };
 //# sourceMappingURL=VirtualTable.js.map

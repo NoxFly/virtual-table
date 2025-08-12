@@ -1,6 +1,7 @@
 import { VirtualTable } from "../../src/VirtualTable.ts";
+import { EventManager } from "../../src/EventManager.ts";
 
-export class Test {
+export class Test extends EventManager {
     /** @type {'light'|'dark'} */
     theme = 'light';
 
@@ -20,6 +21,7 @@ export class Test {
     virtualTable;
 
     constructor(id, $parentElement) {
+        super();
         this.createTestContainer(id, $parentElement);
     }
 

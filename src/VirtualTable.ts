@@ -100,8 +100,8 @@ export class VirtualTable<T extends Type> {
         this.DOM_createColumns();
         this.DOM_computeViewbox();
 
-        this.container.addEventListener('scroll', (e) => this.DOM_EVENT_onScroll(e));
-        this.container.addEventListener('click', (e) => this.DOM_EVENT_onClick(e));
+        this.container.addEventListener('scroll', (e) => this.DOM_EVENT_onScroll(e), { passive: true });
+        this.container.addEventListener('click', (e) => this.DOM_EVENT_onClick(e), { passive: true });
 
         this.$table.style.setProperty('--row-height', this.ROW_HEIGHT + 'px');
     }
@@ -1191,8 +1191,6 @@ export class VirtualTable<T extends Type> {
             const target = event.target as HTMLElement;
             const closestRow = target.closest('.tr');
 
-            console.log(event);
-            
             const data = event.dataTransfer?.getData('text/plain');
 
             this.$lastHighlightedRow?.classList.remove('dragging-hover');

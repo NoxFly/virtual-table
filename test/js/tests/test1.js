@@ -99,10 +99,10 @@ export class Test1 extends Test {
 
         this.generateFilterbar();
 
-        this.createDraggableElement('Delete', this.onDeleteActionDrop.bind(this), 'action-delete');
-        this.createDraggableElement('Insert next to it', this.onInsertBelowActionDrop.bind(this), 'action-insert-below');
-        this.createDraggableElement('Insert children', this.onInsertChildrenActionDrop.bind(this), 'action-insert-children');
-        this.createDraggableElement('Update', this.onUpdateActionDrop.bind(this), 'action-update');
+        this.createDraggableElement('Delete', this.onDeleteActionDrop, 'action-delete');
+        this.createDraggableElement('Insert next to it', this.onInsertBelowActionDrop, 'action-insert-below');
+        this.createDraggableElement('Insert children', this.onInsertChildrenActionDrop, 'action-insert-children');
+        this.createDraggableElement('Update', this.onUpdateActionDrop, 'action-update');
 
         this.createButtonsContainer();
     }
@@ -203,7 +203,6 @@ export class Test1 extends Test {
         draggableDiv.textContent = caption;
         draggableDiv.setAttribute('draggable', 'true');
 
-
         let draggableDivContainer = document.querySelector('.draggable-container');
         
         if (!draggableDivContainer) {
@@ -227,7 +226,7 @@ export class Test1 extends Test {
 
         const action = this.dropActionMap.get(Symbol.for(data));
 
-        action?.(data, row);
+        action?.call(this, data, row);
     }
 
     /**
@@ -236,10 +235,14 @@ export class Test1 extends Test {
      * @param {string} actionId
      */
     onDragStart(event, actionId) {
-        const clone = event.target.cloneNode(true);
-        clone.id = 'clone';
+        /** @type {HTMLElement} */
+        const target = event.target;
 
-        const bounds = event.target.getBoundingClientRect();
+        const clone = target.cloneNode(true);
+        clone.id = 'clone';
+        clone.removeAttribute('draggable');
+
+        const bounds = target.getBoundingClientRect();
 
         this.grabPoint.x = event.clientX - bounds.left;
         this.grabPoint.y = event.clientY - bounds.top;
@@ -248,9 +251,10 @@ export class Test1 extends Test {
         event.dataTransfer.setDragImage(new Image(), 0, 0);
         event.dataTransfer.setData('text/plain', actionId);
 
-        document.body.addEventListener('drag', this.onDrag.bind(this));
-        document.addEventListener('dragend', this.onDragEnd.bind(this), { once: true });
-        document.addEventListener('dragover', this.onDragOver.bind(this));
+        this.listenTo(document.body, 'drag', this.onDrag);
+        this.listenTo(document, 'dragend', this.onDragEnd, { once: true });
+        this.listenTo(document, 'dragover', this.onDragOver);
+        console.log('Drag started with action:', actionId);
 
         clone.style.opacity = '0';
         clone.style.animation = 'fadeIn 0.1s 0.05s forwards';
@@ -275,8 +279,9 @@ export class Test1 extends Test {
      * 
      */
     onDragEnd(event) {
-        document.body.removeEventListener('drag', this.onDrag.bind(this));
-        document.removeEventListener('dragover', this.onDragOver.bind(this));
+        this.stopListenTo(document.body, 'drag', this.onDrag);
+        this.stopListenTo(document, 'dragend', this.onDragEnd);
+        this.stopListenTo(document, 'dragover', this.onDragOver);
 
         const clone = document.getElementById('clone');
         
