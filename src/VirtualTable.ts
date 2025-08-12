@@ -61,6 +61,9 @@ export class VirtualTable<T extends Type> {
     public readonly options: VirtualTableOptions;
 
 
+
+
+
     /**
      * 
      */
@@ -102,6 +105,11 @@ export class VirtualTable<T extends Type> {
 
         this.$table.style.setProperty('--row-height', this.ROW_HEIGHT + 'px');
     }
+
+
+
+    // ------------------------------------------------------------------------------
+    // Table DOM manager
 
     /**
      * Retourne la position actuelle du scroll dans le conteneur.
@@ -193,11 +201,23 @@ export class VirtualTable<T extends Type> {
      */
     private DOM_computeInViewVisibleRows(): void {
         // TODO : ajouter le système de filtrage ici
-        this.flatten = [];
         this.DOM_resetSelections();
+
+        const t0 = performance.now();
+        
+        for(const row of this.flatten) {
+            row.treeIndex = -1;
+        }
+
+        const t1 = performance.now();
+
+        this.flatten = [];
+
+        let i = 0;
 
         const rec = (node: TreeNode<T>): void => {
             this.flatten.push(node);
+            node.treeIndex = i++;
 
             if(node.expanded) {
                 for(const child of node.children) {
@@ -210,8 +230,21 @@ export class VirtualTable<T extends Type> {
             rec(node);
         }
 
+        const t2 = performance.now();
+
         this.DOM_computeViewbox();
         this.DOM_updateViewBoxHeight();
+        this.DOM_resetTableRows();
+        this.DOM_updateScroll();
+
+        const t3 = performance.now();
+
+        console.table([
+            { step: 'reset tree indexes', time: t1 - t0 },
+            { step: 'flatten tree', time: t2 - t1 },
+            { step: 'compute viewbox', time: t3 - t2 },
+            { step: 'total', time: t3 - t0 },
+        ]);
     }
 
     /**
@@ -316,10 +349,6 @@ export class VirtualTable<T extends Type> {
     private formatCellValue(value: Any): string {
         return value?.toString() || '';
     }
-
-
-    // ------------------------------------------------------------------------------
-    // Table DOM manager
 
     /**
      * Réinitialise les lignes du tableau.
@@ -469,8 +498,9 @@ export class VirtualTable<T extends Type> {
             return;
         }
 
+        const y = this.mostTopRow?.y ?? 0;
         const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
-        const topMin = this.TBODY_START_Y + this.mostTopRow.y * (this.ROW_HEIGHT - 1);
+        const topMin = this.TBODY_START_Y + y * (this.ROW_HEIGHT - 1);
         const topMax = topMin + this.ROW_HEIGHT;
 
         if(this.scrollTop >= topMin && this.scrollTop <= topMax) {
@@ -581,45 +611,6 @@ export class VirtualTable<T extends Type> {
         }
     }
 
-    // ------------------------------------------------------------------------------
-    // CRUD
-
-    /**
-     * 
-     */
-    public deleteNode(lineId: string): typeof this {
-        return this;
-    } // TODO: à implémenter
-    
-    /**
-     * 
-     */
-    public deleteNodes(linesId: string[]): typeof this {
-        return this;
-    } // TODO: à implémenter
-    
-    /**
-     * 
-     */
-    public addNode(relativeTo: string, asChildren: boolean, line: T): typeof this {
-        return this;
-    } // TODO: à implémenter
-    
-    /**
-     * 
-     */
-    public addNodes(relativeTo: string, asChildren: boolean, lines: T[]): typeof this {
-        return this;
-    } // TODO: à implémenter
-    
-    /**
-     * 
-     */
-    public updateNodes(lines: UpdatedRow<T>[]): typeof this {
-        return this;
-    } // TODO: à implémenter
-
-
 
     // ------------------------------------------------------------------------------
 
@@ -659,6 +650,8 @@ export class VirtualTable<T extends Type> {
 
             root[i] = node;
 
+            this.nodeMap.set(d.id.toString(), node);
+
             if(i > 0 && root.length > 1) {
                 node.left = root[i - 1];
                 root[i - 1].right = node;
@@ -690,6 +683,51 @@ export class VirtualTable<T extends Type> {
     // PUBLIC API
 
 
+    // ------------------------------------------------------------------------------
+    // CRUD
+
+    /**
+     * 
+     */
+    public deleteNode(lineId: string): typeof this {
+        // TODO: à implémenter
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public deleteNodes(linesId: string[]): typeof this {
+        // TODO: à implémenter
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public addNode(relativeTo: string, asChildren: boolean, line: T): typeof this {
+        // TODO: à implémenter
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public addNodes(relativeTo: string, asChildren: boolean, lines: T[]): typeof this {
+        // TODO: à implémenter
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public updateNodes(lines: UpdatedRow<T>[]): typeof this {
+        // TODO: à implémenter
+        return this;
+    }
+
+
+
     /**
      * Reset et redéfini les données de la table.
      * Recalcule tout, excepté les colonnes.
@@ -700,8 +738,6 @@ export class VirtualTable<T extends Type> {
         this.recomputeDataTree();
 
         this.DOM_computeInViewVisibleRows();
-        this.DOM_resetTableRows();
-        this.DOM_updateRowsContent();
     }
 
 
@@ -713,11 +749,13 @@ export class VirtualTable<T extends Type> {
     /**
      * Déplace le scroll jusqu'à l'index de la ligne spécifié.
      */
-    public scrollTo(index: number): void {
+    public scrollTo(index: number): typeof this {
         this.container.scrollTo({
             top: this.TBODY_START_Y + index * (this.ROW_HEIGHT - 1),
             behavior: 'smooth',
         });
+
+        return this;
     }
 
 
@@ -729,10 +767,10 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    public selectRow(event: MouseEvent, row: TableRow<T>): void {
+    public selectRow(event: MouseEvent, row: TableRow<T>): typeof this {
         if(!row.ref) {
             console.warn('Cannot select a row without a reference to the data node.');
-            return;
+            return this;
         }
 
         const rowIndex = this.DOM_getRowIndex(row);
@@ -751,7 +789,7 @@ export class VirtualTable<T extends Type> {
             }, -1);
 
             if(nearestSelectedIndex === -1) {
-                return;
+                return this;
             }
 
             const from = Math.min(nearestSelectedIndex, rowIndex);
@@ -770,7 +808,7 @@ export class VirtualTable<T extends Type> {
                 }
             }
 
-            return;
+            return this;
         }
         
         // unit selection
@@ -782,12 +820,14 @@ export class VirtualTable<T extends Type> {
             row.$.classList.add('selected');
             this.selectedNodes.add(rowIndex);
         }
+
+        return this;
     }
 
     /**
      * 
      */
-    public selectAllRows(): void {
+    public selectAllRows(): typeof this {
         this.$tableBody.querySelectorAll('.tr').forEach($row => {
             $row.classList.add('selected');
         });
@@ -797,46 +837,53 @@ export class VirtualTable<T extends Type> {
         for(let i=0; i < this.rows.length; i++) {
             this.selectedNodes.add(i);
         }
+
+        return this;
     }
 
     /**
      * 
      */
-    public unselectAllRows(): void {
+    public unselectAllRows(): typeof this {
         this.$tableBody.querySelectorAll('.tr.selected').forEach($row => {
             $row.classList.remove('selected');
         });
 
         this.selectedNodes.clear();
+
+        return this;
     }
 
     /**
      * 
      */
-    public selectCell(): void {
+    public selectCell(): typeof this {
         // TODO
+        return this;
     }
 
     /**
      * 
      */
-    public unselectAllCells(): void {
+    public unselectAllCells(): typeof this {
         this.$tableBody.querySelectorAll('.td.selected').forEach($cell => {
             $cell.classList.remove('selected');
         });
 
         this.selectedCells.clear();
+
+        return this;
     }
 
     /**
      * 
      */
-    public selectColumn(column: ColumnDef<T>): void {
+    public selectColumn(column: ColumnDef<T>): typeof this {
         const columnIndex = this.columns.findIndex(c => c.title === column.title);
 
         if(columnIndex === -1) {
             console.warn(`Column "${column.title}" not found.`);
-            return;
+            return this;
         }
 
         if(this.selectedColumns.has(columnIndex)) {
@@ -853,32 +900,38 @@ export class VirtualTable<T extends Type> {
             });
             this.selectedColumns.add(columnIndex);
         }
+
+        return this;
     }
 
     /**
      * 
      */
-    public unselectAllColumns(): void {
+    public unselectAllColumns(): typeof this {
         this.$tableHead.querySelectorAll('.th.selected').forEach($th => {
             $th.classList.remove('selected');
         });
 
         this.selectedColumns.clear();
+
+        return this;
     }
 
     /**
      * 
      */
-    public editCell(row: TableRow<T>, $cell: HTMLElement): void {
+    public editCell(row: TableRow<T>, $cell: HTMLElement): typeof this {
         // TODO: créer input
+        return this;
     }
 
     /**
      * 
      */
-    public cancelCellEdition(): void {
+    public cancelCellEdition(): typeof this {
         // this.states.$editedCellInput?.remove();
         // this.states.$editedCellInput = null;
+        return this;
     }
 
 
@@ -889,29 +942,33 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    public allowColumnResizing(allow: boolean): void {
+    public allowColumnResizing(allow: boolean): typeof this {
         this.options.allowColumnResize = allow;
+        return this;
     }
 
     /**
      * 
      */
-    public allowRowSelection(allow: boolean): void {
+    public allowRowSelection(allow: boolean): typeof this {
         this.options.allowRowSelection = allow;
+        return this;
     }
 
     /**
      * 
      */
-    public allowCellSelection(allow: boolean): void {
+    public allowCellSelection(allow: boolean): typeof this {
         this.options.allowCellSelection = allow;
+        return this;
     }
 
     /**
      * 
      */
-    public allowCellEditing(allow: boolean): void {
+    public allowCellEditing(allow: boolean): typeof this {
         this.options.allowCellEditing = allow;
+        return this;
     }
 
 
@@ -925,7 +982,7 @@ export class VirtualTable<T extends Type> {
      * Gère les classes CSS pour mettre à jour l'état de survol lors du drag.
      * Permet d'identifier quelle ligne a reçu le drop.
      */
-    public makeDroppable(): void {
+    public makeDroppable(): typeof this {
         this.container.setAttribute('dropzone', 'move');
 
         this.container.addEventListener('dragover', (event) => {
@@ -970,6 +1027,8 @@ export class VirtualTable<T extends Type> {
 
             this.onDrop(data, row);
         });
+
+        return this;
     }
 
     /**

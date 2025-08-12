@@ -79,7 +79,7 @@ export class Test1 extends Test {
     }
 
     execute() {
-        this.data = generateRandomContacts(10);
+        this.data = generateRandomContacts(10000);
         console.log(this.data);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
