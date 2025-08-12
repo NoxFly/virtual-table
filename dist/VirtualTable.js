@@ -14,18 +14,16 @@ class g {
    * Retourne le symbol à utiliser pour le remove.
    */
   listenTo(t, s, e, i) {
-    const o = Symbol.for(e.name);
-    console.log(this);
-    const l = e.bind(this);
-    return this.listeners.set(o, l), t.addEventListener(s, l, i), o;
+    const n = Symbol.for(e.name), o = e.bind(this);
+    return this.listeners.set(n, o), t.addEventListener(s, o, i), n;
   }
   /**
    * Supprime un écouteur à partir de son symbol.
    */
   stopListenTo(t, s, e, i) {
     typeof e == "function" && (e = Symbol.for(e.name));
-    const o = this.listeners.get(e);
-    o && (t.removeEventListener(s, o, i), this.listeners.delete(e));
+    const n = this.listeners.get(e);
+    n && (t.removeEventListener(s, n, i), this.listeners.delete(e));
   }
   /**
    * Supprime tous les écouteurs gérés par cette instance.
@@ -48,11 +46,8 @@ const c = class c {
    * 
    */
   constructor(t, s, e = {}) {
-    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.lastScrollTopIndex = -1, this.onDrop = () => {
+    this.container = t, this.columns = [], this.rows = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.lastScrollTopIndex = -1, this.onDrop = () => {
     }, this.options = { ...c.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s, this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i), { passive: !0 }), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i), { passive: !0 }), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
-  }
-  getNodes() {
-    return this.tree;
   }
   // ------------------------------------------------------------------------------
   // Table DOM manager
@@ -167,32 +162,47 @@ const c = class c {
    * 
    */
   DOM_updateRowsContent() {
-    var t;
-    for (const s of this.rows) {
-      if (!s.ref)
-        continue;
-      const e = s.ref.children.length > 0;
-      s.$.classList.toggle("has-children", e), s.$.classList.toggle("expanded", s.ref.expanded), s.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(s))), s.$.style.setProperty("--depth", `${s.ref.depth}`);
-      for (const i in this.columns) {
-        const o = this.columns[i], l = s.$.children.item(+i);
-        if (l) {
-          const a = o.field ? s.ref.data[o.field] : void 0, n = {
-            $: s.$,
-            value: a,
-            row: s.ref,
-            column: o,
-            rowIndex: s.y,
-            columnIndex: +i
-          }, h = ((t = o.transform) == null ? void 0 : t.call(o, n)) || this.formatCellValue(a);
-          let r = "";
-          if (e && i === "0") {
-            const d = s.ref.expanded ? "expanded" : "collapsed";
-            r += `<button class="btn-expand"><span class="expand-icon ${d}"></span></button>`;
-          }
-          r += `<span class="cell-value">${h}</span>`, l.innerHTML = r;
+    for (const t of this.rows)
+      this.DOM_updateRowContent(t);
+  }
+  /**
+   * 
+   */
+  DOM_updateRowContent(t) {
+    var e;
+    if (!t.ref)
+      return;
+    const s = t.ref.children.length > 0;
+    t.$.classList.toggle("has-children", s), t.$.classList.toggle("expanded", t.ref.expanded), t.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(t))), t.$.style.setProperty("--depth", `${t.ref.depth}`);
+    for (const i in this.columns) {
+      const n = this.columns[i], o = t.$.children.item(+i);
+      if (o) {
+        const a = n.field ? t.ref.data[n.field] : void 0, l = {
+          $: t.$,
+          value: a,
+          row: t.ref,
+          column: n,
+          rowIndex: t.y,
+          columnIndex: +i
+        }, h = ((e = n.transform) == null ? void 0 : e.call(n, l)) || this.formatCellValue(a);
+        let r = "";
+        if (s && i === "0") {
+          const d = t.ref.expanded ? "expanded" : "collapsed";
+          r += `<button class="btn-expand"><span class="expand-icon ${d}"></span></button>`;
         }
+        r += `<span class="cell-value">${h}</span>`, o.innerHTML = r;
       }
     }
+  }
+  /**
+   * 
+   */
+  DOM_getTableRowFromNode(t) {
+    if (!(t.flatIndex < 0 || t.flatIndex >= this.flatten.length))
+      return this.rows.find((s) => {
+        var e;
+        return ((e = s.ref) == null ? void 0 : e.data.id) === t.data.id;
+      });
   }
   /**
    * 
@@ -256,9 +266,9 @@ const c = class c {
    * @param position La nouvelle position de la ligne.
    */
   DOM_setRowPosition(t, s) {
-    var i, o, l;
+    var i, n, o;
     const e = this.TBODY_START_Y + s.top * (this.ROW_HEIGHT - 1);
-    t.y = s.top, t.ref = this.flatten[t.y], t.$.dataset.index = `${t.y}`, t.$.dataset.treeIndex = `${(i = t.ref) == null ? void 0 : i.flatIndex}`, t.$.dataset.id = ((l = (o = t.ref) == null ? void 0 : o.data.id) == null ? void 0 : l.toString()) || "", t.$.style.setProperty("--y", e + "px");
+    t.y = s.top, t.ref = this.flatten[t.y], t.$.dataset.index = `${t.y}`, t.$.dataset.treeIndex = `${(i = t.ref) == null ? void 0 : i.flatIndex}`, t.$.dataset.id = ((o = (n = t.ref) == null ? void 0 : n.data.id) == null ? void 0 : o.toString()) || "", t.$.style.setProperty("--y", e + "px");
   }
   /**
    * Met à jour la position des lignes visibles.
@@ -268,12 +278,12 @@ const c = class c {
     var a;
     if (this.rows.length === 0)
       return;
-    const s = ((a = this.mostTopRow) == null ? void 0 : a.y) ?? 0, e = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), i = this.TBODY_START_Y + s * (this.ROW_HEIGHT - 1), o = i + this.ROW_HEIGHT, l = this.totalVirtualHeight > this.container.clientHeight;
-    if (!(this.scrollTop >= i && this.scrollTop <= o) && !(l && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
+    const s = ((a = this.mostTopRow) == null ? void 0 : a.y) ?? 0, e = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), i = this.TBODY_START_Y + s * (this.ROW_HEIGHT - 1), n = i + this.ROW_HEIGHT, o = this.totalVirtualHeight > this.container.clientHeight;
+    if (!(this.scrollTop >= i && this.scrollTop <= n) && !(o && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
       this.lastScrollTopIndex = e;
-      for (let n = 0; n < this.rows.length; n++) {
-        const h = this.rows[n];
-        this.DOM_setRowPosition(h, { top: e + n, left: h.x });
+      for (let l = 0; l < this.rows.length; l++) {
+        const h = this.rows[l];
+        this.DOM_setRowPosition(h, { top: e + l, left: h.x });
       }
       this.DOM_updateRowsContent();
     }
@@ -346,16 +356,16 @@ const c = class c {
   computeTree(t, s = void 0) {
     const e = new Array(t.length);
     for (let i = 0; i < t.length; i++) {
-      const o = t[i], l = this.dataToTreeNodeRec(o, s);
-      e[i] = l, this.nodeMap.set(o.id.toString(), l), i > 0 && e.length > 1 && (l.left = e[i - 1], e[i - 1].right = l);
+      const n = t[i], o = this.dataToTreeNodeRec(n, s);
+      e[i] = o, this.nodeMap.set(n.id.toString(), o), i > 0 && e.length > 1 && (o.left = e[i - 1], e[i - 1].right = o);
     }
     return e.length > 1 && (e[0].left = e[e.length - 1], e[e.length - 1].right = e[0]), e;
   }
   /**
    * 
    */
-  recomputeDataTree() {
-    this.tree = this.computeTree(this.data), console.debug("Recomputed data tree:", this.tree);
+  recomputeDataTree(t) {
+    this.tree = this.computeTree(t), console.debug("Recomputed data tree:", this.tree);
   }
   // ----------------------------------------------------------------------
   // PUBLIC API
@@ -371,23 +381,25 @@ const c = class c {
    * 
    */
   deleteNodes(t) {
+    if (t.length === 0)
+      return this;
     for (const s of t) {
       const e = this.nodeMap.get(s);
       if (!e)
         continue;
       if (e.left && (e.left.right = e.right), e.right && (e.right.left = e.left), e.parent) {
-        const o = e.parent.children.indexOf(e);
-        o !== -1 && e.parent.children.splice(o, 1);
+        const n = e.parent.children.indexOf(e);
+        n !== -1 && e.parent.children.splice(n, 1);
       } else {
-        const o = this.tree.indexOf(e);
-        o !== -1 && this.tree.splice(o, 1);
+        const n = this.tree.indexOf(e);
+        n !== -1 && this.tree.splice(n, 1);
       }
       const i = [e];
       for (; i.length > 0; ) {
-        const o = i.pop();
-        this.nodeMap.delete(o.data.id.toString());
-        for (const l of o.children)
-          i.push(l);
+        const n = i.pop();
+        this.nodeMap.delete(n.data.id.toString());
+        for (const o of n.children)
+          i.push(o);
       }
       e.parent = void 0, e.left = void 0, e.right = void 0, e.children.length = 0;
     }
@@ -408,22 +420,22 @@ const c = class c {
     const i = this.nodeMap.get(t);
     if (!i && s)
       return console.warn(`Reference node with ID "${t}" not found.`), this;
-    const o = this.verifyDuplicateIds(e);
-    if (o.size > 0)
-      return console.warn("Duplicate IDs found in the elements to add:", Array.from(o).join(", ")), this;
-    const l = s ? i : i == null ? void 0 : i.parent, a = this.computeTree(e, l);
-    let n, h = 0;
+    const n = this.verifyDuplicateIds(e);
+    if (n.size > 0)
+      return console.warn("Duplicate IDs found in the elements to add:", Array.from(n).join(", ")), this;
+    const o = s ? i : i == null ? void 0 : i.parent, a = this.computeTree(e, o);
+    let l, h = 0;
     if (s)
-      Array.isArray(i.children) || (i.children = []), n = i.children, h = n.length, n.push(...a);
+      Array.isArray(i.children) || (i.children = []), l = i.children, h = l.length, l.push(...a);
     else {
-      n = (l == null ? void 0 : l.children) ?? this.tree;
-      const d = i ? n.indexOf(i) : -1;
+      l = (o == null ? void 0 : o.children) ?? this.tree;
+      const d = i ? l.indexOf(i) : -1;
       if (d === -1 && i !== void 0)
         return console.warn(`Reference node with ID "${t}" not found in the parent.`), this;
-      h = n.length, n.splice(d + 1, 0, ...a);
+      h = l.length, l.splice(d + 1, 0, ...a);
     }
     const r = h + a.length;
-    return h > 0 && (n[h - 1].right = n[h], n[h].left = n[h - 1], n[r - 1].right = n[0], n[0].left = n[r - 1]), this.DOM_computeInViewVisibleRows(), this;
+    return h > 0 && (l[h - 1].right = l[h], l[h].left = l[h - 1], l[r - 1].right = l[0], l[0].left = l[r - 1]), this.DOM_computeInViewVisibleRows(), this;
   }
   /**
    * 
@@ -432,9 +444,28 @@ const c = class c {
     return this.updateNodes([t]);
   }
   /**
-   * 
+   * Met à jour les données d'un ou plusieurs nœuds.
+   * L'identifiant (`id`) est forcément présent dans les données.
+   * La propriété `children` n'a pas à être renseignée et sera ignorée.
+   * Met à jour les données "pûres" du noeud, pas ses enfants.
+   * Utiliser `addNodes` ou `deleteNodes` pour gérer les enfants.
+   * Si un nœud n'existe pas, il sera ignoré.
+   * Si un nœud est renseigné plusieurs fois, tout sera pris en compte,
+   * à chaque itération le nœud sera mis à jour.
    */
   updateNodes(t) {
+    if (t.length === 0)
+      return this;
+    for (const s of t) {
+      const e = this.nodeMap.get(s.id.toString());
+      if (!e) {
+        console.warn(`Node with ID "${s.id}" not found.`);
+        continue;
+      }
+      e.data = { ...e.data, ...s };
+      const i = this.DOM_getTableRowFromNode(e);
+      i && this.DOM_updateRowContent(i);
+    }
     return this;
   }
   /**
@@ -444,9 +475,9 @@ const c = class c {
    */
   verifyDuplicateIds(t) {
     const s = /* @__PURE__ */ new Set(), e = (i) => {
-      for (const o of i) {
-        const l = o.id.toString();
-        (this.nodeMap.has(l) || s.has(l)) && s.add(l), Array.isArray(o.children) && e(o.children);
+      for (const n of i) {
+        const o = n.id.toString();
+        (this.nodeMap.has(o) || s.has(o)) && s.add(o), Array.isArray(n.children) && e(n.children);
       }
     };
     return e(t), s;
@@ -456,13 +487,19 @@ const c = class c {
    * Recalcule tout, excepté les colonnes.
    */
   setData(t) {
-    this.data = structuredClone(t);
-    const s = this.verifyDuplicateIds(this.data);
+    t = structuredClone(t);
+    const s = this.verifyDuplicateIds(t);
     if (s.size > 0) {
       console.warn("Duplicate IDs found in the data:", Array.from(s).join(", "));
       return;
     }
-    this.recomputeDataTree(), this.DOM_computeInViewVisibleRows();
+    this.recomputeDataTree(t), this.DOM_computeInViewVisibleRows();
+  }
+  /**
+   * 
+   */
+  getNodes() {
+    return this.tree;
   }
   // ---- scroll ----
   /**
@@ -484,14 +521,14 @@ const c = class c {
       return console.warn("Cannot select a row without a reference to the data node."), this;
     const e = this.DOM_getRowIndex(s);
     if (t.shiftKey) {
-      const o = Array.from(this.selectedNodes).reduce((r, d) => e === -1 ? r : Math.abs(d - e) < Math.abs(r - e) ? d : r, -1);
-      if (o === -1)
+      const n = Array.from(this.selectedNodes).reduce((r, d) => e === -1 ? r : Math.abs(d - e) < Math.abs(r - e) ? d : r, -1);
+      if (n === -1)
         return this;
-      const l = Math.min(o, e), a = Math.max(o, e), n = this.DOM_getRowIndex(this.rows[0]), h = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
-      for (let r = l; r <= a; r++) {
+      const o = Math.min(n, e), a = Math.max(n, e), l = this.DOM_getRowIndex(this.rows[0]), h = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
+      for (let r = o; r <= a; r++) {
         const d = this.flatten[r];
-        if (this.selectedNodes.add(d.flatIndex), r >= n && r <= h) {
-          const f = (i = this.rows[r - n]) == null ? void 0 : i.$;
+        if (this.selectedNodes.add(d.flatIndex), r >= l && r <= h) {
+          const f = (i = this.rows[r - l]) == null ? void 0 : i.$;
           f == null || f.classList.add("selected");
         }
       }
@@ -600,12 +637,12 @@ const c = class c {
       const s = t.target, e = s.closest(".tr"), i = !s.closest(".thead");
       e && i && e !== this.$lastHighlightedRow ? (this.$lastHighlightedRow && this.$lastHighlightedRow.classList.remove("dragging-hover"), e.classList.add("dragging-hover"), this.$lastHighlightedRow = e) : (!e || !i) && this.$lastHighlightedRow && (this.$lastHighlightedRow.classList.remove("dragging-hover"), this.$lastHighlightedRow = null);
     }, { capture: !0 }), this.container.addEventListener("drop", (t) => {
-      var l, a;
+      var o, a;
       t.preventDefault();
-      const e = t.target.closest(".tr"), i = (l = t.dataTransfer) == null ? void 0 : l.getData("text/plain");
+      const e = t.target.closest(".tr"), i = (o = t.dataTransfer) == null ? void 0 : o.getData("text/plain");
       (a = this.$lastHighlightedRow) == null || a.classList.remove("dragging-hover"), this.$lastHighlightedRow = null;
-      const o = this.rows.find((n) => n.$ === e);
-      this.onDrop(i, o);
+      const n = this.rows.find((l) => l.$ === e);
+      this.onDrop(i, n);
     }), this;
   }
 };

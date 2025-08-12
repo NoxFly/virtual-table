@@ -30,9 +30,7 @@ export class VirtualTable<T extends Type> {
     private readonly columns: ColumnDef<T>[] = [];
     /** Les lignes de la vue, leur position et la référence vers leur données à afficher */
     private rows: TableRow<T>[] = [];
-    /** Un arbre multi-root des données brutes */
-    private data: T[] = [];
-    /** Un arbre multi-root de noeuds ayant une référence vers une donnée dans `this.data` */
+    /** Un arbre multi-root de noeuds ayant des données fournies par `setData` */
     private tree: TreeNode<T>[] = [];
     /** Une liste plate des données filtrées provenant d'un arbre, préservant l'ordre des éléments */
     private flatten: TreeNode<T>[] = [];
@@ -106,12 +104,6 @@ export class VirtualTable<T extends Type> {
         this.$table.style.setProperty('--row-height', this.ROW_HEIGHT + 'px');
     }
 
-
-
-
-    public getNodes(): readonly TreeNode<T>[] {
-        return this.tree;
-    }
 
     // ------------------------------------------------------------------------------
     // Table DOM manager
@@ -299,53 +291,71 @@ export class VirtualTable<T extends Type> {
      */
     private DOM_updateRowsContent(): void {
         for(const row of this.rows) {
-            if(!row.ref) {
-                continue;
-            }
+            this.DOM_updateRowContent(row);
+        }
+    }
 
-            const hasChildren = row.ref.children.length > 0;
+    /**
+     * 
+     */
+    private DOM_updateRowContent(row: TableRow<T>): void {
+        if(!row.ref) {
+            return;
+        }
 
-            row.$.classList.toggle('has-children', hasChildren);
-            row.$.classList.toggle('expanded', row.ref.expanded);
-            row.$.classList.toggle('selected', this.selectedNodes.has(this.DOM_getRowIndex(row)));
-            row.$.style.setProperty('--depth', `${row.ref.depth}`);
+        const hasChildren = row.ref.children.length > 0;
 
-            for(const i in this.columns) {
-                const col = this.columns[i];
+        row.$.classList.toggle('has-children', hasChildren);
+        row.$.classList.toggle('expanded', row.ref.expanded);
+        row.$.classList.toggle('selected', this.selectedNodes.has(this.DOM_getRowIndex(row)));
+        row.$.style.setProperty('--depth', `${row.ref.depth}`);
 
-                const $cell = row.$.children.item(+i);
+        for(const i in this.columns) {
+            const col = this.columns[i];
 
-                if($cell) {
-                    const value = col.field
-                        ? row.ref.data[col.field]
-                        : undefined;
+            const $cell = row.$.children.item(+i);
 
-                    const cell: Cell<T> = {
-                        $: row.$,
-                        value,
-                        row: row.ref,
-                        column: col,
-                        rowIndex: row.y,
-                        columnIndex: +i,
-                    };
-                    const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
+            if($cell) {
+                const value = col.field
+                    ? row.ref.data[col.field]
+                    : undefined;
 
-                    let html = '';
+                const cell: Cell<T> = {
+                    $: row.$,
+                    value,
+                    row: row.ref,
+                    column: col,
+                    rowIndex: row.y,
+                    columnIndex: +i,
+                };
+                const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
 
-                    if(hasChildren && i === '0') {
-                        const cls = row.ref.expanded
-                            ? 'expanded'
-                            : 'collapsed';
+                let html = '';
 
-                        html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
-                    }
+                if(hasChildren && i === '0') {
+                    const cls = row.ref.expanded
+                        ? 'expanded'
+                        : 'collapsed';
 
-                    html += `<span class="cell-value">${transformedValue}</span>`;
-
-                    $cell.innerHTML = html;
+                    html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
                 }
+
+                html += `<span class="cell-value">${transformedValue}</span>`;
+
+                $cell.innerHTML = html;
             }
         }
+    }
+
+    /**
+     * 
+     */
+    private DOM_getTableRowFromNode(node: TreeNode<T>): TableRow<T> | undefined {
+        if(node.flatIndex < 0 || node.flatIndex >= this.flatten.length) {
+            return undefined;
+        }
+
+        return this.rows.find(r => r.ref?.data.id === node.data.id);
     }
 
     /**
@@ -684,8 +694,8 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    private recomputeDataTree(): void {
-        this.tree = this.computeTree(this.data);
+    private recomputeDataTree(data: T[]): void {
+        this.tree = this.computeTree(data);
         console.debug("Recomputed data tree:", this.tree);
     }
 
@@ -712,6 +722,10 @@ export class VirtualTable<T extends Type> {
      * 
      */
     public deleteNodes(nodeIds: string[]): typeof this {
+        if(nodeIds.length === 0) {
+            return this;
+        }
+
         // 1. modifie l'arbre (this.tree)
         for(const id of nodeIds) {
             const node = this.nodeMap.get(id);
@@ -860,10 +874,38 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     * Met à jour les données d'un ou plusieurs nœuds.
+     * L'identifiant (`id`) est forcément présent dans les données.
+     * La propriété `children` n'a pas à être renseignée et sera ignorée.
+     * Met à jour les données "pûres" du noeud, pas ses enfants.
+     * Utiliser `addNodes` ou `deleteNodes` pour gérer les enfants.
+     * Si un nœud n'existe pas, il sera ignoré.
+     * Si un nœud est renseigné plusieurs fois, tout sera pris en compte,
+     * à chaque itération le nœud sera mis à jour.
      */
     public updateNodes(nodes: UpdatedRow<T>[]): typeof this {
-        // TODO: à implémenter
+        if(nodes.length === 0) {
+            return this;
+        }
+
+        for(const nodeData of nodes) {
+            const existingNode = this.nodeMap.get(nodeData.id.toString());
+
+            if(!existingNode) {
+                console.warn(`Node with ID "${nodeData.id}" not found.`);
+                continue;
+            }
+
+            // Met à jour les données du noeud
+            existingNode.data = { ...existingNode.data, ...nodeData };
+
+            const tableRow = this.DOM_getTableRowFromNode(existingNode);
+
+            if(tableRow) {
+                this.DOM_updateRowContent(tableRow);
+            }
+        }
+
         return this;
     }
 
@@ -901,22 +943,27 @@ export class VirtualTable<T extends Type> {
      * Recalcule tout, excepté les colonnes.
      */
     public setData(data: T[]): void {
-        this.data = structuredClone(data);
+        data = structuredClone(data);
 
-        const dups = this.verifyDuplicateIds(this.data);
+        const dups = this.verifyDuplicateIds(data);
 
         if(dups.size > 0) {
             console.warn('Duplicate IDs found in the data:', Array.from(dups).join(', '));
             return;
         }
 
-        this.recomputeDataTree();
+        this.recomputeDataTree(data);
 
         this.DOM_computeInViewVisibleRows();
     }
 
 
-
+    /**
+     * 
+     */
+    public getNodes(): readonly TreeNode<T>[] {
+        return this.tree;
+    }
 
 
     // ---- scroll ----

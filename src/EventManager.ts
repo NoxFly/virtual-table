@@ -21,8 +21,6 @@ export class EventManager {
     ): symbol {
         const symbolId = Symbol.for(callback.name);
 
-        console.log(this);
-
         // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         const boundCallback = (callback as Function).bind(this) as EventListener;
 
@@ -66,6 +64,7 @@ export class EventManager {
                 console.warn("Impossible de removeAll sans type stocké, il faut étendre la structure.");
             }
         }
+
         this.listeners.clear();
     }
 }

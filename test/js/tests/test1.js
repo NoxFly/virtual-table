@@ -221,7 +221,6 @@ export class Test1 extends Test {
      * 
      */
     onDrop(data, row) {
-        console.log('Dropped data:', data);
         console.log('Dropped row:', row);
 
         const action = this.dropActionMap.get(Symbol.for(data));
@@ -254,7 +253,6 @@ export class Test1 extends Test {
         this.listenTo(document.body, 'drag', this.onDrag);
         this.listenTo(document, 'dragend', this.onDragEnd, { once: true });
         this.listenTo(document, 'dragover', this.onDragOver);
-        console.log('Drag started with action:', actionId);
 
         clone.style.opacity = '0';
         clone.style.animation = 'fadeIn 0.1s 0.05s forwards';
