@@ -83,7 +83,7 @@ export class Test1 extends Test {
      * 
      */
     execute() {
-        this.data = generateRandomContacts(0);
+        this.data = generateRandomContacts(10000, true);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             columnSizeInPercentage: false,
@@ -107,6 +107,20 @@ export class Test1 extends Test {
         this.createDraggableElement('Insert next to it', this.onInsertBelowActionDrop.bind(this), 'action-insert-below');
         this.createDraggableElement('Insert children', this.onInsertChildrenActionDrop.bind(this), 'action-insert-children');
         this.createDraggableElement('Update', this.onInsertChildrenActionDrop.bind(this), 'action-update');
+
+        this.createDeleteAllButton();
+    }
+
+    createDeleteAllButton() {
+        const deleteAllButton = document.createElement('button');
+        deleteAllButton.classList.add('delete-all-button');
+        deleteAllButton.textContent = 'Delete All';
+        this.container.appendChild(deleteAllButton);
+
+        deleteAllButton.addEventListener('click', () => {
+            this.data = [];
+            this.virtualTable.setData(this.data);
+        });
     }
 
     /**
