@@ -24,7 +24,7 @@ export interface TreeNode<T extends Type> {
     parent?: TreeNode<T>; // Référence au parent, si le noeud est une racine, il n'a pas de parent
     left?: TreeNode<T>; // Frère gauche du même niveau circulaire (lui-même ne pouvant pas s'avoir comme frère gauche)
     right?: TreeNode<T>; // Frère droit du même niveau circulaire (lui-même ne pouvant pas s'avoir comme frère droit)
-    treeIndex: number; // Index absolu dans l'arbre
+    flatIndex: number; // Index absolu dans l'arbre
 }
 
 export interface Position {

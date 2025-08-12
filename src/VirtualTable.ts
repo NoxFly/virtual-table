@@ -206,7 +206,7 @@ export class VirtualTable<T extends Type> {
         const t0 = performance.now();
         
         for(const row of this.flatten) {
-            row.treeIndex = -1;
+            row.flatIndex = -1;
         }
 
         const t1 = performance.now();
@@ -217,7 +217,7 @@ export class VirtualTable<T extends Type> {
 
         const rec = (node: TreeNode<T>): void => {
             this.flatten.push(node);
-            node.treeIndex = i++;
+            node.flatIndex = i++;
 
             if(node.expanded) {
                 for(const child of node.children) {
@@ -484,7 +484,7 @@ export class VirtualTable<T extends Type> {
         row.y = position.top;
         row.ref = this.flatten[row.y];
         row.$.dataset.index = `${row.y}`;
-        row.$.dataset.treeIndex = `${row.ref?.treeIndex}`;
+        row.$.dataset.treeIndex = `${row.ref?.flatIndex}`;
         row.$.dataset.id = row.ref?.data.id?.toString() || '';
         row.$.style.setProperty('--y', top + 'px');
     }
@@ -626,7 +626,7 @@ export class VirtualTable<T extends Type> {
                 ? parent.depth + 1
                 : 0,
             parent,
-            treeIndex: -1,
+            flatIndex: -1,
             children: [],
         };
 
@@ -697,7 +697,61 @@ export class VirtualTable<T extends Type> {
      * 
      */
     public deleteNodes(nodeIds: string[]): typeof this {
-        // TODO: à implémenter
+        // 1. modifie l'arbre (this.tree)
+        for(const id of nodeIds) {
+            const node = this.nodeMap.get(id);
+
+            if(!node) {
+                continue;
+            }
+
+            // a. déconnexion des voisins horizontaux
+            if(node.left)
+                node.left.right = node.right;
+            
+            if(node.right)
+                node.right.left = node.left;
+
+            // b. Suppression dans le parent
+            if(node.parent) {
+                const idx = node.parent.children.indexOf(node);
+                
+                if(idx !== -1) {
+                    node.parent.children.splice(idx, 1);
+                }
+            }
+            // root tree
+            else {
+                const idx = this.tree.indexOf(node);
+                
+                if(idx !== -1) {
+                    this.tree.splice(idx, 1);
+                }
+            }
+
+            // c. Suppression récursive de ce noeud et ses enfants dans le hashmap
+            const stack = [node];
+
+            while(stack.length > 0) {
+                const currentNode = stack.pop()!;
+                
+                this.nodeMap.delete(currentNode.data.id.toString());
+
+                for(const child of currentNode.children) {
+                    stack.push(child);
+                }
+            }
+
+            // d. Nettoyage des références pour GC (garbage collector)
+            node.parent = undefined;
+            node.left = undefined;
+            node.right = undefined;
+            node.children.length = 0;
+        }
+
+        // 2. Reconstruction de `this.flatten`
+        this.DOM_computeInViewVisibleRows();
+
         return this;
     }
     
@@ -805,7 +859,7 @@ export class VirtualTable<T extends Type> {
 
             for(let i=from; i <= to; i++) {
                 const rowToSelect = this.flatten[i];
-                this.selectedNodes.add(rowToSelect.treeIndex);
+                this.selectedNodes.add(rowToSelect.flatIndex);
 
                 if(i >= firstElIndex && i <= lastElIndex) {
                     const $row = this.rows[i - firstElIndex]?.$;

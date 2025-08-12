@@ -22,7 +22,7 @@ export class Test1 extends Test {
         {
             title: 'abs. index',
             width: 100,
-            transform: (cell) => cell.row.treeIndex.toString(),
+            transform: (cell) => cell.row.flatIndex.toString(),
         },
         {
             title: '',
@@ -79,7 +79,7 @@ export class Test1 extends Test {
     }
 
     execute() {
-        this.data = generateRandomContacts(10000);
+        this.data = generateRandomContacts(100);
         console.log(this.data);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
@@ -159,6 +159,12 @@ export class Test1 extends Test {
     onDrop(data, row) {
         console.log('Dropped data:', data);
         console.log('Dropped row:', row);
+
+        const nodeId = row.ref.data.id;
+
+        if(nodeId) {
+            this.virtualTable.deleteNode(nodeId);
+        }
     }
 
     // when start dragging the div, create a clone and move the clone to the mouse position when dragging
