@@ -6,7 +6,7 @@
  * Exports the main VirtualTable component and related type definitions.
  */
 
-export type Any = string | number | boolean | null | undefined | object;
+export type Any = string | number | boolean | null | undefined | Date | object;
 
 export type Type = {
     id: string | number;
@@ -14,16 +14,17 @@ export type Type = {
     [key: string]: Any;
 };
 
+export type UpdatedRow<T extends Type> = Partial<Omit<T, 'children'>> & Pick<T, 'id'>;
+
 export interface TreeNode<T extends Type> {
     data: T;
     expanded: boolean; // Indique si les enfants sont affichés
     depth: number; // Profondeur du noeud dans l'arbre
     children: TreeNode<T>[];
-}
-
-export interface FlatNode<T extends Type> {
-    node: TreeNode<T>;
-    index: number; // Index dans la liste aplatie
+    parent?: TreeNode<T>; // Référence au parent, si le noeud est une racine, il n'a pas de parent
+    left?: TreeNode<T>; // Frère gauche du même niveau circulaire (lui-même ne pouvant pas s'avoir comme frère gauche)
+    right?: TreeNode<T>; // Frère droit du même niveau circulaire (lui-même ne pouvant pas s'avoir comme frère droit)
+    treeIndex: number; // Index absolu dans l'arbre
 }
 
 export interface Position {
@@ -33,7 +34,7 @@ export interface Position {
 
 export interface TableRow<T extends Type> {
     $: HTMLElement; // Référence à la ligne html (dom)
-    ref?: FlatNode<T>; // Contenu des cellules
+    ref?: TreeNode<T>; // Contenu des cellules
 
     previousElement?: TableRow<T>;
     nextElement?: TableRow<T>;

@@ -183,6 +183,7 @@ body {
     /* border: 1px solid #aaa; */
     background: #fff;
     overflow: auto;
+    user-select: none;
 }
 
 #table-container-1 .thead .tr {

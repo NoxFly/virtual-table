@@ -11,8 +11,18 @@ export class Test1 extends Test {
         {
             field: 'id',
             title: 'ID',
-            width: 150,
+            width: 500,
+            field: 'id',
+        },
+        {
+            title: 'index',
+            width: 100,
             transform: (cell) => cell.rowIndex.toString(),
+        },
+        {
+            title: 'abs. index',
+            width: 100,
+            transform: (cell) => cell.row.treeIndex.toString(),
         },
         {
             title: '',
@@ -69,7 +79,7 @@ export class Test1 extends Test {
     }
 
     execute() {
-        this.data = generateRandomContacts(100000);
+        this.data = generateRandomContacts(10);
         console.log(this.data);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {

@@ -73,6 +73,15 @@ function randomWebsite() {
     return `https://${domains[Math.floor(Math.random() * domains.length)]}`;
 }
 
+
+function randomUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+
 /**
  * 
  * @returns {Contact} A randomly generated contact object.
@@ -94,7 +103,7 @@ export function generateRandomContact(withChildren = true) {
         }, generateRandomContact)
 
     return {
-        id: Math.floor(Math.random() * 1000),
+        id: randomUUID(),
         name,
         email,
         phone,
