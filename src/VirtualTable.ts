@@ -689,7 +689,14 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    public deleteNode(lineId: string): typeof this {
+    public deleteNode(nodeId: string): typeof this {
+        return this.deleteNodes([nodeId]);
+    }
+    
+    /**
+     * 
+     */
+    public deleteNodes(nodeIds: string[]): typeof this {
         // TODO: à implémenter
         return this;
     }
@@ -697,7 +704,14 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    public deleteNodes(linesId: string[]): typeof this {
+    public addNode(relativeTo: string, asChildren: boolean, element: T): typeof this {
+        return this.addNodes(relativeTo, asChildren, [element]);
+    }
+    
+    /**
+     * 
+     */
+    public addNodes(relativeTo: string, asChildren: boolean, elements: T[]): typeof this {
         // TODO: à implémenter
         return this;
     }
@@ -705,23 +719,14 @@ export class VirtualTable<T extends Type> {
     /**
      * 
      */
-    public addNode(relativeTo: string, asChildren: boolean, line: T): typeof this {
-        // TODO: à implémenter
-        return this;
+    public updateNode(node: UpdatedRow<T>): typeof this {
+        return this.updateNodes([node]);
     }
-    
+
     /**
      * 
      */
-    public addNodes(relativeTo: string, asChildren: boolean, lines: T[]): typeof this {
-        // TODO: à implémenter
-        return this;
-    }
-    
-    /**
-     * 
-     */
-    public updateNodes(lines: UpdatedRow<T>[]): typeof this {
+    public updateNodes(nodes: UpdatedRow<T>[]): typeof this {
         // TODO: à implémenter
         return this;
     }

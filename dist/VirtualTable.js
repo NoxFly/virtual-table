@@ -333,7 +333,7 @@ const d = class d {
    * 
    */
   deleteNode(t) {
-    return this;
+    return this.deleteNodes([t]);
   }
   /**
    * 
@@ -345,13 +345,19 @@ const d = class d {
    * 
    */
   addNode(t, e, s) {
-    return this;
+    return this.addNodes(t, e, [s]);
   }
   /**
    * 
    */
   addNodes(t, e, s) {
     return this;
+  }
+  /**
+   * 
+   */
+  updateNode(t) {
+    return this.updateNodes([t]);
   }
   /**
    * 
@@ -529,8 +535,8 @@ d.DEFAULT_OPTIONS = {
   allowColumnReorder: !1,
   allowRowReorder: !1
 };
-let f = d;
+let p = d;
 export {
-  f as VirtualTable
+  p as VirtualTable
 };
 //# sourceMappingURL=VirtualTable.js.map
