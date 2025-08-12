@@ -99,27 +99,43 @@ export class Test1 extends Test {
 
         this.generateFilterbar();
 
-        // setTimeout(() => {
-        //     this.virtualTable.scrollTo(9800);
-        // }, 1000);
-
         this.createDraggableElement('Delete', this.onDeleteActionDrop.bind(this), 'action-delete');
         this.createDraggableElement('Insert next to it', this.onInsertBelowActionDrop.bind(this), 'action-insert-below');
         this.createDraggableElement('Insert children', this.onInsertChildrenActionDrop.bind(this), 'action-insert-children');
-        this.createDraggableElement('Update', this.onInsertChildrenActionDrop.bind(this), 'action-update');
+        this.createDraggableElement('Update', this.onUpdateActionDrop.bind(this), 'action-update');
 
-        this.createDeleteAllButton();
+        this.createButtonsContainer();
     }
 
-    createDeleteAllButton() {
+    createButtonsContainer() {
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.classList.add('buttons-container');
+        this.container.appendChild(buttonsContainer);
+
+        this.createDeleteAllButton(buttonsContainer);
+        this.createScrollToButton(buttonsContainer);
+    }
+
+    createDeleteAllButton(buttonsContainer) {
         const deleteAllButton = document.createElement('button');
         deleteAllButton.classList.add('delete-all-button');
         deleteAllButton.textContent = 'Delete All';
-        this.container.appendChild(deleteAllButton);
+        buttonsContainer.appendChild(deleteAllButton);
 
         deleteAllButton.addEventListener('click', () => {
             this.data = [];
             this.virtualTable.setData(this.data);
+        });
+    }
+
+    createScrollToButton(buttonsContainer) {
+        const scrollToButton = document.createElement('button');
+        scrollToButton.classList.add('scroll-to-button');
+        scrollToButton.textContent = 'Scroll to 5000';
+        buttonsContainer.appendChild(scrollToButton);
+
+        scrollToButton.addEventListener('click', () => {
+            this.virtualTable.scrollTo(5000);
         });
     }
 
