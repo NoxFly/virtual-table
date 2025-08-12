@@ -5,13 +5,16 @@
  * Entry point for the virtualization module.
  * Exports the main VirtualTable component and related type definitions.
  */
-const d = class d {
+const c = class c {
   /**
    * 
    */
   constructor(t, s, e = {}) {
-    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.onDrop = () => {
-    }, this.options = { ...d.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s, this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i)), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i)), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+    this.container = t, this.columns = [], this.rows = [], this.data = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.lastScrollTopIndex = -1, this.onDrop = () => {
+    }, this.options = { ...c.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s, this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i)), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i)), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+  }
+  getNodes() {
+    return this.tree;
   }
   // ------------------------------------------------------------------------------
   // Table DOM manager
@@ -78,29 +81,19 @@ const d = class d {
    *        seulement une partie.
    */
   DOM_computeInViewVisibleRows() {
-    this.DOM_resetSelections();
-    const t = performance.now();
-    for (const n of this.flatten)
-      n.flatIndex = -1;
-    const s = performance.now();
-    this.flatten = [];
-    let e = 0;
-    const i = (n) => {
-      if (this.flatten.push(n), n.flatIndex = e++, n.expanded)
-        for (const h of n.children)
-          i(h);
+    this.DOM_resetSelections(), performance.now();
+    for (const e of this.flatten)
+      e.flatIndex = -1;
+    performance.now(), this.flatten = [];
+    let t = 0;
+    const s = (e) => {
+      if (this.flatten.push(e), e.flatIndex = t++, e.expanded)
+        for (const i of e.children)
+          s(i);
     };
-    for (const n of this.tree)
-      i(n);
-    const l = performance.now();
-    this.DOM_computeViewbox(), this.DOM_updateViewBoxHeight(), this.DOM_resetTableRows(), this.DOM_updateScroll();
-    const o = performance.now();
-    console.table([
-      { step: "reset tree indexes", time: s - t },
-      { step: "flatten tree", time: l - s },
-      { step: "compute viewbox", time: o - l },
-      { step: "total", time: o - t }
-    ]);
+    for (const e of this.tree)
+      s(e);
+    performance.now(), this.DOM_computeViewbox(), this.DOM_updateViewBoxHeight(), this.DOM_resetTableRows(), this.DOM_updateScroll(!0), performance.now();
   }
   /**
    * 
@@ -128,7 +121,7 @@ const d = class d {
    * Appelé APRES avoir mis à jour this.flatten
    */
   DOM_updateViewBoxHeight() {
-    this.TOTAL_VISIBLE_ROWS = this.flatten.length, console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+    this.TOTAL_VISIBLE_ROWS = this.flatten.length;
     const t = this.totalVirtualHeight + this.$tableHead.clientHeight - 1;
     this.$table.style.height = t + "px";
   }
@@ -143,22 +136,22 @@ const d = class d {
       const e = s.ref.children.length > 0;
       s.$.classList.toggle("has-children", e), s.$.classList.toggle("expanded", s.ref.expanded), s.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(s))), s.$.style.setProperty("--depth", `${s.ref.depth}`);
       for (const i in this.columns) {
-        const l = this.columns[i], o = s.$.children.item(+i);
-        if (o) {
-          const n = l.field ? s.ref.data[l.field] : void 0, h = {
+        const o = this.columns[i], l = s.$.children.item(+i);
+        if (l) {
+          const a = o.field ? s.ref.data[o.field] : void 0, n = {
             $: s.$,
-            value: n,
+            value: a,
             row: s.ref,
-            column: l,
+            column: o,
             rowIndex: s.y,
             columnIndex: +i
-          }, c = ((t = l.transform) == null ? void 0 : t.call(l, h)) || this.formatCellValue(n);
+          }, h = ((t = o.transform) == null ? void 0 : t.call(o, n)) || this.formatCellValue(a);
           let r = "";
           if (e && i === "0") {
-            const a = s.ref.expanded ? "expanded" : "collapsed";
-            r += `<button class="btn-expand"><span class="expand-icon ${a}"></span></button>`;
+            const d = s.ref.expanded ? "expanded" : "collapsed";
+            r += `<button class="btn-expand"><span class="expand-icon ${d}"></span></button>`;
           }
-          r += `<span class="cell-value">${c}</span>`, o.innerHTML = r;
+          r += `<span class="cell-value">${h}</span>`, l.innerHTML = r;
         }
       }
     }
@@ -225,23 +218,24 @@ const d = class d {
    * @param position La nouvelle position de la ligne.
    */
   DOM_setRowPosition(t, s) {
-    var i, l, o;
+    var i, o, l;
     const e = this.TBODY_START_Y + s.top * (this.ROW_HEIGHT - 1);
-    t.y = s.top, t.ref = this.flatten[t.y], t.$.dataset.index = `${t.y}`, t.$.dataset.treeIndex = `${(i = t.ref) == null ? void 0 : i.flatIndex}`, t.$.dataset.id = ((o = (l = t.ref) == null ? void 0 : l.data.id) == null ? void 0 : o.toString()) || "", t.$.style.setProperty("--y", e + "px");
+    t.y = s.top, t.ref = this.flatten[t.y], t.$.dataset.index = `${t.y}`, t.$.dataset.treeIndex = `${(i = t.ref) == null ? void 0 : i.flatIndex}`, t.$.dataset.id = ((l = (o = t.ref) == null ? void 0 : o.data.id) == null ? void 0 : l.toString()) || "", t.$.style.setProperty("--y", e + "px");
   }
   /**
    * Met à jour la position des lignes visibles.
    * Appelé lors d'un scroll.
    */
-  DOM_updateScroll() {
-    var l;
+  DOM_updateScroll(t) {
+    var a;
     if (this.rows.length === 0)
       return;
-    const t = ((l = this.mostTopRow) == null ? void 0 : l.y) ?? 0, s = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), e = this.TBODY_START_Y + t * (this.ROW_HEIGHT - 1), i = e + this.ROW_HEIGHT;
-    if (!(this.scrollTop >= e && this.scrollTop <= i) && !(s + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length)) {
-      for (let o = 0; o < this.rows.length; o++) {
-        const n = this.rows[o];
-        this.DOM_setRowPosition(n, { top: s + o, left: n.x });
+    const s = ((a = this.mostTopRow) == null ? void 0 : a.y) ?? 0, e = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), i = this.TBODY_START_Y + s * (this.ROW_HEIGHT - 1), o = i + this.ROW_HEIGHT, l = this.totalVirtualHeight > this.container.clientHeight;
+    if (!(this.scrollTop >= i && this.scrollTop <= o) && !(l && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
+      this.lastScrollTopIndex = e;
+      for (let n = 0; n < this.rows.length; n++) {
+        const h = this.rows[n];
+        this.DOM_setRowPosition(h, { top: e + n, left: h.x });
       }
       this.DOM_updateRowsContent();
     }
@@ -314,8 +308,8 @@ const d = class d {
   computeTree(t, s = void 0) {
     const e = new Array(t.length);
     for (let i = 0; i < t.length; i++) {
-      const l = t[i], o = this.dataToTreeNodeRec(l, s);
-      e[i] = o, this.nodeMap.set(l.id.toString(), o), i > 0 && e.length > 1 && (o.left = e[i - 1], e[i - 1].right = o);
+      const o = t[i], l = this.dataToTreeNodeRec(o, s);
+      e[i] = l, this.nodeMap.set(o.id.toString(), l), i > 0 && e.length > 1 && (l.left = e[i - 1], e[i - 1].right = l);
     }
     return e.length > 1 && (e[0].left = e[e.length - 1], e[e.length - 1].right = e[0]), e;
   }
@@ -344,18 +338,18 @@ const d = class d {
       if (!e)
         continue;
       if (e.left && (e.left.right = e.right), e.right && (e.right.left = e.left), e.parent) {
-        const l = e.parent.children.indexOf(e);
-        l !== -1 && e.parent.children.splice(l, 1);
+        const o = e.parent.children.indexOf(e);
+        o !== -1 && e.parent.children.splice(o, 1);
       } else {
-        const l = this.tree.indexOf(e);
-        l !== -1 && this.tree.splice(l, 1);
+        const o = this.tree.indexOf(e);
+        o !== -1 && this.tree.splice(o, 1);
       }
       const i = [e];
       for (; i.length > 0; ) {
-        const l = i.pop();
-        this.nodeMap.delete(l.data.id.toString());
-        for (const o of l.children)
-          i.push(o);
+        const o = i.pop();
+        this.nodeMap.delete(o.data.id.toString());
+        for (const l of o.children)
+          i.push(l);
       }
       e.parent = void 0, e.left = void 0, e.right = void 0, e.children.length = 0;
     }
@@ -371,7 +365,27 @@ const d = class d {
    * 
    */
   addNodes(t, s, e) {
-    return this;
+    if (e.length === 0)
+      return this;
+    const i = this.nodeMap.get(t);
+    if (!i && s)
+      return console.warn(`Reference node with ID "${t}" not found.`), this;
+    const o = this.verifyDuplicateIds(e);
+    if (o.size > 0)
+      return console.warn("Duplicate IDs found in the elements to add:", Array.from(o).join(", ")), this;
+    const l = s ? i : i == null ? void 0 : i.parent, a = this.computeTree(e, l);
+    let n, h = 0;
+    if (s)
+      Array.isArray(i.children) || (i.children = []), n = i.children, h = n.length, n.push(...a);
+    else {
+      n = (l == null ? void 0 : l.children) ?? this.tree;
+      const d = i ? n.indexOf(i) : -1;
+      if (d === -1 && i !== void 0)
+        return console.warn(`Reference node with ID "${t}" not found in the parent.`), this;
+      h = n.length, n.splice(d + 1, 0, ...a);
+    }
+    const r = h + a.length;
+    return h > 0 && (n[h - 1].right = n[h], n[h].left = n[h - 1], n[r - 1].right = n[0], n[0].left = n[r - 1]), this.DOM_computeInViewVisibleRows(), this;
   }
   /**
    * 
@@ -386,11 +400,31 @@ const d = class d {
     return this;
   }
   /**
+   * Vérifie si les éléments à ajouter ont des IDs dupliqués,
+   * entre eux, et avec les IDs déjà présents dans le hashmap.
+   * @returns Un Set contenant les IDs dupliqués.
+   */
+  verifyDuplicateIds(t) {
+    const s = /* @__PURE__ */ new Set(), e = (i) => {
+      for (const o of i) {
+        const l = o.id.toString();
+        (this.nodeMap.has(l) || s.has(l)) && s.add(l), Array.isArray(o.children) && e(o.children);
+      }
+    };
+    return e(t), s;
+  }
+  /**
    * Reset et redéfini les données de la table.
    * Recalcule tout, excepté les colonnes.
    */
   setData(t) {
-    this.data = structuredClone(t), this.recomputeDataTree(), this.DOM_computeInViewVisibleRows();
+    this.data = structuredClone(t);
+    const s = this.verifyDuplicateIds(this.data);
+    if (s.size > 0) {
+      console.warn("Duplicate IDs found in the data:", Array.from(s).join(", "));
+      return;
+    }
+    this.recomputeDataTree(), this.DOM_computeInViewVisibleRows();
   }
   // ---- scroll ----
   /**
@@ -412,14 +446,14 @@ const d = class d {
       return console.warn("Cannot select a row without a reference to the data node."), this;
     const e = this.DOM_getRowIndex(s);
     if (t.shiftKey) {
-      const l = Array.from(this.selectedNodes).reduce((r, a) => e === -1 ? r : Math.abs(a - e) < Math.abs(r - e) ? a : r, -1);
-      if (l === -1)
+      const o = Array.from(this.selectedNodes).reduce((r, d) => e === -1 ? r : Math.abs(d - e) < Math.abs(r - e) ? d : r, -1);
+      if (o === -1)
         return this;
-      const o = Math.min(l, e), n = Math.max(l, e), h = this.DOM_getRowIndex(this.rows[0]), c = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
-      for (let r = o; r <= n; r++) {
-        const a = this.flatten[r];
-        if (this.selectedNodes.add(a.flatIndex), r >= h && r <= c) {
-          const f = (i = this.rows[r - h]) == null ? void 0 : i.$;
+      const l = Math.min(o, e), a = Math.max(o, e), n = this.DOM_getRowIndex(this.rows[0]), h = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
+      for (let r = l; r <= a; r++) {
+        const d = this.flatten[r];
+        if (this.selectedNodes.add(d.flatIndex), r >= n && r <= h) {
+          const f = (i = this.rows[r - n]) == null ? void 0 : i.$;
           f == null || f.classList.add("selected");
         }
       }
@@ -528,18 +562,18 @@ const d = class d {
       const s = t.target, e = s.closest(".tr"), i = !s.closest(".thead");
       e && i && e !== this.$lastHighlightedRow ? (this.$lastHighlightedRow && this.$lastHighlightedRow.classList.remove("dragging-hover"), e.classList.add("dragging-hover"), this.$lastHighlightedRow = e) : (!e || !i) && this.$lastHighlightedRow && (this.$lastHighlightedRow.classList.remove("dragging-hover"), this.$lastHighlightedRow = null);
     }, { capture: !0 }), this.container.addEventListener("drop", (t) => {
-      var o, n;
+      var l, a;
       t.preventDefault();
       const e = t.target.closest(".tr");
       console.log(t);
-      const i = (o = t.dataTransfer) == null ? void 0 : o.getData("text/plain");
-      (n = this.$lastHighlightedRow) == null || n.classList.remove("dragging-hover"), this.$lastHighlightedRow = null;
-      const l = this.rows.find((h) => h.$ === e);
-      this.onDrop(i, l);
+      const i = (l = t.dataTransfer) == null ? void 0 : l.getData("text/plain");
+      (a = this.$lastHighlightedRow) == null || a.classList.remove("dragging-hover"), this.$lastHighlightedRow = null;
+      const o = this.rows.find((n) => n.$ === e);
+      this.onDrop(i, o);
     }), this;
   }
 };
-d.DEFAULT_OPTIONS = {
+c.DEFAULT_OPTIONS = {
   id: "",
   rowHeight: 30,
   columnSizeInPercentage: !1,
@@ -555,7 +589,7 @@ d.DEFAULT_OPTIONS = {
   allowColumnReorder: !1,
   allowRowReorder: !1
 };
-let u = d;
+let u = c;
 export {
   u as VirtualTable
 };

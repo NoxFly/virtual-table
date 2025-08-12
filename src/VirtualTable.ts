@@ -108,6 +108,11 @@ export class VirtualTable<T extends Type> {
 
 
 
+
+    public getNodes(): readonly TreeNode<T>[] {
+        return this.tree;
+    }
+
     // ------------------------------------------------------------------------------
     // Table DOM manager
 
@@ -235,16 +240,16 @@ export class VirtualTable<T extends Type> {
         this.DOM_computeViewbox();
         this.DOM_updateViewBoxHeight();
         this.DOM_resetTableRows();
-        this.DOM_updateScroll();
+        this.DOM_updateScroll(true);
 
         const t3 = performance.now();
 
-        console.table([
-            { step: 'reset tree indexes', time: t1 - t0 },
-            { step: 'flatten tree', time: t2 - t1 },
-            { step: 'compute viewbox', time: t3 - t2 },
-            { step: 'total', time: t3 - t0 },
-        ]);
+        // console.table([
+        //     { step: 'reset tree indexes', time: t1 - t0 },
+        //     { step: 'flatten tree', time: t2 - t1 },
+        //     { step: 'compute viewbox', time: t3 - t2 },
+        //     { step: 'total', time: t3 - t0 },
+        // ]);
     }
 
     /**
@@ -283,7 +288,7 @@ export class VirtualTable<T extends Type> {
      */
     private DOM_updateViewBoxHeight(): void {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
-        console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
+        // console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
         
         const totalHeight = this.totalVirtualHeight + this.$tableHead.clientHeight - 1;
         this.$table.style.height = totalHeight + 'px';
@@ -493,7 +498,7 @@ export class VirtualTable<T extends Type> {
      * Met à jour la position des lignes visibles.
      * Appelé lors d'un scroll.
      */
-    private DOM_updateScroll(): void {
+    private DOM_updateScroll(force?: boolean): void {
         if(this.rows.length === 0) {
             return;
         }
@@ -503,13 +508,21 @@ export class VirtualTable<T extends Type> {
         const topMin = this.TBODY_START_Y + y * (this.ROW_HEIGHT - 1);
         const topMax = topMin + this.ROW_HEIGHT;
 
+        const isOverflow = this.totalVirtualHeight > this.container.clientHeight;
+
         if(this.scrollTop >= topMin && this.scrollTop <= topMax) {
             return;
         }
-        
-        if(scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+
+        if(isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
             return;
         }
+
+        if(!force && scrollTopIndex === this.lastScrollTopIndex) {
+            return;
+        }
+
+        this.lastScrollTopIndex = scrollTopIndex;
 
         for(let i=0; i < this.rows.length; i++) {
             const row = this.rows[i];
@@ -518,6 +531,8 @@ export class VirtualTable<T extends Type> {
 
         this.DOM_updateRowsContent();
     }
+
+    private lastScrollTopIndex: number = -1;
 
     /**
      * Gère l'événement de scroll du conteneur.
@@ -766,7 +781,74 @@ export class VirtualTable<T extends Type> {
      * 
      */
     public addNodes(relativeTo: string, asChildren: boolean, elements: T[]): typeof this {
-        // TODO: à implémenter
+        if(elements.length === 0) {
+            return this;
+        }
+
+        const referenceNode = this.nodeMap.get(relativeTo);
+
+        if(!referenceNode && asChildren) {
+            console.warn(`Reference node with ID "${relativeTo}" not found.`);
+            return this;
+        }
+
+        const duplicateIds = this.verifyDuplicateIds(elements);
+
+        if(duplicateIds.size > 0) {
+            console.warn('Duplicate IDs found in the elements to add:', Array.from(duplicateIds).join(', '));
+            return this;
+        }
+
+        const parentNode = asChildren
+            ? referenceNode
+            : referenceNode?.parent;
+
+        const newNodes: TreeNode<T>[] = this.computeTree(elements, parentNode);
+        
+        let nodes: TreeNode<T>[];
+        let childCount = 0;
+        
+        // insère la liste des nouveaux noeuds à la fin de la liste des enfants de référence
+        if(asChildren) {
+            if(!Array.isArray(referenceNode!.children)) {
+                referenceNode!.children = [];
+            }
+
+            nodes = referenceNode!.children;
+            childCount = nodes.length;
+            nodes.push(...newNodes);
+        }
+        // insère la liste des nouveaux noeuds juste après le relativeTo
+        else {
+            nodes = parentNode?.children ?? this.tree;
+
+            const index = referenceNode
+                ? nodes.indexOf(referenceNode)
+                : -1;
+            
+            if(index === -1 && referenceNode !== undefined) {
+                console.warn(`Reference node with ID "${relativeTo}" not found in the parent.`);
+                return this;
+            }
+
+            childCount = nodes.length;
+            nodes.splice(index + 1, 0, ...newNodes);
+        }
+
+        const newChildCount = childCount + newNodes.length;
+
+        if(childCount > 0) {
+            // jointure interne
+            nodes[childCount - 1].right = nodes[childCount];
+            nodes[childCount].left = nodes[childCount - 1];
+            
+            // jointure externe
+            nodes[newChildCount - 1].right = nodes[0];
+            nodes[0].left = nodes[newChildCount - 1];
+        }
+
+        this.DOM_computeInViewVisibleRows();
+
         return this;
     }
     
@@ -786,6 +868,33 @@ export class VirtualTable<T extends Type> {
     }
 
 
+    /**
+     * Vérifie si les éléments à ajouter ont des IDs dupliqués,
+     * entre eux, et avec les IDs déjà présents dans le hashmap.
+     * @returns Un Set contenant les IDs dupliqués.
+     */
+    private verifyDuplicateIds(elements: Type[]): Set<string> {
+        const duplicateIds = new Set<string>();
+
+        const recursiveCheck = (elements: Type[]): void => {
+            for(const element of elements) {
+                const id = element.id.toString();
+                
+                if(this.nodeMap.has(id) || duplicateIds.has(id)) {
+                    duplicateIds.add(id);
+                }
+
+                if(Array.isArray(element.children)) {
+                    recursiveCheck(element.children);
+                }
+            }
+        };
+
+        recursiveCheck(elements);
+
+        return duplicateIds;
+    }
+
 
     /**
      * Reset et redéfini les données de la table.
@@ -793,6 +902,13 @@ export class VirtualTable<T extends Type> {
      */
     public setData(data: T[]): void {
         this.data = structuredClone(data);
+
+        const dups = this.verifyDuplicateIds(this.data);
+
+        if(dups.size > 0) {
+            console.warn('Duplicate IDs found in the data:', Array.from(dups).join(', '));
+            return;
+        }
 
         this.recomputeDataTree();
 

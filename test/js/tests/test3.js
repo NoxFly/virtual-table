@@ -42,7 +42,6 @@ export class Test3 extends Test {
 
     execute() {
         this.data = generateRandomContacts(6, false);
-        console.log(this.data);
 
         const virtualTable = new VirtualTable(this.table, this.columnsDef, {
             rowHeight: 60,

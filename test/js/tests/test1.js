@@ -5,7 +5,7 @@ import { generateRandomContacts } from "../faker.js";
 
 export class Test1 extends Test {
     static id = 1;
-    static description = "100 000 entries for first level, children, drag & drop, basic styling, some options.";
+    static description = "10 000 entries for first level, children, drag & drop, basic styling, some options.";
 
     columnsDef = [
         {
@@ -73,14 +73,17 @@ export class Test1 extends Test {
 
     mouse = { x: 0, y: 0 };
     grabPoint = { x: 0, y: 0 };
+    dropActionMap = new Map();
 
     constructor(parentElement) {
         super(Test1.id, parentElement);
     }
 
+    /**
+     * 
+     */
     execute() {
-        this.data = generateRandomContacts(100);
-        console.log(this.data);
+        this.data = generateRandomContacts(0);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             columnSizeInPercentage: false,
@@ -97,12 +100,18 @@ export class Test1 extends Test {
         this.generateFilterbar();
 
         // setTimeout(() => {
-        //     virtualTable.scrollTo(98000);
+        //     this.virtualTable.scrollTo(9800);
         // }, 1000);
 
-        this.createDraggableElement();
+        this.createDraggableElement('Delete', this.onDeleteActionDrop.bind(this), 'action-delete');
+        this.createDraggableElement('Insert next to it', this.onInsertBelowActionDrop.bind(this), 'action-insert-below');
+        this.createDraggableElement('Insert children', this.onInsertChildrenActionDrop.bind(this), 'action-insert-children');
+        this.createDraggableElement('Update', this.onInsertChildrenActionDrop.bind(this), 'action-update');
     }
 
+    /**
+     * 
+     */
     generateFilterbar() {
         const filterbar = document.createElement('div');
         filterbar.classList.add('filterbar');
@@ -140,35 +149,63 @@ export class Test1 extends Test {
         filterFieldSelect.addEventListener('change', this.onFilterFieldChange.bind(this));
     }
 
+    /**
+     * 
+     */
     onFilterInput(event) {
     }
 
+    /**
+     * 
+     */
     onFilterFieldChange(event) {
     }
 
-    createDraggableElement() {
+    /**
+     * 
+     * @param {string} caption 
+     * @param {(data: any, row: any) => void} action 
+     * @param {string} className
+     */
+    createDraggableElement(caption, action, className = '') {
         const draggableDiv = document.createElement('div');
-        draggableDiv.classList.add('draggable-div');
-        draggableDiv.textContent = 'Drag me over the table!';
+        draggableDiv.classList.add('draggable-div', className);
+        draggableDiv.textContent = caption;
         draggableDiv.setAttribute('draggable', 'true');
-        this.container.appendChild(draggableDiv);
 
-        draggableDiv.addEventListener('dragstart', this.onDragStart.bind(this));
+
+        let draggableDivContainer = document.querySelector('.draggable-container');
+        
+        if (!draggableDivContainer) {
+            draggableDivContainer = document.createElement('div');
+            draggableDivContainer.classList.add('draggable-container');
+            this.container.appendChild(draggableDivContainer);
+        }
+
+        draggableDivContainer.appendChild(draggableDiv);
+
+        draggableDiv.addEventListener('dragstart', e => this.onDragStart(e, action.name));
+        this.dropActionMap.set(Symbol.for(action.name), action);
     }
 
+    /**
+     * 
+     */
     onDrop(data, row) {
         console.log('Dropped data:', data);
         console.log('Dropped row:', row);
 
-        const nodeId = row.ref.data.id;
+        const action = this.dropActionMap.get(Symbol.for(data));
 
-        if(nodeId) {
-            this.virtualTable.deleteNode(nodeId);
-        }
+        action?.(data, row);
     }
 
-    // when start dragging the div, create a clone and move the clone to the mouse position when dragging
-    onDragStart(event) {
+    /**
+     * when start dragging the div, create a clone and move the clone to the mouse position when dragging
+     * @param {DragEvent} event
+     * @param {string} actionId
+     */
+    onDragStart(event, actionId) {
         const clone = event.target.cloneNode(true);
         clone.id = 'clone';
 
@@ -179,6 +216,7 @@ export class Test1 extends Test {
 
         event.dataTransfer.dropEffect = "copy";
         event.dataTransfer.setDragImage(new Image(), 0, 0);
+        event.dataTransfer.setData('text/plain', actionId);
 
         document.body.addEventListener('drag', this.onDrag.bind(this));
         document.addEventListener('dragend', this.onDragEnd.bind(this), { once: true });
@@ -189,7 +227,9 @@ export class Test1 extends Test {
         document.body.appendChild(clone);
     }
     
-
+    /**
+     * 
+     */
     onDrag(event) {
         const clone = document.getElementById('clone');
         
@@ -201,6 +241,9 @@ export class Test1 extends Test {
         }
     }
 
+    /**
+     * 
+     */
     onDragEnd(event) {
         document.body.removeEventListener('drag', this.onDrag.bind(this));
         document.removeEventListener('dragover', this.onDragOver.bind(this));
@@ -216,10 +259,75 @@ export class Test1 extends Test {
         }
     }
 
+    /**
+     * 
+     */
     onDragOver(event) {
         this.mouse.x = event.clientX;
         this.mouse.y = event.clientY;
     }
+
+    /**
+     * 
+     */
+    onDeleteActionDrop(data, row) {
+        if(!row) {
+            return;
+        }
+
+        const nodeId = row.ref.data.id;
+        this.virtualTable.deleteNode(nodeId);
+    }
+
+    /**
+     * 
+     */
+    onInsertBelowActionDrop(data, row) {
+        if(!row) {
+            const nodes = this.virtualTable.getNodes();
+            const lastNodeId = nodes[nodes.length - 1]?.data.id;
+            row = { ref: { data: { id: lastNodeId } } };
+        }
+
+        const nodeId = row.ref.data.id;
+        const randomCount = Math.floor(Math.random() * 5) + 1;
+        const nodes = generateRandomContacts(randomCount, Math.random() >= 0.5);
+        this.virtualTable.addNodes(nodeId, false, nodes);
+    }
+
+    /**
+     * 
+     */
+    onInsertChildrenActionDrop(data, row) {
+        if(!row) {
+            const nodes = this.virtualTable.getNodes();
+            const lastNodeId = nodes[nodes.length - 1]?.data.id;
+            row = { ref: { data: { id: lastNodeId } } };
+        }
+
+        const nodeId = row.ref.data.id;
+        const randomCount = Math.floor(Math.random() * 5) + 1;
+        const nodes = generateRandomContacts(randomCount, Math.random() >= 0.5);
+        this.virtualTable.addNodes(nodeId, true, nodes);
+    }
+
+    /**
+     * 
+     */
+    onUpdateActionDrop(data, row) {
+        if(!row) {
+            return;
+        }
+
+        const nodeId = row.ref.data.id;
+        const newNodeData = generateRandomContacts(1)[0];
+
+        newNodeData.id = nodeId;
+        delete newNodeData.children;
+
+        this.virtualTable.updateNode(newNodeData);
+    }
+
 
     /**
      * 

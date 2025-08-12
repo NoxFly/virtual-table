@@ -275,12 +275,44 @@ body {
 
 
 .draggable-div {
-    background: #00838f;
-    color: #fff;
+    --bg: #00838f;
+    --fg: #fff;
+
+    background: var(--bg);
+    color: var(--fg);
     border: 1px solid transparent;
     padding: 10px;
     cursor: move;
     user-select: none;
+}
+
+.action-delete {
+    --bg: #d32f2f;
+    --fg: #fff;
+}
+
+.action-insert-below {
+    --bg: #1976d2;
+    --fg: #fff;
+}
+
+.action-insert-children {
+    --bg: #388e3c;
+    --fg: #fff;
+}
+
+.action-update {
+    --bg: #fbc02d;
+    --fg: #000;
+}
+
+.draggable-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 #clone {

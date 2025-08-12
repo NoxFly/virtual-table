@@ -34,7 +34,6 @@ export class Test {
      * @returns {HTMLElement}
      */
     createTestContainer(id, parentElement) {
-        console.log(this);
         this.container = document.createElement('section');
         this.container.classList.add('test-container');
         parentElement.appendChild(this.container);
