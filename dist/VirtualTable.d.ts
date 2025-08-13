@@ -1,3 +1,5 @@
+export * from 'styles/VirtualTable.module.css';
+
 declare class EventManager {
     private readonly listeners;
     listenTo<K extends keyof DocumentEventMap>(target: EventTarget, type: K, callback: (this: Document, ev: DocumentEventMap[K]) => void, options?: boolean | AddEventListenerOptions): symbol;
@@ -42,19 +44,22 @@ interface Cell<T extends Type> {
     rowIndex: number;
     columnIndex: number;
 }
-type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html';
+type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html' | 'enum';
 interface ColumnDef<T extends Type> {
+    id: string;
     title: string;
     field?: keyof T;
     type?: ColumnType;
+    enumValues?: Set<string>;
     width: number;
     cssClasses?: string[];
     readonly?: boolean;
     required?: boolean;
     hidden?: boolean;
     sortable?: boolean;
-    transform?: (cell: Cell<T>) => string;
+    transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }
+type ColumnsDefs<T extends Type> = Omit<ColumnDef<T>, 'id'>[];
 interface VirtualTableOptions {
     id: string;
     rowHeight: number;
@@ -93,7 +98,7 @@ declare class VirtualTable<T extends Type> {
     private $lastHighlightedRow;
     readonly options: VirtualTableOptions;
     private readonly $columns;
-    constructor(container: HTMLElement, columnsDef: ColumnDef<T>[], options?: Partial<VirtualTableOptions>);
+    constructor(container: HTMLElement, columnsDef: ColumnsDefs<T>, options?: Partial<VirtualTableOptions>);
     private get scrollTop();
     private get totalVirtualHeight();
     private get columnUnits();
@@ -148,8 +153,9 @@ declare class VirtualTable<T extends Type> {
     allowCellSelection(allow: boolean): typeof this;
     allowCellEditing(allow: boolean): typeof this;
     hideColumn(columnIndex: number): typeof this;
+    hideColumn(columnId: string): typeof this;
     makeDroppable(): typeof this;
     onDrop: (data: string | undefined, row: TableRow<T>) => void;
 }
 
-export { type Any, type Cell, type ColumnDef, type ColumnType, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };
+export { type Any, type Cell, type ColumnDef, type ColumnType, type ColumnsDefs, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };

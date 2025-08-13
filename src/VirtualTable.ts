@@ -1,12 +1,12 @@
 /**
  * @copyright Copyright (c) 2025 NoxFly
  * @license AGPL-3.0
- * 
+ *
  * Entry point for the virtualization module.
  * Exports the main VirtualTable component and related type definitions.
  */
 
-import { Any, Cell, ColumnDef, Position, TableRow, TreeNode, Type, UpdatedRow, VirtualTableOptions } from './types';
+import { Any, Cell, ColumnDef, ColumnsDefs, Position, TableRow, TreeNode, Type, UpdatedRow, VirtualTableOptions } from './types';
 
 export class VirtualTable<T extends Type> {
     protected static readonly DEFAULT_OPTIONS: VirtualTableOptions = {
@@ -64,21 +64,24 @@ export class VirtualTable<T extends Type> {
 
 
     /**
-     * 
+     *
      */
-    constructor(private readonly container: HTMLElement, columnsDef: ColumnDef<T>[], options: Partial<VirtualTableOptions> = {}) {
+    constructor(private readonly container: HTMLElement, columnsDef: ColumnsDefs<T>, options: Partial<VirtualTableOptions> = {}) {
         this.options = { ...VirtualTable.DEFAULT_OPTIONS, ...options };
 
         this.ROW_HEIGHT = this.options.rowHeight;
 
-        this.columns = columnsDef;
+        this.columns = columnsDef.map(col => ({
+            id: crypto.randomUUID(),
+            ...col,
+        }));
 
         this.$table = document.createElement('div');
         this.$table.classList.add('table');
-        
+
         this.$tableHead = document.createElement('div');
         this.$tableHead.classList.add('thead');
-        
+
         this.$tableBody = document.createElement('div');
         this.$tableBody.classList.add('tbody');
 
@@ -117,7 +120,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private get totalVirtualHeight(): number {
         //                                                                          border-size v
@@ -125,7 +128,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private get columnUnits(): string {
         return this.options.columnSizeInPercentage
@@ -149,6 +152,7 @@ export class VirtualTable<T extends Type> {
             const $th = document.createElement('div');
 
             $th.dataset.type = columnDef.type || 'string';
+            $th.dataset.id = columnDef.id;
             $th.classList.add('th', ...(columnDef.cssClasses || []));
             $th.style.width = columnDef.width + this.columnUnits;
 
@@ -160,7 +164,7 @@ export class VirtualTable<T extends Type> {
 
             const $span = document.createElement('span');
             $span.classList.add('cell-value');
-            $span.textContent = columnDef.title;
+            $span.innerHTML = columnDef.title;
 
             $th.appendChild($span);
             $tr.appendChild($th);
@@ -207,7 +211,7 @@ export class VirtualTable<T extends Type> {
      * Met à jour la hauteur du conteneur virtuel.
      * En amont, transforme l'arbre en liste plate.
      * La liste plate ne contient que les nœuds visibles.
-     * 
+     *
      * *Note : recalcule TOUT, pas intelligemment.*
      */
     private DOM_computeInViewVisibleRows(): void {
@@ -244,7 +248,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_resetSelections(): void {
         this.unselectAllCells();
@@ -268,7 +272,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_getRowIndex(row: TableRow<T>): number {
         return +(row.$.dataset.index ?? "-1");
@@ -280,13 +284,13 @@ export class VirtualTable<T extends Type> {
     private DOM_updateViewBoxHeight(): void {
         this.TOTAL_VISIBLE_ROWS = this.flatten.length;
         // console.debug("Total visible rows: ", this.TOTAL_VISIBLE_ROWS);
-        
+
         const totalHeight = this.totalVirtualHeight + this.$tableHead.clientHeight - 1;
         this.$table.style.height = totalHeight + 'px';
     }
-    
+
     /**
-     * 
+     *
      */
     private DOM_updateRowsContent(): void {
         for(const row of this.rows) {
@@ -295,7 +299,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_updateRowContent(row: TableRow<T>): void {
         if(!row.ref) {
@@ -343,7 +347,24 @@ export class VirtualTable<T extends Type> {
                 columnIndex: +i,
             };
 
-            const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
+            let transformedValue: string;
+
+            if(col.transform !== undefined) {
+                const v = col.transform?.(cell);
+
+                if(v === undefined || v === null) {
+                    transformedValue = "";
+                }
+                else if(v instanceof HTMLElement) {
+                    transformedValue = v.outerHTML;
+                }
+                else {
+                    transformedValue = v;
+                }
+            }
+            else {
+                transformedValue = this.formatCellValue(value);
+            }
 
             let html = '';
 
@@ -364,7 +385,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_getTableRowFromNode(node: TreeNode<T>): TableRow<T> | undefined {
         if(node.flatIndex < 0 || node.flatIndex >= this.flatten.length) {
@@ -375,7 +396,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private formatCellValue(value: Any): string {
         return value?.toString() || '';
@@ -414,7 +435,7 @@ export class VirtualTable<T extends Type> {
     /**
      * Créé une <tr> vide et l'ajoute à la fin du <tbody>.
      * Créé les <td> correspondants aux colonnes.
-     * 
+     *
      * @returns La ligne vide créée.
      */
     private DOM_createEmptyRow(shouldAddDirectly: boolean = true): TableRow<T> {
@@ -428,7 +449,7 @@ export class VirtualTable<T extends Type> {
 
         row.nextElement = row;
         row.previousElement = row;
-        
+
         if(this.rows.length > 0) {
             row.previousElement = this.rows[this.rows.length - 1];
             row.previousElement.nextElement = row;
@@ -449,7 +470,7 @@ export class VirtualTable<T extends Type> {
 
     /**
      * Créé les <td> vides correspondant aux colonnes.
-     * 
+     *
      * @param row La ligne à laquelle ajouter les cellules vides.
      */
     private DOM_createEmptyCells(row: TableRow<T>): void {
@@ -462,11 +483,11 @@ export class VirtualTable<T extends Type> {
 
             const $td = document.createElement('div');
             $td.classList.add('td', ...(columnDef.cssClasses || []));
-            
+
             if(columnDef.field) {
                 $td.classList.add('field', `field-${columnDef.field.toString()}`);
             }
-            
+
             $td.style.setProperty('--width', columnDef.width + this.columnUnits);
 
             $td.dataset.type = columnDef.type || 'string';
@@ -479,7 +500,7 @@ export class VirtualTable<T extends Type> {
 
     /**
      * Supprime la ligne donnée du <tbody> et de la liste des lignes.
-     * 
+     *
      * @param row La ligne à supprimer.
      */
     private DOM_removeRow(rowIndex: number): void;
@@ -549,7 +570,7 @@ export class VirtualTable<T extends Type> {
     /**
      * Met à jour la position de la ligne donnée.
      * Appelé lors d'un scroll.
-     * 
+     *
      * @param row La ligne à mettre à jour.
      * @param position La nouvelle position de la ligne.
      */
@@ -613,7 +634,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_EVENT_onClick(e: MouseEvent): void {
         if(!e.shiftKey && !e.ctrlKey) {
@@ -642,14 +663,14 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private DOM_EVENT_onRowClick(e: MouseEvent, row: TableRow<T>, $target: HTMLElement): void {
         if($target.closest('.btn-expand')) {
             this.toggleRowExpand(row);
             return;
         }
-        
+
         if($target.closest('.td')) {
             const $cell = $target.closest('.td') as HTMLElement;
 
@@ -673,7 +694,7 @@ export class VirtualTable<T extends Type> {
     /**
      * Gère l'événement de clic sur une ligne.
      * Développe ou réduit la ligne si elle a des enfants.
-     * 
+     *
      * @param row La ligne sur laquelle on a cliqué.
      * @param expandBtn Le bouton d'expansion/réduction.
      */
@@ -723,11 +744,11 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private computeTree(data: T[], parent: TreeNode<T> | undefined = undefined): TreeNode<T>[] {
         const root = new Array(data.length);
-        
+
         for(let i = 0; i < data.length; i++) {
             const d = data[i];
 
@@ -752,7 +773,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     private recomputeDataTree(data: T[]): void {
         this.tree = this.computeTree(data);
@@ -772,14 +793,14 @@ export class VirtualTable<T extends Type> {
     // CRUD
 
     /**
-     * 
+     *
      */
     public deleteNode(nodeId: string): typeof this {
         return this.deleteNodes([nodeId]);
     }
-    
+
     /**
-     * 
+     *
      */
     public deleteNodes(nodeIds: string[]): typeof this {
         if(nodeIds.length === 0) {
@@ -797,14 +818,14 @@ export class VirtualTable<T extends Type> {
             // a. déconnexion des voisins horizontaux
             if(node.left)
                 node.left.right = node.right;
-            
+
             if(node.right)
                 node.right.left = node.left;
 
             // b. Suppression dans le parent
             if(node.parent) {
                 const idx = node.parent.children.indexOf(node);
-                
+
                 if(idx !== -1) {
                     node.parent.children.splice(idx, 1);
                 }
@@ -812,7 +833,7 @@ export class VirtualTable<T extends Type> {
             // root tree
             else {
                 const idx = this.tree.indexOf(node);
-                
+
                 if(idx !== -1) {
                     this.tree.splice(idx, 1);
                 }
@@ -823,7 +844,7 @@ export class VirtualTable<T extends Type> {
 
             while(stack.length > 0) {
                 const currentNode = stack.pop()!;
-                
+
                 this.nodeMap.delete(currentNode.data.id.toString());
 
                 for(const child of currentNode.children) {
@@ -843,16 +864,16 @@ export class VirtualTable<T extends Type> {
 
         return this;
     }
-    
+
     /**
-     * 
+     *
      */
     public addNode(relativeTo: string, asChildren: boolean, element: T): typeof this {
         return this.addNodes(relativeTo, asChildren, [element]);
     }
-    
+
     /**
-     * 
+     *
      */
     public addNodes(relativeTo: string, asChildren: boolean, elements: T[]): typeof this {
         if(elements.length === 0) {
@@ -878,10 +899,10 @@ export class VirtualTable<T extends Type> {
             : referenceNode?.parent;
 
         const newNodes: TreeNode<T>[] = this.computeTree(elements, parentNode);
-        
+
         let nodes: TreeNode<T>[];
         let childCount = 0;
-        
+
         // insère la liste des nouveaux noeuds à la fin de la liste des enfants de référence
         if(asChildren) {
             if(!Array.isArray(referenceNode!.children)) {
@@ -899,7 +920,7 @@ export class VirtualTable<T extends Type> {
             const index = referenceNode
                 ? nodes.indexOf(referenceNode)
                 : -1;
-            
+
             if(index === -1 && referenceNode !== undefined) {
                 console.warn(`Reference node with ID "${relativeTo}" not found in the parent.`);
                 return this;
@@ -915,7 +936,7 @@ export class VirtualTable<T extends Type> {
             // jointure interne
             nodes[childCount - 1].right = nodes[childCount];
             nodes[childCount].left = nodes[childCount - 1];
-            
+
             // jointure externe
             nodes[newChildCount - 1].right = nodes[0];
             nodes[0].left = nodes[newChildCount - 1];
@@ -925,9 +946,9 @@ export class VirtualTable<T extends Type> {
 
         return this;
     }
-    
+
     /**
-     * 
+     *
      */
     public updateNode(node: UpdatedRow<T>): typeof this {
         return this.updateNodes([node]);
@@ -981,7 +1002,7 @@ export class VirtualTable<T extends Type> {
         const recursiveCheck = (elements: Type[]): void => {
             for(const element of elements) {
                 const id = element.id.toString();
-                
+
                 if(this.nodeMap.has(id) || duplicateIds.has(id)) {
                     duplicateIds.add(id);
                 }
@@ -1018,7 +1039,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public clear(): void {
         this.tree.length = 0;
@@ -1033,7 +1054,7 @@ export class VirtualTable<T extends Type> {
 
 
     /**
-     * 
+     *
      */
     public getNodes(): readonly TreeNode<T>[] {
         return this.tree;
@@ -1059,9 +1080,9 @@ export class VirtualTable<T extends Type> {
 
 
     // ---- selection ----
-    
+
     /**
-     * 
+     *
      */
     public selectRow(event: MouseEvent, row: TableRow<T>): typeof this {
         if(!row.ref) {
@@ -1106,7 +1127,7 @@ export class VirtualTable<T extends Type> {
 
             return this;
         }
-        
+
         // unit selection
         if(this.selectedNodes.has(rowIndex)) {
             row.$.classList.remove('selected');
@@ -1121,7 +1142,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public selectAllRows(): typeof this {
         this.$tableBody.querySelectorAll('.tr').forEach($row => {
@@ -1138,7 +1159,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public unselectAllRows(): typeof this {
         this.$tableBody.querySelectorAll('.tr.selected').forEach($row => {
@@ -1151,7 +1172,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public selectCell(): typeof this {
         // TODO
@@ -1159,7 +1180,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public unselectAllCells(): typeof this {
         this.$tableBody.querySelectorAll('.td.selected').forEach($cell => {
@@ -1172,7 +1193,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public selectColumn(column: ColumnDef<T>): typeof this {
         const columnIndex = this.columns.findIndex(c => c.title === column.title);
@@ -1201,7 +1222,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public unselectAllColumns(): typeof this {
         this.$tableHead.querySelectorAll('.th.selected').forEach($th => {
@@ -1214,7 +1235,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public editCell(row: TableRow<T>, $cell: HTMLElement): typeof this {
         // TODO: créer input
@@ -1222,7 +1243,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public cancelCellEdition(): typeof this {
         // this.states.$editedCellInput?.remove();
@@ -1236,7 +1257,7 @@ export class VirtualTable<T extends Type> {
     // ---- resizing ----
 
     /**
-     * 
+     *
      */
     public allowColumnResizing(allow: boolean): typeof this {
         this.options.allowColumnResize = allow;
@@ -1244,7 +1265,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public allowRowSelection(allow: boolean): typeof this {
         this.options.allowRowSelection = allow;
@@ -1252,7 +1273,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public allowCellSelection(allow: boolean): typeof this {
         this.options.allowCellSelection = allow;
@@ -1260,7 +1281,7 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
-     * 
+     *
      */
     public allowCellEditing(allow: boolean): typeof this {
         this.options.allowCellEditing = allow;
@@ -1273,7 +1294,18 @@ export class VirtualTable<T extends Type> {
      * mais la rend invisible dans l'affichage.
      * @param column L'index de la colonne à masquer. Attention, il faut que ce soit l'index "absolu" (par rapport à toutes les colonnes, même celles cachées).
      */
-    public hideColumn(columnIndex: number): typeof this {
+    public hideColumn(columnIndex: number): typeof this;
+    public hideColumn(columnId: string): typeof this;
+    public hideColumn(columnIndexOrId: number | string): typeof this {
+        let columnIndex: number;
+
+        if(typeof columnIndexOrId === 'number') {
+            columnIndex = columnIndexOrId;
+        }
+        else {
+            columnIndex = this.columns.findIndex(c => c.id === columnIndexOrId);
+        }
+
         if(columnIndex < 0 || columnIndex >= this.columns.length) {
             console.warn(`Column index ${columnIndex} is out of bounds.`);
             return this;
@@ -1327,7 +1359,7 @@ export class VirtualTable<T extends Type> {
                 }
             }
         }, { capture: true });
-        
+
         this.container.addEventListener('drop', (event) => {
             event.preventDefault();
 

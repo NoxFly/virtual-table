@@ -32,11 +32,16 @@
         "typeRoots": [
             "./node_modules/@types",
             "./src/types"
+        ],
+        "plugins": [
+            {
+                "name": "typescript-plugin-css-modules"
+            }
         ]
     },
     "include": [
         "src/**/*",
-        "test/js/**/*.ts", "tmp/cgpt.ts",
+        "test/js/**/*.ts", "tmp/cgpt.ts", "dist/css.d.ts",
     ],
     "exclude": [
         "node_modules",

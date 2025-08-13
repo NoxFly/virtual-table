@@ -80,7 +80,7 @@ var EventManager = _EventManager;
 // src/VirtualTable.ts
 var _VirtualTable = class _VirtualTable {
   /**
-   * 
+   *
    */
   constructor(container, columnsDef, options = {}) {
     this.container = container;
@@ -113,7 +113,10 @@ var _VirtualTable = class _VirtualTable {
     }, "onDrop");
     this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
     this.ROW_HEIGHT = this.options.rowHeight;
-    this.columns = columnsDef;
+    this.columns = columnsDef.map((col) => ({
+      id: crypto.randomUUID(),
+      ...col
+    }));
     this.$table = document.createElement("div");
     this.$table.classList.add("table");
     this.$tableHead = document.createElement("div");
@@ -144,13 +147,13 @@ var _VirtualTable = class _VirtualTable {
     return this.container.scrollTop;
   }
   /**
-   * 
+   *
    */
   get totalVirtualHeight() {
     return this.$tableHead.clientHeight + (this.TOTAL_VISIBLE_ROWS - 1) * (this.ROW_HEIGHT - 1);
   }
   /**
-   * 
+   *
    */
   get columnUnits() {
     return this.options.columnSizeInPercentage ? "%" : "px";
@@ -168,6 +171,7 @@ var _VirtualTable = class _VirtualTable {
       }
       const $th = document.createElement("div");
       $th.dataset.type = columnDef.type || "string";
+      $th.dataset.id = columnDef.id;
       $th.classList.add("th", ...columnDef.cssClasses || []);
       $th.style.width = columnDef.width + this.columnUnits;
       if (columnDef.field) {
@@ -175,7 +179,7 @@ var _VirtualTable = class _VirtualTable {
       }
       const $span = document.createElement("span");
       $span.classList.add("cell-value");
-      $span.textContent = columnDef.title;
+      $span.innerHTML = columnDef.title;
       $th.appendChild($span);
       $tr.appendChild($th);
       this.$columns.push($th);
@@ -212,7 +216,7 @@ var _VirtualTable = class _VirtualTable {
    * Met à jour la hauteur du conteneur virtuel.
    * En amont, transforme l'arbre en liste plate.
    * La liste plate ne contient que les nœuds visibles.
-   * 
+   *
    * *Note : recalcule TOUT, pas intelligemment.*
    */
   DOM_computeInViewVisibleRows() {
@@ -240,7 +244,7 @@ var _VirtualTable = class _VirtualTable {
     this.DOM_updateScroll(true);
   }
   /**
-   * 
+   *
    */
   DOM_resetSelections() {
     this.unselectAllCells();
@@ -260,7 +264,7 @@ var _VirtualTable = class _VirtualTable {
     return this.rows[index - firstIndex] || null;
   }
   /**
-   * 
+   *
    */
   DOM_getRowIndex(row) {
     return +(row.$.dataset.index ?? "-1");
@@ -274,7 +278,7 @@ var _VirtualTable = class _VirtualTable {
     this.$table.style.height = totalHeight + "px";
   }
   /**
-   * 
+   *
    */
   DOM_updateRowsContent() {
     for (const row of this.rows) {
@@ -282,7 +286,7 @@ var _VirtualTable = class _VirtualTable {
     }
   }
   /**
-   * 
+   *
    */
   DOM_updateRowContent(row) {
     if (!row.ref) {
@@ -313,7 +317,19 @@ var _VirtualTable = class _VirtualTable {
         rowIndex: row.y,
         columnIndex: +i
       };
-      const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
+      let transformedValue;
+      if (col.transform !== void 0) {
+        const v = col.transform?.(cell);
+        if (v === void 0 || v === null) {
+          transformedValue = "";
+        } else if (v instanceof HTMLElement) {
+          transformedValue = v.outerHTML;
+        } else {
+          transformedValue = v;
+        }
+      } else {
+        transformedValue = this.formatCellValue(value);
+      }
       let html = "";
       if (hasChildren && $cell.classList.contains("expand") && this.options.allowExpandCollapse) {
         const cls = row.ref.expanded ? "expanded" : "collapsed";
@@ -325,7 +341,7 @@ var _VirtualTable = class _VirtualTable {
     }
   }
   /**
-   * 
+   *
    */
   DOM_getTableRowFromNode(node) {
     if (node.flatIndex < 0 || node.flatIndex >= this.flatten.length) {
@@ -334,7 +350,7 @@ var _VirtualTable = class _VirtualTable {
     return this.rows.find((r) => r.ref?.data.id === node.data.id);
   }
   /**
-   * 
+   *
    */
   formatCellValue(value) {
     return value?.toString() || "";
@@ -365,7 +381,7 @@ var _VirtualTable = class _VirtualTable {
   /**
    * Créé une <tr> vide et l'ajoute à la fin du <tbody>.
    * Créé les <td> correspondants aux colonnes.
-   * 
+   *
    * @returns La ligne vide créée.
    */
   DOM_createEmptyRow(shouldAddDirectly = true) {
@@ -392,7 +408,7 @@ var _VirtualTable = class _VirtualTable {
   }
   /**
    * Créé les <td> vides correspondant aux colonnes.
-   * 
+   *
    * @param row La ligne à laquelle ajouter les cellules vides.
    */
   DOM_createEmptyCells(row) {
@@ -456,7 +472,7 @@ var _VirtualTable = class _VirtualTable {
   /**
    * Met à jour la position de la ligne donnée.
    * Appelé lors d'un scroll.
-   * 
+   *
    * @param row La ligne à mettre à jour.
    * @param position La nouvelle position de la ligne.
    */
@@ -506,7 +522,7 @@ var _VirtualTable = class _VirtualTable {
     this.DOM_updateScroll();
   }
   /**
-   * 
+   *
    */
   DOM_EVENT_onClick(e) {
     if (!e.shiftKey && !e.ctrlKey) {
@@ -527,7 +543,7 @@ var _VirtualTable = class _VirtualTable {
     }
   }
   /**
-   * 
+   *
    */
   DOM_EVENT_onRowClick(e, row, $target) {
     if ($target.closest(".btn-expand")) {
@@ -550,7 +566,7 @@ var _VirtualTable = class _VirtualTable {
   /**
    * Gère l'événement de clic sur une ligne.
    * Développe ou réduit la ligne si elle a des enfants.
-   * 
+   *
    * @param row La ligne sur laquelle on a cliqué.
    * @param expandBtn Le bouton d'expansion/réduction.
    */
@@ -587,7 +603,7 @@ var _VirtualTable = class _VirtualTable {
     return node;
   }
   /**
-   * 
+   *
    */
   computeTree(data, parent = void 0) {
     const root = new Array(data.length);
@@ -608,7 +624,7 @@ var _VirtualTable = class _VirtualTable {
     return root;
   }
   /**
-   * 
+   *
    */
   recomputeDataTree(data) {
     this.tree = this.computeTree(data);
@@ -619,13 +635,13 @@ var _VirtualTable = class _VirtualTable {
   // ------------------------------------------------------------------------------
   // CRUD
   /**
-   * 
+   *
    */
   deleteNode(nodeId) {
     return this.deleteNodes([nodeId]);
   }
   /**
-   * 
+   *
    */
   deleteNodes(nodeIds) {
     if (nodeIds.length === 0) {
@@ -668,13 +684,13 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   addNode(relativeTo, asChildren, element) {
     return this.addNodes(relativeTo, asChildren, [element]);
   }
   /**
-   * 
+   *
    */
   addNodes(relativeTo, asChildren, elements) {
     if (elements.length === 0) {
@@ -722,7 +738,7 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   updateNode(node) {
     return this.updateNodes([node]);
@@ -791,7 +807,7 @@ var _VirtualTable = class _VirtualTable {
     this.DOM_computeInViewVisibleRows();
   }
   /**
-   * 
+   *
    */
   clear() {
     this.tree.length = 0;
@@ -802,7 +818,7 @@ var _VirtualTable = class _VirtualTable {
     this.DOM_computeInViewVisibleRows();
   }
   /**
-   * 
+   *
    */
   getNodes() {
     return this.tree;
@@ -820,7 +836,7 @@ var _VirtualTable = class _VirtualTable {
   }
   // ---- selection ----
   /**
-   * 
+   *
    */
   selectRow(event, row) {
     if (!row.ref) {
@@ -862,7 +878,7 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   selectAllRows() {
     this.$tableBody.querySelectorAll(".tr").forEach(($row) => {
@@ -875,7 +891,7 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   unselectAllRows() {
     this.$tableBody.querySelectorAll(".tr.selected").forEach(($row) => {
@@ -885,13 +901,13 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   selectCell() {
     return this;
   }
   /**
-   * 
+   *
    */
   unselectAllCells() {
     this.$tableBody.querySelectorAll(".td.selected").forEach(($cell) => {
@@ -901,7 +917,7 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   selectColumn(column) {
     const columnIndex = this.columns.findIndex((c) => c.title === column.title);
@@ -925,7 +941,7 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   unselectAllColumns() {
     this.$tableHead.querySelectorAll(".th.selected").forEach(($th) => {
@@ -935,53 +951,53 @@ var _VirtualTable = class _VirtualTable {
     return this;
   }
   /**
-   * 
+   *
    */
   editCell(row, $cell) {
     return this;
   }
   /**
-   * 
+   *
    */
   cancelCellEdition() {
     return this;
   }
   // ---- resizing ----
   /**
-   * 
+   *
    */
   allowColumnResizing(allow) {
     this.options.allowColumnResize = allow;
     return this;
   }
   /**
-   * 
+   *
    */
   allowRowSelection(allow) {
     this.options.allowRowSelection = allow;
     return this;
   }
   /**
-   * 
+   *
    */
   allowCellSelection(allow) {
     this.options.allowCellSelection = allow;
     return this;
   }
   /**
-   * 
+   *
    */
   allowCellEditing(allow) {
     this.options.allowCellEditing = allow;
     return this;
   }
-  /**
-   * Masque une colonne de la table.
-   * Cette fonction ne supprime pas la colonne,
-   * mais la rend invisible dans l'affichage.
-   * @param column L'index de la colonne à masquer. Attention, il faut que ce soit l'index "absolu" (par rapport à toutes les colonnes, même celles cachées).
-   */
-  hideColumn(columnIndex) {
+  hideColumn(columnIndexOrId) {
+    let columnIndex;
+    if (typeof columnIndexOrId === "number") {
+      columnIndex = columnIndexOrId;
+    } else {
+      columnIndex = this.columns.findIndex((c) => c.id === columnIndexOrId);
+    }
     if (columnIndex < 0 || columnIndex >= this.columns.length) {
       console.warn(`Column index ${columnIndex} is out of bounds.`);
       return this;
@@ -1062,6 +1078,13 @@ var VirtualTable = _VirtualTable;
  * @copyright Copyright (c) 2025 NoxFly
  * @license AGPL-3.0
  * 
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ *
  * Entry point for the virtualization module.
  * Exports the main VirtualTable component and related type definitions.
  */

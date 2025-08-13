@@ -1,13 +1,13 @@
 /**
  * @copyright Copyright (c) 2025 NoxFly
  * @license AGPL-3.0
- * 
+ *
  * Entry point for the virtualization module.
  * Exports the main VirtualTable component and related type definitions.
  */
 
 /**
- * 
+ *
  */
 export type Any = string | number | boolean | null | undefined | Date | object;
 
@@ -122,7 +122,7 @@ export interface TableRow<T extends Type> {
     x: number;
     /**
      * Positionnement absolu en pixels de la ligne dans la table.
-     */ 
+     */
     y: number;
 }
 
@@ -156,12 +156,21 @@ export interface Cell<T extends Type> {
     columnIndex: number;
 }
 
-export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html';
+/**
+ * Représente les types de colonnes supportés dans la table virtuel.
+ * Permet d'identifier le type de données que la colonne doit afficher.
+ * Aucune validation n'est effectuée sur le type de données.
+ */
+export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html' | 'enum';
 
 /**
  * Représente la définition d'une colonne dans la table virtuel.
  */
 export interface ColumnDef<T extends Type> {
+    /**
+     * Identifiant unique de la colonne.
+     */
+    id: string;
     /**
      * Le texte à afficher comme nom de colonne
      */
@@ -180,6 +189,11 @@ export interface ColumnDef<T extends Type> {
      * @see {@link ColumnType}
      */
     type?: ColumnType;
+    /**
+     * Les valeurs possibles pour une colonne de type `enum`.
+     * Sera ignoré si le type n'est pas `enum`.
+     */
+    enumValues?: Set<string>;
     /**
      * La largeur de la colonne. Peut être exprimé en pixel (défaut),
      * ou en pourcentage si {@link VirtualTableOptions.columnSizeInPercentage} vaut `true`.
@@ -214,7 +228,9 @@ export interface ColumnDef<T extends Type> {
     hidden?: boolean;
     /**
      * Indique si un tri sur les lignes peut être effectué grâce
-     * à cette colonne.
+     * à cette colonne. Si cette propriété vaut `true` mais n'a
+     * pas de `field` défini, alors la fonctionnalité de tri ne
+     * sera pas activée sur cette colonne.
      * @default false
      * @todo Pas implémenté pour le moment.
      */
@@ -225,8 +241,10 @@ export interface ColumnDef<T extends Type> {
      * @param cell La cellule à afficher
      * @returns La valeur transformée à afficher
      */
-    transform?: (cell: Cell<T>) => string;
+    transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }
+
+export type ColumnsDefs<T extends Type> = Omit<ColumnDef<T>, 'id'>[];
 
 /**
  * Représente les options de configuration d'une table virtuelle.
@@ -252,15 +270,15 @@ export interface VirtualTableOptions {
      * @default false
      */
     columnSizeInPercentage: boolean;
-    
+
     // --
-    
+
     /**
      * Indique si les en-têtes de colonnes doivent suivre au scroll de la page.
      * @default false
      */
     stickyHeader: boolean;
-    
+
     // -- allowed actions --
 
     /**
@@ -268,7 +286,7 @@ export interface VirtualTableOptions {
      * @default true
      */
     allowExpandCollapse: boolean;
-    
+
     /**
      * Indique si la sélection de colonnes est autorisée.
      * @default false
@@ -314,6 +332,6 @@ export interface VirtualTableOptions {
      * @todo Pas implémenté pour le moment.
     */
     allowRowReorder: boolean;
-    
+
     // --
 }

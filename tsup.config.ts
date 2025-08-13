@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+import { execSync } from "child_process";
 
 const copyrights = `
 /**
@@ -27,5 +28,11 @@ export default defineConfig({
     treeshake: false,
     banner: {
         js: copyrights,
+    },
+    onSuccess: async () => {
+        // Copy all .d.ts files
+        execSync('cp src/*.d.ts dist/', { stdio: 'inherit' });
+        // Copy all .css files
+        execSync('cp -r src/styles/ dist/', { stdio: 'inherit' });
     }
 });
