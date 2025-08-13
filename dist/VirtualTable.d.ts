@@ -73,6 +73,7 @@ export declare class VirtualTable<T extends Type> {
     private mostTopRow;
     private $lastHighlightedRow;
     readonly options: VirtualTableOptions;
+    private readonly $columns;
     constructor(container: HTMLElement, columnsDef: ColumnDef<T>[], options?: Partial<VirtualTableOptions>);
     private get scrollTop();
     private get totalVirtualHeight();
@@ -92,6 +93,7 @@ export declare class VirtualTable<T extends Type> {
     private DOM_createEmptyRow;
     private DOM_createEmptyCells;
     private DOM_removeRow;
+    private DOM_removeCell;
     private DOM_setRowPosition;
     private DOM_updateScroll;
     private lastScrollTopIndex;
@@ -126,6 +128,7 @@ export declare class VirtualTable<T extends Type> {
     allowRowSelection(allow: boolean): typeof VirtualTable;
     allowCellSelection(allow: boolean): typeof VirtualTable;
     allowCellEditing(allow: boolean): typeof VirtualTable;
+    hideColumn(columnIndex: number): typeof VirtualTable;
     makeDroppable(): typeof VirtualTable;
     onDrop: (data: string | undefined, row: TableRow<T>) => void;
 }

@@ -60,7 +60,7 @@ export class VirtualTable<T extends Type> {
     public readonly options: VirtualTableOptions;
 
 
-
+    private readonly $columns: HTMLElement[] = [];
 
 
     /**
@@ -164,8 +164,11 @@ export class VirtualTable<T extends Type> {
 
             $th.appendChild($span);
             $tr.appendChild($th);
+
+            this.$columns.push($th);
         }
 
+        this.$tableHead.innerHTML = ''; // vide le contenu précédent
         this.$tableHead.appendChild($tr);
     }
 
@@ -306,8 +309,14 @@ export class VirtualTable<T extends Type> {
         row.$.classList.toggle('selected', this.selectedNodes.has(this.DOM_getRowIndex(row)));
         row.$.style.setProperty('--depth', `${row.ref.depth}`);
 
-        for(const i in this.columns) {
-            const col = this.columns[i];
+        const visibleColumns = this.columns.filter(c => !c.hidden);
+
+        for(const i in visibleColumns) {
+            const col = visibleColumns[i];
+
+            if(col.hidden) {
+                continue;
+            }
 
             const $cell = row.$.children.item(+i) as HTMLElement | null;
 
@@ -338,7 +347,7 @@ export class VirtualTable<T extends Type> {
 
             let html = '';
 
-            if(hasChildren && i === '0' && this.options.allowExpandCollapse) {
+            if(hasChildren && $cell.classList.contains('expand') && this.options.allowExpandCollapse) {
                 const cls = row.ref.expanded
                     ? 'expanded'
                     : 'collapsed';
@@ -505,6 +514,39 @@ export class VirtualTable<T extends Type> {
     }
 
     /**
+     * Supprime la cellule à l'index donné de chaque ligne.
+     * L'élément HTML de l'entête de la colonne est également enlevé
+     */
+    private DOM_removeCell(columnIndex: number): void {
+        if(columnIndex < 0 || columnIndex >= this.columns.length || this.columns[columnIndex].hidden) {
+            return;
+        }
+
+        this.columns[columnIndex].hidden = true;
+
+        this.$columns[columnIndex].remove();
+
+        // calcule l'index des cellules à supprimer.
+        // Ce doit être columnIndex - X, où X est le nombre de colonnes cachées avant celle-ci.
+        const hiddenCount = this.columns
+            .slice(0, columnIndex)
+            .filter(c => c.hidden)
+            .length;
+
+        const cellIndex = columnIndex - hiddenCount;
+
+        console.log(columnIndex, hiddenCount, cellIndex);
+
+        for(const row of this.rows) {
+            const $cell = row.$.children.item(cellIndex) as HTMLElement | null;
+            console.log($cell);
+            $cell?.remove();
+        }
+
+        this.DOM_updateRowsContent();
+    }
+
+    /**
      * Met à jour la position de la ligne donnée.
      * Appelé lors d'un scroll.
      * 
@@ -583,7 +625,9 @@ export class VirtualTable<T extends Type> {
         const $target = e.target as HTMLElement;
 
         if($target.closest('.th')) {
-            
+            const target = $target.closest('.th') as HTMLElement;
+            const targetIndex = this.$columns.indexOf(target);
+            this.hideColumn(targetIndex);
         }
         // body
         else {
@@ -620,6 +664,8 @@ export class VirtualTable<T extends Type> {
             if(this.options.allowRowSelection) {
                 this.selectRow(e, row);
             }
+
+            return;
         }
     }
 
@@ -1221,7 +1267,29 @@ export class VirtualTable<T extends Type> {
         return this;
     }
 
+    /**
+     * Masque une colonne de la table.
+     * Cette fonction ne supprime pas la colonne,
+     * mais la rend invisible dans l'affichage.
+     * @param column L'index de la colonne à masquer. Attention, il faut que ce soit l'index "absolu" (par rapport à toutes les colonnes, même celles cachées).
+     */
+    public hideColumn(columnIndex: number): typeof this {
+        if(columnIndex < 0 || columnIndex >= this.columns.length) {
+            console.warn(`Column index ${columnIndex} is out of bounds.`);
+            return this;
+        }
 
+        const column = this.columns[columnIndex];
+
+        if(column.hidden) {
+            console.warn(`Column "${column.title}" is already hidden.`);
+            return this;
+        }
+
+        this.DOM_removeCell(columnIndex);
+
+        return this;
+    }
 
 
 

@@ -285,7 +285,22 @@ body {
 
 #table-container-1 .td.field-id {
     font-size: .6rem;
+    color: #666;
+}
+
+#table-container-1 .td.indent {
+    border-right-color: transparent;
+}
+
+#table-container-1 .td.row-index {
+    font-size: .7rem;
+    border-right-color: transparent;
+    border-left-color: transparent;
     color: #888;
+}
+
+#table-container-1 .td.row-index + .td {
+    border-left-color: transparent;
 }
 
 .draggable-div {

@@ -9,22 +9,29 @@ export class Test1 extends Test {
 
     columnsDef = [
         {
+            title: '#',
+            width: 50,
+            type: 'number',
+            cssClasses: ['row-index'],
+            transform: (cell) => cell.rowIndex.toString(),
+        },
+        {
+            title: '',
+            width: 30,
+            cssClasses: ['expand'],
+        },
+        {
             field: 'id',
             title: 'ID',
             width: 300,
             field: 'id',
+            cssClasses: ['indent'],
         },
         {
             title: '',
             transform: (cell) => this.createTooltipButton(cell),
             cssClasses: ['tooltip'],
             width: 29,
-        },
-        {
-            title: 'index',
-            width: 60,
-            type: 'number',
-            transform: (cell) => cell.rowIndex.toString(),
         },
         {
             field: 'name',
@@ -39,7 +46,7 @@ export class Test1 extends Test {
         {
             field: 'phone',
             title: 'Phone',
-            width: 100,
+            width: 120,
         },
         {
             field: 'address',

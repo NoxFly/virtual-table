@@ -55,7 +55,7 @@
     display: inline-block;
 }
 
-.virtual-table .tbody .tr .td:first-child .cell-value {
+.virtual-table .tbody .td.indent .cell-value {
     transform: translateX(calc(20px * var(--depth)));
 }
 
@@ -65,17 +65,12 @@
 }
 
 .virtual-table .btn-expand {
-    --r: .4;
-    --s: calc(var(--row-height) * var(--r));
-    --p: calc(var(--s) / 2);
-
-    transform: translateX(calc(20px * var(--depth)));
     position: relative;
     background: none;
     border: none;
-    height: var(--s);
-    width: var(--s);
-    margin: 0 var(--p) 0 0;
+    height: 100%;
+    width: 100%;
+    margin: 0;
     display: inline-block;
     vertical-align: top;
     cursor: pointer;
@@ -84,15 +79,21 @@
 
 .virtual-table .expand-icon {
     display: inline-block;
-    width: 60%;
+    height: 40%;
     aspect-ratio: 1/1;
     border-bottom: 1px solid #aaa;
     border-right: 1px solid #aaa;
-    transform: translate(0, -0.2rem) rotate(45deg);
+    transform: translate(0, -40%) rotate(45deg);
+    opacity: .5;
+}
+
+.virtual-table .tr.expanded .btn-expand .expand-icon {
+    transform: translate(0, 10%) rotate(-135deg);
 }
 
 .virtual-table .btn-expand:hover .expand-icon {
     border-color: #000;
+    opacity: 1;
 }
 
 .virtual-table .table.sticky-header .thead {
