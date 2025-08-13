@@ -141,9 +141,19 @@ export class VirtualTable<T extends Type> {
         $tr.classList.add('tr');
 
         for(const columnDef of this.columns) {
+            if(columnDef.hidden) {
+                return;
+            }
+
             const $th = document.createElement('div');
-            $th.classList.add('th');
+            $th.classList.add('th', ...(columnDef.cssClasses || []));
             $th.style.width = columnDef.width + this.columnUnits;
+
+            if(columnDef.field) {
+                $th.classList.add(columnDef.field.toString());
+            }
+
+            // TODO: ajouter une icone de tri si columnDef.sortable
 
             const $span = document.createElement('span');
             $span.classList.add('cell-value');
@@ -439,10 +449,14 @@ export class VirtualTable<T extends Type> {
     private DOM_createEmptyCells(row: TableRow<T>): void {
         const $fragment = document.createDocumentFragment();
 
-        for(const i in this.columns) {
+        for(const columnDef of this.columns) {
+            if(columnDef.hidden) {
+                continue;
+            }
+
             const $td = document.createElement('div');
-            $td.classList.add('td');
-            $td.style.setProperty('--width', this.columns[i].width + this.columnUnits);
+            $td.classList.add('td', ...(columnDef.cssClasses || []));
+            $td.style.setProperty('--width', columnDef.width + this.columnUnits);
 
             $fragment.appendChild($td);
         }

@@ -14,6 +14,10 @@ declare interface ColumnDef<T extends Type> {
     field?: keyof T;
     width: number;
     cssClasses?: string[];
+    readonly?: boolean;
+    required?: boolean;
+    hidden?: boolean;
+    sortable?: boolean;
     transform?: (cell: Cell<T>) => string;
 }
 

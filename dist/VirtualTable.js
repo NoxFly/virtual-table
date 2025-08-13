@@ -77,8 +77,10 @@ const c = class c {
     const t = document.createElement("div");
     t.classList.add("tr");
     for (const s of this.columns) {
+      if (s.hidden)
+        return;
       const e = document.createElement("div");
-      e.classList.add("th"), e.style.width = s.width + this.columnUnits;
+      e.classList.add("th", ...s.cssClasses || []), e.style.width = s.width + this.columnUnits, s.field && e.classList.add(s.field.toString());
       const i = document.createElement("span");
       i.classList.add("cell-value"), i.textContent = s.title, e.appendChild(i), t.appendChild(e);
     }
@@ -258,9 +260,11 @@ const c = class c {
    */
   DOM_createEmptyCells(t) {
     const s = document.createDocumentFragment();
-    for (const e in this.columns) {
+    for (const e of this.columns) {
+      if (e.hidden)
+        continue;
       const i = document.createElement("div");
-      i.classList.add("td"), i.style.setProperty("--width", this.columns[e].width + this.columnUnits), s.appendChild(i);
+      i.classList.add("td", ...e.cssClasses || []), i.style.setProperty("--width", e.width + this.columnUnits), s.appendChild(i);
     }
     t.$.appendChild(s);
   }
