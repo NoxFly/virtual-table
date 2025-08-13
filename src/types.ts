@@ -188,7 +188,7 @@ export interface ColumnDef<T extends Type> {
      * @default 'string'
      * @see {@link ColumnType}
      */
-    type?: ColumnType;
+    type: ColumnType;
     /**
      * Les valeurs possibles pour une colonne de type `enum`.
      * Sera ignoré si le type n'est pas `enum`.
@@ -244,7 +244,7 @@ export interface ColumnDef<T extends Type> {
     transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }
 
-export type ColumnsDefs<T extends Type> = Omit<ColumnDef<T>, 'id'>[];
+export type ColumnsDefs<T extends Type> = (Omit<ColumnDef<T>, 'id' | 'type'> & Partial<Pick<ColumnDef<T>, 'type'>>)[];
 
 /**
  * Représente les options de configuration d'une table virtuelle.
@@ -261,20 +261,32 @@ export interface VirtualTableOptions {
      */
     rowHeight: number;
     /**
-     * Indique, pour une table arborescente, si les enfants d'un noeud sont affichés par défaut.
+     * Indique, pour une table arborescente, si les enfants
+     * d'un noeud sont affichés par défaut.
      * @default true
      */
     defaultExpanded: boolean;
     /**
-     * Indique si la largeur des colonnes est exprimée en pourcentage à travers {@link ColumnDef.width}.
+     * Indique si la largeur des colonnes est exprimée en
+     * pourcentage à travers {@link ColumnDef.width}.
      * @default false
      */
     columnSizeInPercentage: boolean;
 
+    /**
+     * Indique si les champs de type nombre ayant une valeur
+     * de zéro doivent être traitées comme des cellules vides.
+     * Utilisé pour l'affichage et la validation des cellules
+     * ayant `required: true` dans leur définition.
+     * @default false
+     */
+    treatZeroAsEmpty: boolean;
+
     // --
 
     /**
-     * Indique si les en-têtes de colonnes doivent suivre au scroll de la page.
+     * Indique si les en-têtes de colonnes doivent suivre au
+     * scroll de la page.
      * @default false
      */
     stickyHeader: boolean;
@@ -282,7 +294,8 @@ export interface VirtualTableOptions {
     // -- allowed actions --
 
     /**
-     * Indique si l'expansion et la réduction des lignes enfants est autorisée.
+     * Indique si l'expansion et la réduction des lignes enfants
+     * est autorisée.
      * @default true
      */
     allowExpandCollapse: boolean;

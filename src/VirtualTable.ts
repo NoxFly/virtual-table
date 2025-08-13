@@ -14,6 +14,7 @@ export class VirtualTable<T extends Type> {
         rowHeight: 30,
         columnSizeInPercentage: false,
         defaultExpanded: true,
+        treatZeroAsEmpty: false,
         // --
         stickyHeader: false,
         // -- allowed actions
@@ -72,8 +73,9 @@ export class VirtualTable<T extends Type> {
         this.ROW_HEIGHT = this.options.rowHeight;
 
         this.columns = columnsDef.map(col => ({
-            id: crypto.randomUUID(),
             ...col,
+            id: crypto.randomUUID(),
+            type: col.type || 'string',
         }));
 
         this.$table = document.createElement('div');
@@ -151,7 +153,7 @@ export class VirtualTable<T extends Type> {
 
             const $th = document.createElement('div');
 
-            $th.dataset.type = columnDef.type || 'string';
+            $th.dataset.type = columnDef.type;
             $th.dataset.id = columnDef.id;
             $th.classList.add('th', ...(columnDef.cssClasses || []));
             $th.style.width = columnDef.width + this.columnUnits;
@@ -308,6 +310,14 @@ export class VirtualTable<T extends Type> {
 
         const hasChildren = row.ref.children.length > 0;
 
+        let rowClasses = "tr ";
+
+        if(this.rowCssClassesCallback !== undefined) {
+            rowClasses += this.rowCssClassesCallback(row);
+        }
+
+        row.$.className = rowClasses;
+
         row.$.classList.toggle('has-children', hasChildren);
         row.$.classList.toggle('expanded', row.ref.expanded);
         row.$.classList.toggle('selected', this.selectedNodes.has(this.DOM_getRowIndex(row)));
@@ -333,14 +343,22 @@ export class VirtualTable<T extends Type> {
                 ? row.ref.data[col.field!]
                 : undefined;
 
-            const showRequired = this.options.allowCellEditing
-                && !col.readonly
-                && col.required
-                && (value === "" || value === undefined || value === null);
+            const showRequired = this.options.allowCellEditing === true
+                && col.readonly !== true
+                && col.required === true
+                && (
+                    (value === undefined || value === null)
+                    || ((col.type === "string" && value === "")
+                    || (col.type === "number" && value === 0 && this.options.treatZeroAsEmpty === true))
+                );
+
+            const realValue = (value === 0 && this.options.treatZeroAsEmpty === true)
+                ? undefined
+                : value;
 
             const cell: Cell<T> = {
                 $: row.$,
-                value,
+                value: realValue,
                 row: row.ref,
                 column: col,
                 rowIndex: row.y,
@@ -490,7 +508,7 @@ export class VirtualTable<T extends Type> {
 
             $td.style.setProperty('--width', columnDef.width + this.columnUnits);
 
-            $td.dataset.type = columnDef.type || 'string';
+            $td.dataset.type = columnDef.type;
 
             $fragment.appendChild($td);
         }
@@ -556,11 +574,8 @@ export class VirtualTable<T extends Type> {
 
         const cellIndex = columnIndex - hiddenCount;
 
-        console.log(columnIndex, hiddenCount, cellIndex);
-
         for(const row of this.rows) {
             const $cell = row.$.children.item(cellIndex) as HTMLElement | null;
-            console.log($cell);
             $cell?.remove();
         }
 
@@ -1050,6 +1065,8 @@ export class VirtualTable<T extends Type> {
 
         this.DOM_computeInViewVisibleRows();
     }
+
+    public rowCssClassesCallback?: (row: TableRow<T>) => string;
 
 
     /**

@@ -1,5 +1,3 @@
-export * from 'styles/VirtualTable.module.css';
-
 declare class EventManager {
     private readonly listeners;
     listenTo<K extends keyof DocumentEventMap>(target: EventTarget, type: K, callback: (this: Document, ev: DocumentEventMap[K]) => void, options?: boolean | AddEventListenerOptions): symbol;
@@ -49,7 +47,7 @@ interface ColumnDef<T extends Type> {
     id: string;
     title: string;
     field?: keyof T;
-    type?: ColumnType;
+    type: ColumnType;
     enumValues?: Set<string>;
     width: number;
     cssClasses?: string[];
@@ -59,12 +57,13 @@ interface ColumnDef<T extends Type> {
     sortable?: boolean;
     transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }
-type ColumnsDefs<T extends Type> = Omit<ColumnDef<T>, 'id'>[];
+type ColumnsDefs<T extends Type> = (Omit<ColumnDef<T>, 'id' | 'type'> & Partial<Pick<ColumnDef<T>, 'type'>>)[];
 interface VirtualTableOptions {
     id: string;
     rowHeight: number;
     defaultExpanded: boolean;
     columnSizeInPercentage: boolean;
+    treatZeroAsEmpty: boolean;
     stickyHeader: boolean;
     allowExpandCollapse: boolean;
     allowColumnSelection: boolean;
@@ -137,6 +136,7 @@ declare class VirtualTable<T extends Type> {
     private verifyDuplicateIds;
     setData(data: T[]): void;
     clear(): void;
+    rowCssClassesCallback?: (row: TableRow<T>) => string;
     getNodes(): readonly TreeNode<T>[];
     scrollTo(index: number): typeof this;
     selectRow(event: MouseEvent, row: TableRow<T>): typeof this;

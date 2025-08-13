@@ -96,6 +96,11 @@
     opacity: 1;
 }
 
+.virtual-table .tbody .td.indent.expand .btn-expand {
+    width: 28px;
+    margin-right: 5px;
+}
+
 .virtual-table .table.sticky-header .thead {
     position: sticky;
     top: 0;

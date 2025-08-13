@@ -9,5 +9,3 @@
 export * from "./EventManager";
 export * from "./VirtualTable";
 export * from "./types";
-
-export * from "styles/VirtualTable.module.css";

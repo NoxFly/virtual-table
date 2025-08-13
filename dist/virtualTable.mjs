@@ -89,8 +89,9 @@ var _VirtualTable = class _VirtualTable {
     this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
     this.ROW_HEIGHT = this.options.rowHeight;
     this.columns = columnsDef.map((col) => ({
+      ...col,
       id: crypto.randomUUID(),
-      ...col
+      type: col.type || "string"
     }));
     this.$table = document.createElement("div");
     this.$table.classList.add("table");
@@ -145,7 +146,7 @@ var _VirtualTable = class _VirtualTable {
         return;
       }
       const $th = document.createElement("div");
-      $th.dataset.type = columnDef.type || "string";
+      $th.dataset.type = columnDef.type;
       $th.dataset.id = columnDef.id;
       $th.classList.add("th", ...columnDef.cssClasses || []);
       $th.style.width = columnDef.width + this.columnUnits;
@@ -268,6 +269,11 @@ var _VirtualTable = class _VirtualTable {
       return;
     }
     const hasChildren = row.ref.children.length > 0;
+    let rowClasses = "tr ";
+    if (this.rowCssClassesCallback !== void 0) {
+      rowClasses += this.rowCssClassesCallback(row);
+    }
+    row.$.className = rowClasses;
     row.$.classList.toggle("has-children", hasChildren);
     row.$.classList.toggle("expanded", row.ref.expanded);
     row.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(row)));
@@ -283,10 +289,11 @@ var _VirtualTable = class _VirtualTable {
         continue;
       const hasField = col.field !== void 0;
       const value = hasField ? row.ref.data[col.field] : void 0;
-      const showRequired = this.options.allowCellEditing && !col.readonly && col.required && (value === "" || value === void 0 || value === null);
+      const showRequired = this.options.allowCellEditing === true && col.readonly !== true && col.required === true && (value === void 0 || value === null || (col.type === "string" && value === "" || col.type === "number" && value === 0 && this.options.treatZeroAsEmpty === true));
+      const realValue = value === 0 && this.options.treatZeroAsEmpty === true ? void 0 : value;
       const cell = {
         $: row.$,
-        value,
+        value: realValue,
         row: row.ref,
         column: col,
         rowIndex: row.y,
@@ -398,7 +405,7 @@ var _VirtualTable = class _VirtualTable {
         $td.classList.add("field", `field-${columnDef.field.toString()}`);
       }
       $td.style.setProperty("--width", columnDef.width + this.columnUnits);
-      $td.dataset.type = columnDef.type || "string";
+      $td.dataset.type = columnDef.type;
       $fragment.appendChild($td);
     }
     row.$.appendChild($fragment);
@@ -436,10 +443,8 @@ var _VirtualTable = class _VirtualTable {
     this.$columns[columnIndex].remove();
     const hiddenCount = this.columns.slice(0, columnIndex).filter((c) => c.hidden).length;
     const cellIndex = columnIndex - hiddenCount;
-    console.log(columnIndex, hiddenCount, cellIndex);
     for (const row of this.rows) {
       const $cell = row.$.children.item(cellIndex);
-      console.log($cell);
       $cell?.remove();
     }
     this.DOM_updateRowsContent();
@@ -508,7 +513,6 @@ var _VirtualTable = class _VirtualTable {
     if ($target.closest(".th")) {
       const target = $target.closest(".th");
       const targetIndex = this.$columns.indexOf(target);
-      this.hideColumn(targetIndex);
     } else {
       const $closestRow = $target.closest(".tr");
       const closestRow = this.DOM_getRowFromHTMLRow($closestRow);
@@ -1031,6 +1035,7 @@ _VirtualTable.DEFAULT_OPTIONS = {
   rowHeight: 30,
   columnSizeInPercentage: false,
   defaultExpanded: true,
+  treatZeroAsEmpty: false,
   // --
   stickyHeader: false,
   // -- allowed actions
