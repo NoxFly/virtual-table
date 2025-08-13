@@ -20,11 +20,12 @@
   ],
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"vite\"",
-    "build": "vite build",
+    "build": "npm run lint && tsup",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts && tsc --noEmit",
     "lint:fix": "npm run lint -- --fix",
-    "prepublishOnly": "npm run lint && npm run build"
+    "prepublishOnly": "npm run build",
+    "prepush": "npm run build"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.1.0",
@@ -34,6 +35,7 @@
     "eslint": "^9.21.0",
     "ts-loader": "^9.5.2",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.25.0",
     "vite": "^6.3.5",
