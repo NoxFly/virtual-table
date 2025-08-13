@@ -156,6 +156,8 @@ export interface Cell<T extends Type> {
     columnIndex: number;
 }
 
+export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html';
+
 /**
  * Représente la définition d'une colonne dans la table virtuel.
  */
@@ -168,6 +170,16 @@ export interface ColumnDef<T extends Type> {
      * La propriété à afficher dans cette colonne pour chaque donnée dans T
      */
     field?: keyof T;
+    /**
+     * Le type de la colonne.
+     * N'est pas obligatoire, mais permet d'identifier le type de données que la colonne doit afficher.
+     * Du traitement spécifique peut être appliqué en fonction du type.
+     * Un attribut data-type est définit à la cellule pour le type de colonne,
+     * par exemple `data-type="string"`.
+     * @default 'string'
+     * @see {@link ColumnType}
+     */
+    type?: ColumnType;
     /**
      * La largeur de la colonne. Peut être exprimé en pixel (défaut),
      * ou en pourcentage si {@link VirtualTableOptions.columnSizeInPercentage} vaut `true`.
@@ -190,6 +202,7 @@ export interface ColumnDef<T extends Type> {
     /**
      * Indique si une valeur est obligatoire dans la cellule de cette colonne, lors de la saisie.
      * Cette propriété ne s'applique que si {@link VirtualTableOptions.allowCellEditing} vaut `true`.
+     * Une classe `validator-required` sera ajouté à la cellule si celle-ci est vide (valeur null, undefined ou chaîne vide).
      * @default false
      * @todo Pas implémenté pour le moment.
     */
@@ -249,6 +262,12 @@ export interface VirtualTableOptions {
     stickyHeader: boolean;
     
     // -- allowed actions --
+
+    /**
+     * Indique si l'expansion et la réduction des lignes enfants est autorisée.
+     * @default true
+     */
+    allowExpandCollapse: boolean;
     
     /**
      * Indique si la sélection de colonnes est autorisée.

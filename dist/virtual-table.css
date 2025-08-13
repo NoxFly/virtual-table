@@ -52,10 +52,10 @@
     padding: 0;
     margin: 0;
     line-height: 1rem;
+    display: inline-block;
 }
 
 .virtual-table .tbody .tr .td:first-child .cell-value {
-    display: inline-block;
     transform: translateX(calc(20px * var(--depth)));
 }
 
@@ -65,7 +65,7 @@
 }
 
 .virtual-table .btn-expand {
-    --r: .6;
+    --r: .4;
     --s: calc(var(--row-height) * var(--r));
     --p: calc(var(--s) / 2);
 
@@ -79,6 +79,7 @@
     display: inline-block;
     vertical-align: top;
     cursor: pointer;
+    padding: 0;
 }
 
 .virtual-table .expand-icon {

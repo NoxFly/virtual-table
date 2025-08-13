@@ -11,23 +11,20 @@ export class Test1 extends Test {
         {
             field: 'id',
             title: 'ID',
-            width: 500,
+            width: 300,
             field: 'id',
-        },
-        {
-            title: 'index',
-            width: 100,
-            transform: (cell) => cell.rowIndex.toString(),
-        },
-        {
-            title: 'abs. index',
-            width: 100,
-            transform: (cell) => cell.row.flatIndex.toString(),
         },
         {
             title: '',
             transform: (cell) => this.createTooltipButton(cell),
-            width: 50,
+            cssClasses: ['tooltip'],
+            width: 29,
+        },
+        {
+            title: 'index',
+            width: 60,
+            type: 'number',
+            transform: (cell) => cell.rowIndex.toString(),
         },
         {
             field: 'name',
@@ -86,9 +83,8 @@ export class Test1 extends Test {
         this.data = generateRandomContacts(10000, true);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
-            columnSizeInPercentage: false,
-            allowRowSelection: true,
             stickyHeader: true,
+            rowHeight: 28,
         });
 
         this.virtualTable.setData(this.data);

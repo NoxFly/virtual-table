@@ -17,6 +17,7 @@ export class VirtualTable<T extends Type> {
         // --
         stickyHeader: false,
         // -- allowed actions
+        allowExpandCollapse: true,
         allowColumnSelection: false,
         allowRowSelection: false,
         allowCellSelection: false,
@@ -146,6 +147,8 @@ export class VirtualTable<T extends Type> {
             }
 
             const $th = document.createElement('div');
+
+            $th.dataset.type = columnDef.type || 'string';
             $th.classList.add('th', ...(columnDef.cssClasses || []));
             $th.style.width = columnDef.width + this.columnUnits;
 
@@ -202,21 +205,15 @@ export class VirtualTable<T extends Type> {
      * En amont, transforme l'arbre en liste plate.
      * La liste plate ne contient que les nœuds visibles.
      * 
-     * Note : recalcule TOUT, pas intelligemment. A n'appeler
-     *        que si on souhaite tout remettre à jour, pas
-     *        seulement une partie.
+     * *Note : recalcule TOUT, pas intelligemment.*
      */
     private DOM_computeInViewVisibleRows(): void {
         // TODO : ajouter le système de filtrage ici
         this.DOM_resetSelections();
 
-        const t0 = performance.now();
-        
         for(const row of this.flatten) {
             row.flatIndex = -1;
         }
-
-        const t1 = performance.now();
 
         this.flatten.length = 0;
 
@@ -237,21 +234,10 @@ export class VirtualTable<T extends Type> {
             rec(node);
         }
 
-        const t2 = performance.now();
-
         this.DOM_computeViewbox();
         this.DOM_updateViewBoxHeight();
         this.DOM_resetTableRows();
         this.DOM_updateScroll(true);
-
-        const t3 = performance.now();
-
-        console.table([
-            { step: 'reset tree indexes', time: t1 - t0 },
-            { step: 'flatten tree', time: t2 - t1 },
-            { step: 'compute viewbox', time: t3 - t2 },
-            { step: 'total', time: t3 - t0 },
-        ]);
     }
 
     /**
@@ -323,37 +309,48 @@ export class VirtualTable<T extends Type> {
         for(const i in this.columns) {
             const col = this.columns[i];
 
-            const $cell = row.$.children.item(+i);
+            const $cell = row.$.children.item(+i) as HTMLElement | null;
 
-            if($cell) {
-                const value = col.field
-                    ? row.ref.data[col.field]
-                    : undefined;
+            if(!$cell)
+                continue;
 
-                const cell: Cell<T> = {
-                    $: row.$,
-                    value,
-                    row: row.ref,
-                    column: col,
-                    rowIndex: row.y,
-                    columnIndex: +i,
-                };
-                const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
+            const hasField = col.field !== undefined;
 
-                let html = '';
+            const value = hasField
+                ? row.ref.data[col.field!]
+                : undefined;
 
-                if(hasChildren && i === '0') {
-                    const cls = row.ref.expanded
-                        ? 'expanded'
-                        : 'collapsed';
+            const showRequired = this.options.allowCellEditing
+                && !col.readonly
+                && col.required
+                && (value === "" || value === undefined || value === null);
 
-                    html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
-                }
+            const cell: Cell<T> = {
+                $: row.$,
+                value,
+                row: row.ref,
+                column: col,
+                rowIndex: row.y,
+                columnIndex: +i,
+            };
 
-                html += `<span class="cell-value">${transformedValue}</span>`;
+            const transformedValue = col.transform?.(cell) || this.formatCellValue(value);
 
-                $cell.innerHTML = html;
+            let html = '';
+
+            if(hasChildren && i === '0' && this.options.allowExpandCollapse) {
+                const cls = row.ref.expanded
+                    ? 'expanded'
+                    : 'collapsed';
+
+                html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
             }
+
+            html += `<div class="cell-value">${transformedValue}</div>`;
+
+            $cell.innerHTML = html;
+
+            $cell.classList.toggle('validator-required', showRequired);
         }
     }
 
@@ -456,7 +453,14 @@ export class VirtualTable<T extends Type> {
 
             const $td = document.createElement('div');
             $td.classList.add('td', ...(columnDef.cssClasses || []));
+            
+            if(columnDef.field) {
+                $td.classList.add('field', `field-${columnDef.field.toString()}`);
+            }
+            
             $td.style.setProperty('--width', columnDef.width + this.columnUnits);
+
+            $td.dataset.type = columnDef.type || 'string';
 
             $fragment.appendChild($td);
         }
@@ -628,6 +632,10 @@ export class VirtualTable<T extends Type> {
      * @param expandBtn Le bouton d'expansion/réduction.
      */
     private toggleRowExpand(row: TableRow<T>): void {
+        if(!this.options.allowExpandCollapse) {
+            return;
+        }
+
         if(!row.ref) {
             console.warn('Cannot toggle expand on a row without a reference to the data node.');
             return;
@@ -639,15 +647,7 @@ export class VirtualTable<T extends Type> {
 
         row.$.classList.toggle('expanded', node.expanded);
 
-        // Expanded
-        if(node.expanded) {
-            // TODO
-        }
-
-        // Collasped
-        else {
-            // TODO
-        }
+        this.DOM_computeInViewVisibleRows();
     }
 
 

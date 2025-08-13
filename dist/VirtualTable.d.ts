@@ -12,6 +12,7 @@ declare interface Cell<T extends Type> {
 declare interface ColumnDef<T extends Type> {
     title: string;
     field?: keyof T;
+    type?: ColumnType;
     width: number;
     cssClasses?: string[];
     readonly?: boolean;
@@ -20,6 +21,8 @@ declare interface ColumnDef<T extends Type> {
     sortable?: boolean;
     transform?: (cell: Cell<T>) => string;
 }
+
+declare type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html';
 
 declare interface TableRow<T extends Type> {
     $: HTMLElement;
@@ -133,6 +136,7 @@ declare interface VirtualTableOptions {
     defaultExpanded: boolean;
     columnSizeInPercentage: boolean;
     stickyHeader: boolean;
+    allowExpandCollapse: boolean;
     allowColumnSelection: boolean;
     allowRowSelection: boolean;
     allowCellSelection: boolean;

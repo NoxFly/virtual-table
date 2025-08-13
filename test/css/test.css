@@ -251,6 +251,10 @@ body {
     background-color: #f0f0f0;
 }
 
+#table-container-1 .tbody .tr .td.tooltip {
+    padding: 0;
+}
+
 #table-container-1 .dragging-hover::before {
     content: "";
     position: absolute;
@@ -273,6 +277,16 @@ body {
     border-color: #00838f;
 }
 
+#table-container-1 :where(.th, .td)[data-type="number"] {
+    text-align: right;
+    color: #666;
+    font-size: .8rem;
+}
+
+#table-container-1 .td.field-id {
+    font-size: .6rem;
+    color: #888;
+}
 
 .draggable-div {
     --bg: #00838f;
