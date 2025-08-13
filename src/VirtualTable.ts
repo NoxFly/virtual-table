@@ -648,7 +648,6 @@ export class VirtualTable<T extends Type> {
         if($target.closest('.th')) {
             const target = $target.closest('.th') as HTMLElement;
             const targetIndex = this.$columns.indexOf(target);
-            this.hideColumn(targetIndex);
         }
         // body
         else {
