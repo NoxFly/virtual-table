@@ -1086,8 +1086,11 @@ var _VirtualTable = class _VirtualTable {
     $input.classList.add("cell-editor");
     cell.$.classList.add("editing");
     const cancelEdition = /* @__PURE__ */ __name(() => {
-      cell.$.classList.remove("editing");
-      $input.remove();
+      try {
+        cell.$?.classList.remove("editing");
+        $input?.remove();
+      } catch (e) {
+      }
       if ($input instanceof HTMLInputElement) {
         $input.removeEventListener("keydown", keydownHandler);
       } else {

@@ -1372,8 +1372,12 @@ export class VirtualTable<T extends Type> {
         cell.$.classList.add('editing');
 
         const cancelEdition = (): void => {
-            cell.$.classList.remove('editing');
-            $input.remove();
+
+            try {
+                cell.$?.classList.remove('editing');
+                $input?.remove();
+            }
+            catch(e) {}
 
             if($input instanceof HTMLInputElement) {
                 $input.removeEventListener('keydown', keydownHandler);
