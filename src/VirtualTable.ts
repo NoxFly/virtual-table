@@ -106,6 +106,7 @@ export class VirtualTable<T extends Type> {
 
         this.container.addEventListener('scroll', (e) => this.DOM_EVENT_onScroll(e), { passive: true });
         this.container.addEventListener('click', (e) => this.DOM_EVENT_onClick(e), { passive: true });
+        this.container.addEventListener('contextmenu', (e) => this.DOM_EVENT_onContextMenu(e));
 
         this.$table.style.setProperty('--row-height', this.ROW_HEIGHT + 'px');
     }
@@ -262,7 +263,7 @@ export class VirtualTable<T extends Type> {
      * Retourne le nœud de l'arbre de la vue correspondant à l'élément `<tr>` donné.
      * en O(1)
      */
-    private DOM_getRowFromHTMLRow($row: HTMLTableRowElement | null | undefined): TableRow<T> | null {
+    public getRowFromHTMLRow($row: HTMLElement | null | undefined): TableRow<T> | null {
         if($row === null || $row === undefined || this.rows.length === 0) {
             return null;
         }
@@ -332,7 +333,8 @@ export class VirtualTable<T extends Type> {
                 continue;
             }
 
-            const $cell = row.$.children.item(+i) as HTMLElement | null;
+            const cell = row.cells[+i];
+            const $cell = cell.$;
 
             if(!$cell)
                 continue;
@@ -356,14 +358,11 @@ export class VirtualTable<T extends Type> {
                 ? undefined
                 : value;
 
-            const cell: Cell<T> = {
-                $: row.$,
-                value: realValue,
-                row: row.ref,
-                column: col,
-                rowIndex: row.y,
-                columnIndex: +i,
-            };
+            cell.value = realValue;
+            cell.row = row.ref;
+            cell.column = col;
+            cell.rowIndex = row.y;
+            cell.columnIndex = +i;
 
             let transformedValue: string;
 
@@ -461,6 +460,7 @@ export class VirtualTable<T extends Type> {
             $: document.createElement('div'),
             x: 0,
             y: 0,
+            cells: [],
         };
 
         row.$.classList.add('tr');
@@ -511,6 +511,17 @@ export class VirtualTable<T extends Type> {
             $td.dataset.type = columnDef.type;
 
             $fragment.appendChild($td);
+
+            const cell: Cell<T> = {
+                $: $td,
+                value: '',
+                row: row.ref!,
+                column: columnDef,
+                rowIndex: row.y,
+                columnIndex: this.columns.indexOf(columnDef),
+            };
+
+            row.cells.push(cell);
         }
 
         row.$.appendChild($fragment);
@@ -663,15 +674,54 @@ export class VirtualTable<T extends Type> {
         if($target.closest('.th')) {
             const target = $target.closest('.th') as HTMLElement;
             const targetIndex = this.$columns.indexOf(target);
+            const column = this.columns[targetIndex];
+
+            if(column) {
+                this.onColumnClicked(column, e, target);
+            }
         }
         // body
         else {
-            const $closestRow = $target.closest('.tr') as HTMLTableRowElement;
+            const $closestRow = $target.closest('.tr') as HTMLElement;
 
-            const closestRow = this.DOM_getRowFromHTMLRow($closestRow);
+            const closestRow = this.getRowFromHTMLRow($closestRow);
 
             if(closestRow) {
                 this.DOM_EVENT_onRowClick(e, closestRow, $target);
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    private DOM_EVENT_onContextMenu(e: MouseEvent): void {
+        const $target = e.target as HTMLElement;
+
+        if($target.closest('.th')) {
+            const target = $target.closest('.th') as HTMLElement;
+            const targetIndex = this.$columns.indexOf(target);
+            const column = this.columns[targetIndex];
+
+            if(column) {
+                this.onColumnRightClicked(column, e, target);
+            }
+        }
+        else {
+            const $closestRow = $target.closest('.tr') as HTMLElement;
+            const closestRow = this.getRowFromHTMLRow($closestRow);
+
+            if(closestRow) {
+                const $cell = $target.closest('.td') as HTMLElement | null;
+
+                if($cell) {
+                    const cellIndex = Array.from(closestRow.$.children).indexOf($cell);
+                    const cell = closestRow.cells[cellIndex];
+
+                    this.onCellRightClicked(cell, e);
+                }
+
+                this.onRowRightClicked(closestRow, e);
             }
         }
     }
@@ -685,11 +735,14 @@ export class VirtualTable<T extends Type> {
             return;
         }
 
-        if($target.closest('.td')) {
-            const $cell = $target.closest('.td') as HTMLElement;
+        const $cell = $target.closest('.td') as HTMLElement | null;
+
+        if($cell) {
+            const cellIndex = Array.from(row.$.children).indexOf($cell);
+            const cell = row.cells[cellIndex];
 
             if(this.options.allowCellEditing) {
-                this.editCell(row, $cell);
+                this.editCell(row, cell);
             }
 
             if(this.options.allowCellSelection) {
@@ -700,8 +753,10 @@ export class VirtualTable<T extends Type> {
                 this.selectRow(e, row);
             }
 
-            return;
+            this.onCellClicked(cell, e);
         }
+
+        this.onRowClicked(row, e);
     }
 
 
@@ -1253,7 +1308,7 @@ export class VirtualTable<T extends Type> {
     /**
      *
      */
-    public editCell(row: TableRow<T>, $cell: HTMLElement): typeof this {
+    public editCell(row: TableRow<T>, cell: Cell<T>): typeof this {
         // TODO: créer input
         return this;
     }
@@ -1400,4 +1455,35 @@ export class VirtualTable<T extends Type> {
      * en callback de l'évènement drop sur le conteneur de la table.
      */
     public onDrop: (data: string | undefined, row: TableRow<T>) => void = () => {};
+
+    /**
+     *
+     */
+    public onCellClicked: (cell: Cell<T>, event: MouseEvent) => void = () => {};
+
+    /**
+     *
+     */
+    public onRowClicked: (row: TableRow<T>, event: MouseEvent) => void = () => {};
+
+    /**
+     *
+     */
+    public onColumnClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void = () => {};
+
+    /**
+     *
+     */
+    public onCellRightClicked: (cell: Cell<T>, event: MouseEvent) => void = () => {};
+
+    /**
+     *
+     */
+    public onRowRightClicked: (row: TableRow<T>, event: MouseEvent) => void = () => {};
+
+    /**
+     *
+     */
+    public onColumnRightClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void = () => {};
+
 }

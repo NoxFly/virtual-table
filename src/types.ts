@@ -124,6 +124,8 @@ export interface TableRow<T extends Type> {
      * Positionnement absolu en pixels de la ligne dans la table.
      */
     y: number;
+
+    cells: Cell<T>[];
 }
 
 /**

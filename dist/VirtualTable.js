@@ -111,6 +111,36 @@ var _VirtualTable = class _VirtualTable {
      */
     this.onDrop = /* @__PURE__ */ __name(() => {
     }, "onDrop");
+    /**
+     *
+     */
+    this.onCellClicked = /* @__PURE__ */ __name(() => {
+    }, "onCellClicked");
+    /**
+     *
+     */
+    this.onRowClicked = /* @__PURE__ */ __name(() => {
+    }, "onRowClicked");
+    /**
+     *
+     */
+    this.onColumnClicked = /* @__PURE__ */ __name(() => {
+    }, "onColumnClicked");
+    /**
+     *
+     */
+    this.onCellRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onCellRightClicked");
+    /**
+     *
+     */
+    this.onRowRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onRowRightClicked");
+    /**
+     *
+     */
+    this.onColumnRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onColumnRightClicked");
     this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
     this.ROW_HEIGHT = this.options.rowHeight;
     this.columns = columnsDef.map((col) => ({
@@ -137,6 +167,7 @@ var _VirtualTable = class _VirtualTable {
     this.DOM_computeViewbox();
     this.container.addEventListener("scroll", (e) => this.DOM_EVENT_onScroll(e), { passive: true });
     this.container.addEventListener("click", (e) => this.DOM_EVENT_onClick(e), { passive: true });
+    this.container.addEventListener("contextmenu", (e) => this.DOM_EVENT_onContextMenu(e));
     this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   // ------------------------------------------------------------------------------
@@ -256,7 +287,7 @@ var _VirtualTable = class _VirtualTable {
    * Retourne le nœud de l'arbre de la vue correspondant à l'élément `<tr>` donné.
    * en O(1)
    */
-  DOM_getRowFromHTMLRow($row) {
+  getRowFromHTMLRow($row) {
     if ($row === null || $row === void 0 || this.rows.length === 0) {
       return null;
     }
@@ -309,21 +340,19 @@ var _VirtualTable = class _VirtualTable {
       if (col.hidden) {
         continue;
       }
-      const $cell = row.$.children.item(+i);
+      const cell = row.cells[+i];
+      const $cell = cell.$;
       if (!$cell)
         continue;
       const hasField = col.field !== void 0;
       const value = hasField ? row.ref.data[col.field] : void 0;
       const showRequired = this.options.allowCellEditing === true && col.readonly !== true && col.required === true && (value === void 0 || value === null || (col.type === "string" && value === "" || col.type === "number" && value === 0 && this.options.treatZeroAsEmpty === true));
       const realValue = value === 0 && this.options.treatZeroAsEmpty === true ? void 0 : value;
-      const cell = {
-        $: row.$,
-        value: realValue,
-        row: row.ref,
-        column: col,
-        rowIndex: row.y,
-        columnIndex: +i
-      };
+      cell.value = realValue;
+      cell.row = row.ref;
+      cell.column = col;
+      cell.rowIndex = row.y;
+      cell.columnIndex = +i;
       let transformedValue;
       if (col.transform !== void 0) {
         const v = col.transform?.(cell);
@@ -395,7 +424,8 @@ var _VirtualTable = class _VirtualTable {
     const row = {
       $: document.createElement("div"),
       x: 0,
-      y: 0
+      y: 0,
+      cells: []
     };
     row.$.classList.add("tr");
     row.nextElement = row;
@@ -432,6 +462,15 @@ var _VirtualTable = class _VirtualTable {
       $td.style.setProperty("--width", columnDef.width + this.columnUnits);
       $td.dataset.type = columnDef.type;
       $fragment.appendChild($td);
+      const cell = {
+        $: $td,
+        value: "",
+        row: row.ref,
+        column: columnDef,
+        rowIndex: row.y,
+        columnIndex: this.columns.indexOf(columnDef)
+      };
+      row.cells.push(cell);
     }
     row.$.appendChild($fragment);
   }
@@ -538,11 +577,41 @@ var _VirtualTable = class _VirtualTable {
     if ($target.closest(".th")) {
       const target = $target.closest(".th");
       const targetIndex = this.$columns.indexOf(target);
+      const column = this.columns[targetIndex];
+      if (column) {
+        this.onColumnClicked(column, e, target);
+      }
     } else {
       const $closestRow = $target.closest(".tr");
-      const closestRow = this.DOM_getRowFromHTMLRow($closestRow);
+      const closestRow = this.getRowFromHTMLRow($closestRow);
       if (closestRow) {
         this.DOM_EVENT_onRowClick(e, closestRow, $target);
+      }
+    }
+  }
+  /**
+   *
+   */
+  DOM_EVENT_onContextMenu(e) {
+    const $target = e.target;
+    if ($target.closest(".th")) {
+      const target = $target.closest(".th");
+      const targetIndex = this.$columns.indexOf(target);
+      const column = this.columns[targetIndex];
+      if (column) {
+        this.onColumnRightClicked(column, e, target);
+      }
+    } else {
+      const $closestRow = $target.closest(".tr");
+      const closestRow = this.getRowFromHTMLRow($closestRow);
+      if (closestRow) {
+        const $cell = $target.closest(".td");
+        if ($cell) {
+          const cellIndex = Array.from(closestRow.$.children).indexOf($cell);
+          const cell = closestRow.cells[cellIndex];
+          this.onCellRightClicked(cell, e);
+        }
+        this.onRowRightClicked(closestRow, e);
       }
     }
   }
@@ -554,18 +623,21 @@ var _VirtualTable = class _VirtualTable {
       this.toggleRowExpand(row);
       return;
     }
-    if ($target.closest(".td")) {
-      const $cell = $target.closest(".td");
+    const $cell = $target.closest(".td");
+    if ($cell) {
+      const cellIndex = Array.from(row.$.children).indexOf($cell);
+      const cell = row.cells[cellIndex];
       if (this.options.allowCellEditing) {
-        this.editCell(row, $cell);
+        this.editCell(row, cell);
       }
       if (this.options.allowCellSelection) {
       }
       if (this.options.allowRowSelection) {
         this.selectRow(e, row);
       }
-      return;
+      this.onCellClicked(cell, e);
     }
+    this.onRowClicked(row, e);
   }
   /**
    * Gère l'événement de clic sur une ligne.
@@ -957,7 +1029,7 @@ var _VirtualTable = class _VirtualTable {
   /**
    *
    */
-  editCell(row, $cell) {
+  editCell(row, cell) {
     return this;
   }
   /**

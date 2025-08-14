@@ -84,7 +84,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     execute() {
         this.data = generateRandomContacts(10000, true);
@@ -92,6 +92,7 @@ export class Test1 extends Test {
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             stickyHeader: true,
             rowHeight: 28,
+            allowRowSelection: true,
         });
 
         this.virtualTable.setData(this.data);
@@ -143,7 +144,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     generateFilterbar() {
         const filterbar = document.createElement('div');
@@ -183,21 +184,21 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onFilterInput(event) {
     }
 
     /**
-     * 
+     *
      */
     onFilterFieldChange(event) {
     }
 
     /**
-     * 
-     * @param {string} caption 
-     * @param {(data: any, row: any) => void} action 
+     *
+     * @param {string} caption
+     * @param {(data: any, row: any) => void} action
      * @param {string} className
      */
     createDraggableElement(caption, action, className = '') {
@@ -207,7 +208,7 @@ export class Test1 extends Test {
         draggableDiv.setAttribute('draggable', 'true');
 
         let draggableDivContainer = document.querySelector('.draggable-container');
-        
+
         if (!draggableDivContainer) {
             draggableDivContainer = document.createElement('div');
             draggableDivContainer.classList.add('draggable-container');
@@ -221,7 +222,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onDrop(data, row) {
         console.log('Dropped row:', row);
@@ -261,13 +262,13 @@ export class Test1 extends Test {
         clone.style.animation = 'fadeIn 0.1s 0.05s forwards';
         document.body.appendChild(clone);
     }
-    
+
     /**
-     * 
+     *
      */
     onDrag(event) {
         const clone = document.getElementById('clone');
-        
+
         if (clone) {
             const x = this.mouse.x - this.grabPoint.x;
             const y = this.mouse.y - this.grabPoint.y;
@@ -277,7 +278,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onDragEnd(event) {
         this.stopListenTo(document.body, 'drag', this.onDrag);
@@ -285,7 +286,7 @@ export class Test1 extends Test {
         this.stopListenTo(document, 'dragover', this.onDragOver);
 
         const clone = document.getElementById('clone');
-        
+
         if (clone) {
             clone.style.animation = '';
             clone.style.opacity = '0';
@@ -296,7 +297,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onDragOver(event) {
         this.mouse.x = event.clientX;
@@ -304,7 +305,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onDeleteActionDrop(data, row) {
         if(!row) {
@@ -316,7 +317,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onInsertBelowActionDrop(data, row) {
         if(!row) {
@@ -332,7 +333,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onInsertChildrenActionDrop(data, row) {
         if(!row) {
@@ -348,7 +349,7 @@ export class Test1 extends Test {
     }
 
     /**
-     * 
+     *
      */
     onUpdateActionDrop(data, row) {
         if(!row) {
@@ -366,8 +367,8 @@ export class Test1 extends Test {
 
 
     /**
-     * 
-     * @param {*} cell 
+     *
+     * @param {*} cell
      * @returns {HTMLButtonElement}
      */
     createTooltipButton(cell) {

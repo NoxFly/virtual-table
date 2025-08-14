@@ -33,6 +33,7 @@ interface TableRow<T extends Type> {
     nextElement?: TableRow<T>;
     x: number;
     y: number;
+    cells: Cell<T>[];
 }
 interface Cell<T extends Type> {
     $: HTMLElement;
@@ -105,7 +106,7 @@ declare class VirtualTable<T extends Type> {
     private DOM_computeViewbox;
     private DOM_computeInViewVisibleRows;
     private DOM_resetSelections;
-    private DOM_getRowFromHTMLRow;
+    getRowFromHTMLRow($row: HTMLElement | null | undefined): TableRow<T> | null;
     private DOM_getRowIndex;
     private DOM_updateViewBoxHeight;
     private DOM_updateRowsContent;
@@ -122,6 +123,7 @@ declare class VirtualTable<T extends Type> {
     private lastScrollTopIndex;
     private DOM_EVENT_onScroll;
     private DOM_EVENT_onClick;
+    private DOM_EVENT_onContextMenu;
     private DOM_EVENT_onRowClick;
     private toggleRowExpand;
     private dataToTreeNodeRec;
@@ -146,7 +148,7 @@ declare class VirtualTable<T extends Type> {
     unselectAllCells(): typeof this;
     selectColumn(column: ColumnDef<T>): typeof this;
     unselectAllColumns(): typeof this;
-    editCell(row: TableRow<T>, $cell: HTMLElement): typeof this;
+    editCell(row: TableRow<T>, cell: Cell<T>): typeof this;
     cancelCellEdition(): typeof this;
     allowColumnResizing(allow: boolean): typeof this;
     allowRowSelection(allow: boolean): typeof this;
@@ -156,6 +158,12 @@ declare class VirtualTable<T extends Type> {
     hideColumn(columnId: string): typeof this;
     makeDroppable(): typeof this;
     onDrop: (data: string | undefined, row: TableRow<T>) => void;
+    onCellClicked: (cell: Cell<T>, event: MouseEvent) => void;
+    onRowClicked: (row: TableRow<T>, event: MouseEvent) => void;
+    onColumnClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void;
+    onCellRightClicked: (cell: Cell<T>, event: MouseEvent) => void;
+    onRowRightClicked: (row: TableRow<T>, event: MouseEvent) => void;
+    onColumnRightClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void;
 }
 
 export { type Any, type Cell, type ColumnDef, type ColumnType, type ColumnsDefs, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };
