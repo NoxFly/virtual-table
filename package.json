@@ -1,5 +1,5 @@
 {
-  "name": "virtual-table",
+  "name": "@noxfly/virtual-table",
   "main": "dist/VirtualTable.js",
   "version": "1.0.0",
   "description": "",
@@ -13,11 +13,18 @@
   },
   "keywords": [
     "virtual-table",
-    "virtual-scrolling"
+    "virtual-scrolling",
+    "virtual",
+    "table",
+    "tree",
+    "virtualization",
+    "web-components",
+    "performances"
   ],
   "files": [
     "dist/"
   ],
+  "private": false,
   "scripts": {
     "dev": "concurrently \"vite build --watch\" \"vite\"",
     "build": "tsup",
