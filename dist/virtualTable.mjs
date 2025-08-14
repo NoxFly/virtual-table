@@ -116,6 +116,11 @@ var _VirtualTable = class _VirtualTable {
      */
     this.onColumnRightClicked = /* @__PURE__ */ __name(() => {
     }, "onColumnRightClicked");
+    /**
+     *
+     */
+    this.onEmptySpaceRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onEmptySpaceRightClicked");
     this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
     this.ROW_HEIGHT = this.options.rowHeight;
     this.columns = columnsDef.map((col) => ({
@@ -324,7 +329,7 @@ var _VirtualTable = class _VirtualTable {
       const showRequired = this.options.allowCellEditing === true && col.readonly !== true && col.required === true && (value === void 0 || value === null || (col.type === "string" && value === "" || col.type === "number" && value === 0 && this.options.treatZeroAsEmpty === true));
       const realValue = value === 0 && this.options.treatZeroAsEmpty === true ? void 0 : value;
       cell.value = realValue;
-      cell.row = row.ref;
+      cell.node = row.ref;
       cell.column = col;
       cell.rowIndex = row.y;
       cell.columnIndex = +i;
@@ -440,7 +445,8 @@ var _VirtualTable = class _VirtualTable {
       const cell = {
         $: $td,
         value: "",
-        row: row.ref,
+        row,
+        node: row.ref,
         column: columnDef,
         rowIndex: row.y,
         columnIndex: this.columns.indexOf(columnDef)
@@ -576,7 +582,7 @@ var _VirtualTable = class _VirtualTable {
       if (column) {
         this.onColumnRightClicked(column, e, target);
       }
-    } else {
+    } else if ($target.closest(".tr")) {
       const $closestRow = $target.closest(".tr");
       const closestRow = this.getRowFromHTMLRow($closestRow);
       if (closestRow) {
@@ -588,6 +594,8 @@ var _VirtualTable = class _VirtualTable {
         }
         this.onRowRightClicked(closestRow, e);
       }
+    } else {
+      this.onEmptySpaceRightClicked(e);
     }
   }
   /**

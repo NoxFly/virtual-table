@@ -38,7 +38,8 @@ interface TableRow<T extends Type> {
 interface Cell<T extends Type> {
     $: HTMLElement;
     value: Any;
-    row: TreeNode<T>;
+    row: TableRow<T>;
+    node: TreeNode<T>;
     column: ColumnDef<T>;
     rowIndex: number;
     columnIndex: number;
@@ -164,6 +165,7 @@ declare class VirtualTable<T extends Type> {
     onCellRightClicked: (cell: Cell<T>, event: MouseEvent) => void;
     onRowRightClicked: (row: TableRow<T>, event: MouseEvent) => void;
     onColumnRightClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void;
+    onEmptySpaceRightClicked: (event: MouseEvent) => void;
 }
 
 export { type Any, type Cell, type ColumnDef, type ColumnType, type ColumnsDefs, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };

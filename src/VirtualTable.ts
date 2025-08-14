@@ -359,7 +359,7 @@ export class VirtualTable<T extends Type> {
                 : value;
 
             cell.value = realValue;
-            cell.row = row.ref;
+            cell.node = row.ref;
             cell.column = col;
             cell.rowIndex = row.y;
             cell.columnIndex = +i;
@@ -515,7 +515,8 @@ export class VirtualTable<T extends Type> {
             const cell: Cell<T> = {
                 $: $td,
                 value: '',
-                row: row.ref!,
+                row,
+                node: row.ref!,
                 column: columnDef,
                 rowIndex: row.y,
                 columnIndex: this.columns.indexOf(columnDef),
@@ -707,7 +708,7 @@ export class VirtualTable<T extends Type> {
                 this.onColumnRightClicked(column, e, target);
             }
         }
-        else {
+        else if($target.closest('.tr')) {
             const $closestRow = $target.closest('.tr') as HTMLElement;
             const closestRow = this.getRowFromHTMLRow($closestRow);
 
@@ -723,6 +724,9 @@ export class VirtualTable<T extends Type> {
 
                 this.onRowRightClicked(closestRow, e);
             }
+        }
+        else {
+            this.onEmptySpaceRightClicked(e);
         }
     }
 
@@ -1485,5 +1489,10 @@ export class VirtualTable<T extends Type> {
      *
      */
     public onColumnRightClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void = () => {};
+
+    /**
+     *
+     */
+    public onEmptySpaceRightClicked: (event: MouseEvent) => void = () => {};
 
 }

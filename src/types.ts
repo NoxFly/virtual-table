@@ -141,9 +141,13 @@ export interface Cell<T extends Type> {
      */
     value: Any;
     /**
+     *
+     */
+    row: TableRow<T>;
+    /**
      * Référence au noeud de l'arbre auquel appartient la cellule.
      */
-    row: TreeNode<T>;
+    node: TreeNode<T>;
     /**
      * Référence à la colonne de la cellule.
      */
