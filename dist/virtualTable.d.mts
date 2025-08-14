@@ -149,7 +149,7 @@ declare class VirtualTable<T extends Type> {
     unselectAllCells(): typeof this;
     selectColumn(column: ColumnDef<T>): typeof this;
     unselectAllColumns(): typeof this;
-    editCell(row: TableRow<T>, cell: Cell<T>): typeof this;
+    editCell(cell: Cell<T>): typeof this;
     cancelCellEdition(): typeof this;
     allowColumnResizing(allow: boolean): typeof this;
     allowRowSelection(allow: boolean): typeof this;
@@ -166,6 +166,7 @@ declare class VirtualTable<T extends Type> {
     onRowRightClicked: (row: TableRow<T>, event: MouseEvent) => void;
     onColumnRightClicked: (column: ColumnDef<T>, event: MouseEvent, target: HTMLElement) => void;
     onEmptySpaceRightClicked: (event: MouseEvent) => void;
+    onCellEdited: (cell: Cell<T>, value: Any) => void;
 }
 
 export { type Any, type Cell, type ColumnDef, type ColumnType, type ColumnsDefs, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };

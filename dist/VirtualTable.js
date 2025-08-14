@@ -146,6 +146,11 @@ var _VirtualTable = class _VirtualTable {
      */
     this.onEmptySpaceRightClicked = /* @__PURE__ */ __name(() => {
     }, "onEmptySpaceRightClicked");
+    /**
+     *
+     */
+    this.onCellEdited = /* @__PURE__ */ __name(() => {
+    }, "onCellEdited");
     this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
     this.ROW_HEIGHT = this.options.rowHeight;
     this.columns = columnsDef.map((col) => ({
@@ -570,6 +575,9 @@ var _VirtualTable = class _VirtualTable {
    */
   DOM_EVENT_onScroll(e) {
     this.DOM_updateScroll();
+    this.container.querySelectorAll(".td.editing").forEach(($cell) => {
+      $cell.classList.remove("editing");
+    });
   }
   /**
    *
@@ -636,7 +644,7 @@ var _VirtualTable = class _VirtualTable {
       const cellIndex = Array.from(row.$.children).indexOf($cell);
       const cell = row.cells[cellIndex];
       if (this.options.allowCellEditing) {
-        this.editCell(row, cell);
+        this.editCell(cell);
       }
       if (this.options.allowCellSelection) {
       }
@@ -1037,7 +1045,134 @@ var _VirtualTable = class _VirtualTable {
   /**
    *
    */
-  editCell(row, cell) {
+  editCell(cell) {
+    if (!this.options.allowCellEditing || cell.column.readonly || cell.$.classList.contains("editing")) {
+      return this;
+    }
+    let $input;
+    const value = cell.node.data[cell.column.field];
+    if (cell.column.type === "string" || cell.column.type === "number") {
+      $input = document.createElement("input");
+      $input.type = "text";
+      $input.value = value?.toString().trim() || "";
+      if (cell.column.type === "number") {
+        $input.oninput = () => {
+          $input.value = $input.value.replace(/[^0-9.-]/g, "");
+        };
+      }
+    } else if (cell.column.type === "boolean") {
+      $input = document.createElement("input");
+      $input.type = "checkbox";
+      $input.checked = !!value;
+    } else if (cell.column.type === "date") {
+      $input = document.createElement("input");
+      $input.type = "date";
+      $input.value = value && (value instanceof Date || typeof value === "string" || typeof value === "number") ? new Date(value).toISOString().split("T")[0] : "";
+    } else if (cell.column.type === "enum" && cell.column.enumValues !== void 0) {
+      $input = document.createElement("select");
+      for (const option of cell.column.enumValues) {
+        const $option = document.createElement("option");
+        $option.value = option.toString();
+        $option.textContent = option.toString();
+        if (option.toString() === value?.toString()) {
+          $option.selected = true;
+        }
+        $input.appendChild($option);
+      }
+    } else {
+      console.warn(`Unsupported column type: ${cell.column.type}`);
+      return this;
+    }
+    $input.classList.add("cell-editor");
+    cell.$.classList.add("editing");
+    const cancelEdition = /* @__PURE__ */ __name(() => {
+      cell.$.classList.remove("editing");
+      $input.remove();
+      if ($input instanceof HTMLInputElement) {
+        $input.removeEventListener("keydown", keydownHandler);
+      } else {
+        $input.removeEventListener("change", confirmEdition);
+      }
+      $input.removeEventListener("blur", confirmEdition);
+    }, "cancelEdition");
+    const confirmEdition = /* @__PURE__ */ __name(() => {
+      cancelEdition();
+      const newValue = $input instanceof HTMLInputElement ? $input.value.trim() : $input.value;
+      if (newValue === value?.toString().trim())
+        return;
+      let castedValue = newValue;
+      switch (cell.column.type) {
+        case "number":
+          castedValue = parseFloat(newValue);
+          if (isNaN(castedValue)) {
+            castedValue = null;
+          }
+          break;
+        case "boolean":
+          castedValue = $input.checked;
+          break;
+        case "date":
+          castedValue = new Date(newValue);
+          if (isNaN(castedValue.getTime())) {
+            castedValue = null;
+          }
+          break;
+      }
+      this.onCellEdited(cell, castedValue);
+    }, "confirmEdition");
+    const navigateToPreviousOrNextCell = /* @__PURE__ */ __name((vec) => {
+      confirmEdition();
+      const currentCellIndex = cell.row.cells.indexOf(cell);
+      let nextCellIndex = currentCellIndex + vec;
+      while (nextCellIndex >= 0 && nextCellIndex < cell.row.cells.length) {
+        const nextCell = cell.row.cells[nextCellIndex];
+        const colType = nextCell.column.type;
+        const isReadonly = nextCell.column.readonly === true;
+        if (colType === "html" || isReadonly) {
+          nextCellIndex += vec;
+          continue;
+        }
+        this.editCell(nextCell);
+        break;
+      }
+    }, "navigateToPreviousOrNextCell");
+    const navigateToPreviousOrNextRow = /* @__PURE__ */ __name((vec) => {
+      confirmEdition();
+      const rowIndex = this.DOM_getRowIndex(cell.row);
+      const nextRowIndex = rowIndex + vec;
+      if (nextRowIndex >= 0 && nextRowIndex < this.rows.length) {
+        const nextRow = this.rows[nextRowIndex];
+        const nextCell = nextRow.cells[cell.columnIndex];
+        this.editCell(nextCell);
+      }
+    }, "navigateToPreviousOrNextRow");
+    const keydownHandler = /* @__PURE__ */ __name((event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        confirmEdition();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancelEdition();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        navigateToPreviousOrNextCell(event.shiftKey ? -1 : 1);
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        navigateToPreviousOrNextCell(event.key === "ArrowLeft" ? -1 : 1);
+      } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        navigateToPreviousOrNextRow(event.key === "ArrowUp" ? -1 : 1);
+      }
+    }, "keydownHandler");
+    if ($input instanceof HTMLInputElement) {
+      $input.addEventListener("keydown", keydownHandler);
+    } else if ($input instanceof HTMLSelectElement) {
+      $input.addEventListener("change", confirmEdition, { once: true, passive: true });
+    }
+    $input.addEventListener("blur", confirmEdition, { once: true, passive: true });
+    const $cell = cell.$;
+    $cell.appendChild($input);
+    $input.focus();
     return this;
   }
   /**

@@ -658,6 +658,10 @@ export class VirtualTable<T extends Type> {
      */
     private DOM_EVENT_onScroll(e: Event): void {
         this.DOM_updateScroll();
+
+        this.container.querySelectorAll('.td.editing').forEach($cell => {
+            $cell.classList.remove('editing');
+        });
     }
 
     /**
@@ -746,7 +750,7 @@ export class VirtualTable<T extends Type> {
             const cell = row.cells[cellIndex];
 
             if(this.options.allowCellEditing) {
-                this.editCell(row, cell);
+                this.editCell(cell);
             }
 
             if(this.options.allowCellSelection) {
@@ -1312,8 +1316,192 @@ export class VirtualTable<T extends Type> {
     /**
      *
      */
-    public editCell(row: TableRow<T>, cell: Cell<T>): typeof this {
-        // TODO: créer input
+    public editCell(cell: Cell<T>): typeof this {
+        if(!this.options.allowCellEditing || cell.column.readonly || cell.$.classList.contains('editing')) {
+            return this;
+        }
+
+        let $input: HTMLInputElement | HTMLSelectElement;
+
+        const value = cell.node.data[cell.column.field!];
+
+        if(cell.column.type === 'string' || cell.column.type === 'number') {
+            $input = document.createElement('input');
+            $input.type = 'text';
+            $input.value = value?.toString().trim() || '';
+
+            if(cell.column.type === 'number') {
+                $input.oninput = () => {
+                    $input.value = $input.value.replace(/[^0-9.-]/g, '');
+                };
+            }
+        }
+        else if(cell.column.type === 'boolean') {
+            $input = document.createElement('input');
+            $input.type = 'checkbox';
+            $input.checked = !!value;
+        }
+        else if(cell.column.type === 'date') {
+            $input = document.createElement('input');
+            $input.type = 'date';
+            $input.value = (value && (value instanceof Date || typeof value === 'string' || typeof value === 'number'))
+                ? new Date(value).toISOString().split('T')[0]
+                : '';
+        }
+        else if(cell.column.type === 'enum' && cell.column.enumValues !== undefined) {
+            $input = document.createElement('select');
+
+            for(const option of cell.column.enumValues) {
+                const $option = document.createElement('option');
+                $option.value = option.toString();
+                $option.textContent = option.toString();
+
+                if(option.toString() === value?.toString()) {
+                    $option.selected = true;
+                }
+
+                $input.appendChild($option);
+            }
+        }
+        else {
+            console.warn(`Unsupported column type: ${cell.column.type}`);
+            return this;
+        }
+
+        $input.classList.add('cell-editor');
+        cell.$.classList.add('editing');
+
+        const cancelEdition = (): void => {
+            cell.$.classList.remove('editing');
+            $input.remove();
+
+            if($input instanceof HTMLInputElement) {
+                $input.removeEventListener('keydown', keydownHandler);
+            }
+            else {
+                $input.removeEventListener('change', confirmEdition);
+            }
+
+            $input.removeEventListener('blur', confirmEdition);
+        };
+
+        const confirmEdition = (): void => {
+            cancelEdition();
+
+            const newValue = $input instanceof HTMLInputElement
+                ? $input.value.trim()
+                : $input.value;
+
+            if(newValue === value?.toString().trim())
+                return;
+
+            let castedValue: Any = newValue;
+
+            switch(cell.column.type) {
+                case 'number':
+                    castedValue = parseFloat(newValue);
+
+                    if(isNaN(castedValue)) {
+                        castedValue = null;
+                    }
+                    break;
+
+                case 'boolean':
+                    castedValue = ($input as HTMLInputElement).checked;
+                    break;
+
+                case 'date':
+                    castedValue = new Date(newValue);
+
+                    if(isNaN((castedValue as Date).getTime())) {
+                        castedValue = null; // or a default date
+                    }
+                    break;
+            }
+
+            this.onCellEdited(cell, castedValue);
+        };
+
+        const navigateToPreviousOrNextCell = (vec: -1 | 1): void => {
+            confirmEdition();
+
+            const currentCellIndex = cell.row.cells.indexOf(cell);
+            let nextCellIndex = currentCellIndex + vec;
+
+            while(
+                nextCellIndex >= 0 &&
+                nextCellIndex < cell.row.cells.length
+            ) {
+                const nextCell = cell.row.cells[nextCellIndex];
+                const colType = nextCell.column.type;
+                const isReadonly = nextCell.column.readonly === true;
+
+                // Skip cells with type "html" or readonly
+                if(colType === "html" || isReadonly) {
+                    nextCellIndex += vec;
+                    continue;
+                }
+
+                this.editCell(nextCell);
+                break;
+            }
+        };
+
+        const navigateToPreviousOrNextRow = (vec: -1 | 1): void => {
+            confirmEdition();
+
+            const rowIndex = this.DOM_getRowIndex(cell.row);
+            const nextRowIndex = rowIndex + vec;
+
+            if(nextRowIndex >= 0 && nextRowIndex < this.rows.length) {
+                const nextRow = this.rows[nextRowIndex];
+                const nextCell = nextRow.cells[cell.columnIndex];
+                this.editCell(nextCell);
+            }
+        };
+
+        const keydownHandler = (event: KeyboardEvent): void => {
+            // Confirm
+            if(event.key === 'Enter') {
+                event.preventDefault();
+                confirmEdition();
+            }
+            // Cancel
+            else if(event.key === 'Escape') {
+                event.preventDefault();
+                cancelEdition();
+            }
+            // else if Tab or Shift + Tab, navigate to previous or next cell (no circular navigation)
+            else if(event.key === 'Tab') {
+                event.preventDefault();
+                navigateToPreviousOrNextCell(event.shiftKey ? -1 : 1);
+            }
+            // else if Arrow keys (left, right, same as Tab / Shift + Tab)
+            else if(event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                navigateToPreviousOrNextCell(event.key === 'ArrowLeft' ? -1 : 1);
+            }
+            // else if Arrow keys (up, down goes to the same cell in the next or previous row)
+            else if(event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                navigateToPreviousOrNextRow(event.key === 'ArrowUp' ? -1 : 1);
+            }
+        };
+
+        if($input instanceof HTMLInputElement) {
+            $input.addEventListener('keydown', keydownHandler);
+        }
+        else if($input instanceof HTMLSelectElement) {
+            $input.addEventListener('change', confirmEdition, { once: true, passive: true });
+        }
+
+
+        $input.addEventListener('blur', confirmEdition, { once: true, passive: true });
+
+        const $cell = cell.$;
+        $cell.appendChild($input);
+        $input.focus();
+
         return this;
     }
 
@@ -1494,5 +1682,10 @@ export class VirtualTable<T extends Type> {
      *
      */
     public onEmptySpaceRightClicked: (event: MouseEvent) => void = () => {};
+
+    /**
+     *
+     */
+    public onCellEdited: (cell: Cell<T>, value: Any) => void = () => {};
 
 }
