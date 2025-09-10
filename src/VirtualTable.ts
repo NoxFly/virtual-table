@@ -632,7 +632,7 @@ export class VirtualTable<T extends Type> {
             return;
         }
 
-    if(!force && isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+        if(!force && isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
             return;
         }
 
