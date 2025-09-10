@@ -242,7 +242,7 @@ const g = class g {
       const i = this.DOM_createEmptyRow(!1);
       s.appendChild(i.$), this.DOM_setRowPosition(i, { top: e, left: 0 });
     }
-    this.$tableBody.appendChild(s), this.rows.length > 0 && (this.mostTopRow = this.rows[0].nextElement);
+    this.$tableBody.appendChild(s), this.rows.length > 0 && (this.mostTopRow = this.rows[0]);
   }
   /**
    * Créé une <tr> vide et l'ajoute à la fin du <tbody>.
@@ -324,7 +324,7 @@ const g = class g {
     if (this.rows.length === 0)
       return;
     const s = ((d = this.mostTopRow) == null ? void 0 : d.y) ?? 0, e = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), i = this.TBODY_START_Y + s * (this.ROW_HEIGHT - 1), n = i + this.ROW_HEIGHT, l = this.totalVirtualHeight > this.container.clientHeight;
-    if (!(this.scrollTop >= i && this.scrollTop <= n) && !(l && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
+    if (!(this.scrollTop >= i && this.scrollTop <= n) && !(!t && l && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
       this.lastScrollTopIndex = e;
       for (let r = 0; r < this.rows.length; r++) {
         const c = this.rows[r];
