@@ -13,23 +13,27 @@ export class Test1 extends Test {
             width: 50,
             type: 'number',
             cssClasses: ['row-index'],
+            readonly: true,
             transform: (cell) => cell.rowIndex.toString(),
         },
         {
             title: '',
             width: 30,
+            readonly: true,
             cssClasses: ['expand'],
         },
         {
             field: 'id',
             title: 'ID',
             width: 300,
+            readonly: true,
             cssClasses: ['indent'],
         },
         {
             title: '',
             transform: (cell) => this.createTooltipButton(cell),
             cssClasses: ['tooltip'],
+            readonly: true,
             width: 29,
         },
         {
@@ -93,7 +97,7 @@ export class Test1 extends Test {
      *
      */
     execute() {
-        this.data = generateRandomContacts(10000, true);
+        this.data = generateRandomContacts(25, false);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             stickyHeader: true,
