@@ -120,7 +120,7 @@
     width: 100%;
     height: 100%;
     z-index: 10;
-    border: 1px solid #444;
+    border: none;
     background: var(--bg);
     outline: none;
 }
@@ -130,3 +130,32 @@
 }
 
 
+.cell-editor {
+    position: absolute;
+    z-index: 19;
+}
+
+.cell-editor input,
+.cell-editor select {
+    outline: none;
+    border: none;
+    border-radius: 2px;
+    width: 100%;
+    height: 100%;
+    padding: 6px 8px;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: var(--font-family);
+    opacity: 0;
+}
+
+.cell-editor input[data-type="number"] {
+    text-align: right;
+}
+
+.cell-editor input:focus,
+.cell-editor select:focus {
+    opacity: 1;
+    outline: 2px solid color-mix(in srgb, var(--secondary), transparent 30%);
+    border: 1px solid #ddd;
+}

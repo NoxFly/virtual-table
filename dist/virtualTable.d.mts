@@ -79,9 +79,9 @@ interface VirtualTableOptions {
 }
 
 declare class VirtualTable<T extends Type> {
-    private readonly container;
+    readonly container: HTMLElement;
     protected static readonly DEFAULT_OPTIONS: VirtualTableOptions;
-    private readonly columns;
+    readonly columns: ColumnDef<T>[];
     private readonly rows;
     private tree;
     private readonly flatten;
