@@ -56,6 +56,7 @@ interface ColumnDef<T extends Type> {
     readonly?: boolean;
     required?: boolean;
     hidden?: boolean;
+    editTransformedValue?: boolean;
     sortable?: boolean;
     transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }

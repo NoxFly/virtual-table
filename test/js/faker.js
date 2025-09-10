@@ -9,6 +9,7 @@
  * @property {string} jobTitle - Job title of the contact.
  * @property {string} birthday - Birthday of the contact in ISO format.
  * @property {string} website - Website URL of the contact.
+ * @property {string} num - An incremental padded number as string.
  * @property {Contact[]} children - Array of child contacts.
  */
 
@@ -83,7 +84,7 @@ function randomUUID() {
 
 
 /**
- * 
+ *
  * @returns {Contact} A randomly generated contact object.
  */
 export function generateRandomContact(withChildren = true) {
@@ -113,12 +114,13 @@ export function generateRandomContact(withChildren = true) {
         jobTitle,
         birthday,
         website,
+        num: "00000001.00000002.00000003",
     };
 }
 
 /**
- * 
- * @param {number} count 
+ *
+ * @param {number} count
  * @returns {Contact[]} An array of randomly generated contact objects.
  */
 export function generateRandomContacts(count, withChildren = true) {

@@ -24,7 +24,6 @@ export class Test1 extends Test {
             field: 'id',
             title: 'ID',
             width: 300,
-            field: 'id',
             cssClasses: ['indent'],
         },
         {
@@ -32,6 +31,13 @@ export class Test1 extends Test {
             transform: (cell) => this.createTooltipButton(cell),
             cssClasses: ['tooltip'],
             width: 29,
+        },
+        {
+            field: 'num',
+            title: 'num',
+            width: 300,
+            editTransformedValue: true,
+            transform: (cell) => `${cell.value}`.replace(/\s+/g, "").replace(/\b0+(\d)/g, "$1"),
         },
         {
             field: 'name',
@@ -93,6 +99,7 @@ export class Test1 extends Test {
             stickyHeader: true,
             rowHeight: 28,
             allowRowSelection: true,
+            allowCellEditing: true,
         });
 
         this.virtualTable.setData(this.data);

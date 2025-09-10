@@ -10,6 +10,9 @@
     --second-text-color: #555;
     --border-color: rgba(0, 0, 0, 0.2);
     --hover-background-color: rgba(0, 0, 0, 0.05);
+
+    --bg: #fff;
+    --secondary: #f00;
 }
 
 html.dark-theme {
@@ -181,7 +184,7 @@ body {
     width: min(95%, 800px);
     height: 600px;
     /* border: 1px solid #aaa; */
-    background: #fff;
+    background: var(--bg);
     overflow: auto;
     user-select: none;
 }

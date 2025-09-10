@@ -1058,6 +1058,12 @@ var _VirtualTable = class _VirtualTable {
       console.warn(`Unsupported column type: ${cell.column.type}`);
       return this;
     }
+    if (cell.column.type !== "enum" && cell.column.editTransformedValue === true && cell.column.transform !== void 0) {
+      const transformedValue = cell.column.transform(cell);
+      if (!(transformedValue instanceof HTMLElement)) {
+        $input.value = transformedValue?.toString().trim() || "";
+      }
+    }
     $input.classList.add("cell-editor");
     cell.$.classList.add("editing");
     const cancelEdition = /* @__PURE__ */ __name(() => {

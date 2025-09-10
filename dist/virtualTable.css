@@ -1,90 +1,161 @@
-/* src/styles/VirtualTable.module.css */
 .virtual-table {
-  overflow: auto;
+    overflow: auto;
 }
+
 .virtual-table .table {
-  position: relative;
-  width: max-content;
-  height: max-content;
+    position: relative;
+    width: max-content;
+    height: max-content;
 }
+
 .virtual-table :where(.th, .td) {
-  display: inline-block;
+    display: inline-block;
 }
+
 .virtual-table .tbody .tr {
-  width: 100%;
-  height: var(--row-height);
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translate(var(--x, 0px), var(--y, 0px));
-  white-space: nowrap;
+    width: 100%;
+    height: var(--row-height);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(var(--x, 0px), var(--y, 0px));
+    white-space: nowrap;
 }
+
 .virtual-table .tbody .tr .td {
-  border: 1px solid #444;
-  height: var(--row-height);
-  background-color: var(--bg, transparent);
-  overflow: hidden;
-  padding-top: .1rem;
-  width: var(--width);
-  max-width: var(--width);
+    border: 1px solid #444;
+    height: var(--row-height);
+    background-color: var(--bg, transparent);
+    overflow: hidden;
+    padding-top: .1rem;
+    width: var(--width);
+    max-width: var(--width);
 }
+
 .virtual-table .thead .tr .th {
-  border: 1px solid #666;
-  font-weight: 600;
+    border: 1px solid #666;
+    font-weight: 600;
 }
+
 .virtual-table .tbody .tr .td:not(:last-child),
 .virtual-table .thead .tr .th:not(:last-child) {
-  border-right: none;
+    border-right: none;
 }
+
 .virtual-table .tbody .tr:not(:last-child) .td {
-  border-bottom: none;
+    border-bottom: none;
 }
+
 .virtual-table .tbody .td .cell-value {
-  height: 100%;
-  vertical-align: top;
-  padding: 0;
-  margin: 0;
-  line-height: 1rem;
-  display: inline-block;
+    height: 100%;
+    vertical-align: top;
+    padding: 0;
+    margin: 0;
+    line-height: 1rem;
+    display: inline-block;
 }
+
 .virtual-table .tbody .td.indent .cell-value {
-  transform: translateX(calc(20px * var(--depth)));
+    transform: translateX(calc(20px * var(--depth)));
 }
+
 .virtual-table .tbody .tr.selected {
-  background-color: #ddeeff;
-  color: #000;
+    background-color: #ddeeff;
+    color: #000;
 }
+
 .virtual-table .btn-expand {
-  position: relative;
-  background: none;
-  border: none;
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  display: inline-block;
-  vertical-align: top;
-  cursor: pointer;
-  padding: 0;
+    position: relative;
+    background: none;
+    border: none;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+    padding: 0;
 }
+
 .virtual-table .expand-icon {
-  display: inline-block;
-  height: 40%;
-  aspect-ratio: 1/1;
-  border-bottom: 1px solid #aaa;
-  border-right: 1px solid #aaa;
-  transform: translate(0, -40%) rotate(45deg);
-  opacity: .5;
+    display: inline-block;
+    height: 40%;
+    aspect-ratio: 1/1;
+    border-bottom: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+    transform: translate(0, -40%) rotate(45deg);
+    opacity: .5;
 }
+
 .virtual-table .tr.expanded .btn-expand .expand-icon {
-  transform: translate(0, 10%) rotate(-135deg);
+    transform: translate(0, 10%) rotate(-135deg);
 }
+
 .virtual-table .btn-expand:hover .expand-icon {
-  border-color: #000;
-  opacity: 1;
+    border-color: #000;
+    opacity: 1;
 }
+
+.virtual-table .tbody .td.indent.expand .btn-expand {
+    width: 28px;
+    margin-right: 5px;
+}
+
 .virtual-table .table.sticky-header .thead {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
-/*# sourceMappingURL=virtualTable.css.map */
+
+
+.virtual-table .tbody .tr .td.editing {
+    position: relative;
+    outline: 2px solid var(--primary);
+}
+
+.virtual-table .tbody .tr .td .cell-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    border: none;
+    background: var(--bg);
+    outline: none;
+}
+
+.virtual-table .tbody .tr .td[data-type="number"] .cell-editor {
+    text-align: right;
+}
+
+
+.cell-editor {
+    position: absolute;
+    z-index: 19;
+}
+
+.cell-editor input,
+.cell-editor select {
+    outline: none;
+    border: none;
+    border-radius: 2px;
+    width: 100%;
+    height: 100%;
+    padding: 6px 8px;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: var(--font-family);
+    opacity: 0;
+}
+
+.cell-editor input[data-type="number"] {
+    text-align: right;
+}
+
+.cell-editor input:focus,
+.cell-editor select:focus {
+    opacity: 1;
+    outline: 2px solid color-mix(in srgb, var(--secondary), transparent 30%);
+    border: 1px solid #ddd;
+}

@@ -216,22 +216,27 @@ export interface ColumnDef<T extends Type> {
      * Indique si la colonne n'est pas modifiable par l'utilisateur.
      * Cette propriété ne s'applique que si {@link VirtualTableOptions.allowCellEditing} vaut `true`.
      * @default false
-     * @todo Pas implémenté pour le moment.
-    */
+     */
     readonly?: boolean;
     /**
      * Indique si une valeur est obligatoire dans la cellule de cette colonne, lors de la saisie.
      * Cette propriété ne s'applique que si {@link VirtualTableOptions.allowCellEditing} vaut `true`.
      * Une classe `validator-required` sera ajouté à la cellule si celle-ci est vide (valeur null, undefined ou chaîne vide).
      * @default false
-     * @todo Pas implémenté pour le moment.
-    */
+     */
     required?: boolean;
     /**
      * Indique si la colonne doit être cachée.
      * @default false
-    */
+     */
     hidden?: boolean;
+    /**
+     * Indique, pour une colonne éditable, si
+     * c'est la valeur transformée qui doit être
+     * éditée, ou la valeur brute.
+     * @default false
+     */
+    editTransformedValue?: boolean;
     /**
      * Indique si un tri sur les lignes peut être effectué grâce
      * à cette colonne. Si cette propriété vaut `true` mais n'a

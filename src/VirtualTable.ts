@@ -29,7 +29,7 @@ export class VirtualTable<T extends Type> {
     };
 
 
-    private readonly columns: ColumnDef<T>[] = [];
+    public readonly columns: ColumnDef<T>[] = [];
     /** Les lignes de la vue, leur position et la référence vers leur données à afficher */
     private readonly rows: TableRow<T>[] = [];
     /** Un arbre multi-root de noeuds ayant des données fournies par `setData` */
@@ -67,7 +67,7 @@ export class VirtualTable<T extends Type> {
     /**
      *
      */
-    constructor(private readonly container: HTMLElement, columnsDef: ColumnsDefs<T>, options: Partial<VirtualTableOptions> = {}) {
+    constructor(public readonly container: HTMLElement, columnsDef: ColumnsDefs<T>, options: Partial<VirtualTableOptions> = {}) {
         this.options = { ...VirtualTable.DEFAULT_OPTIONS, ...options };
 
         this.ROW_HEIGHT = this.options.rowHeight;
@@ -1366,6 +1366,14 @@ export class VirtualTable<T extends Type> {
         else {
             console.warn(`Unsupported column type: ${cell.column.type}`);
             return this;
+        }
+
+        if(cell.column.type !== 'enum' && cell.column.editTransformedValue === true && cell.column.transform !== undefined) {
+            const transformedValue = cell.column.transform(cell);
+
+            if(!(transformedValue instanceof HTMLElement)) {
+                $input.value = transformedValue?.toString().trim() || '';
+            }
         }
 
         $input.classList.add('cell-editor');
