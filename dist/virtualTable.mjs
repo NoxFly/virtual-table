@@ -396,7 +396,7 @@ var _VirtualTable = class _VirtualTable {
     }
     this.$tableBody.appendChild($fragment);
     if (this.rows.length > 0) {
-      this.mostTopRow = this.rows[0].nextElement;
+      this.mostTopRow = this.rows[0];
     }
   }
   /**
@@ -531,7 +531,7 @@ var _VirtualTable = class _VirtualTable {
     if (this.scrollTop >= topMin && this.scrollTop <= topMax) {
       return;
     }
-    if (isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+    if (!force && isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
       return;
     }
     if (!force && scrollTopIndex === this.lastScrollTopIndex) {
