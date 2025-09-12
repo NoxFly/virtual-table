@@ -1397,8 +1397,6 @@ export class VirtualTable<T extends Type> {
         };
 
         const confirmEdition = (): void => {
-            const stack = new Error().stack;
-            console.debug(stack);
             cancelEdition();
 
             const newValue = $input instanceof HTMLInputElement

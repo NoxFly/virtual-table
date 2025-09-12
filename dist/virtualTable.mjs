@@ -1067,19 +1067,21 @@ var _VirtualTable = class _VirtualTable {
     $input.classList.add("cell-editor");
     cell.$.classList.add("editing");
     const cancelEdition = /* @__PURE__ */ __name(() => {
-      try {
-        cell.$?.classList.remove("editing");
-        $input?.remove();
-      } catch (e) {
-      }
       if ($input instanceof HTMLInputElement) {
         $input.removeEventListener("keydown", keydownHandler);
       } else {
         $input.removeEventListener("change", confirmEdition);
       }
       $input.removeEventListener("blur", confirmEdition);
+      try {
+        cell.$?.classList.remove("editing");
+        $input?.remove();
+      } catch (e) {
+      }
     }, "cancelEdition");
     const confirmEdition = /* @__PURE__ */ __name(() => {
+      const stack = new Error().stack;
+      console.debug(stack);
       cancelEdition();
       const newValue = $input instanceof HTMLInputElement ? $input.value.trim() : $input.value;
       if (newValue === value?.toString().trim())
@@ -1157,6 +1159,9 @@ var _VirtualTable = class _VirtualTable {
     const $cell = cell.$;
     $cell.appendChild($input);
     $input.focus();
+    if ($input instanceof HTMLInputElement && (cell.column.type === "string" || cell.column.type === "number")) {
+      $input.select();
+    }
     return this;
   }
   /**
