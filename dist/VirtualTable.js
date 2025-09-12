@@ -1,11 +1,38 @@
 /**
- * @copyright Copyright (c) 2025 NoxFly
- * @license AGPL-3.0
- * 
- * Entry point for the virtualization module.
- * Exports the main VirtualTable component and related type definitions.
+ * @copyright 2025 NoxFly
+ * @license MIT
+ * @author NoxFly
  */
-class E {
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var src_exports = {};
+__export(src_exports, {
+  EventManager: () => EventManager,
+  VirtualTable: () => VirtualTable
+});
+module.exports = __toCommonJS(src_exports);
+
+// src/EventManager.ts
+var _EventManager = class _EventManager {
   constructor() {
     this.listeners = /* @__PURE__ */ new Map();
   }
@@ -13,53 +40,145 @@ class E {
    * Ajoute un écouteur en liant `this` une seule fois.
    * Retourne le symbol à utiliser pour le remove.
    */
-  listenTo(t, s, e, i) {
-    const n = Symbol.for(e.name), l = e.bind(this);
-    return this.listeners.set(n, l), t.addEventListener(s, l, i), n;
+  listenTo(target, type, callback, options) {
+    const symbolId = Symbol.for(callback.name);
+    const boundCallback = callback.bind(this);
+    this.listeners.set(symbolId, boundCallback);
+    target.addEventListener(type, boundCallback, options);
+    return symbolId;
   }
   /**
    * Supprime un écouteur à partir de son symbol.
    */
-  stopListenTo(t, s, e, i) {
-    typeof e == "function" && (e = Symbol.for(e.name));
-    const n = this.listeners.get(e);
-    n && (t.removeEventListener(s, n, i), this.listeners.delete(e));
+  stopListenTo(target, type, symbolId, options) {
+    if (typeof symbolId === "function") {
+      symbolId = Symbol.for(symbolId.name);
+    }
+    const listener = this.listeners.get(symbolId);
+    if (listener) {
+      target.removeEventListener(type, listener, options);
+      this.listeners.delete(symbolId);
+    }
   }
   /**
    * Supprime tous les écouteurs gérés par cette instance.
    */
-  removeAllListeners(t, s) {
-    for (const [e, i] of this.listeners)
-      s ? t.removeEventListener(s, i) : console.warn("Impossible de removeAll sans type stocké, il faut étendre la structure.");
+  removeAllListeners(target, type) {
+    for (const [symbolId, listener] of this.listeners) {
+      if (type) {
+        target.removeEventListener(type, listener);
+      } else {
+        console.warn("Impossible de removeAll sans type stock\xE9, il faut \xE9tendre la structure.");
+      }
+    }
     this.listeners.clear();
   }
-}
-/**
- * @copyright Copyright (c) 2025 NoxFly
- * @license AGPL-3.0
- *
- * Entry point for the virtualization module.
- * Exports the main VirtualTable component and related type definitions.
- */
-const g = class g {
+};
+__name(_EventManager, "EventManager");
+var EventManager = _EventManager;
+
+// src/VirtualTable.ts
+var _VirtualTable = class _VirtualTable {
   /**
    *
    */
-  constructor(t, s, e = {}) {
-    this.container = t, this.columns = [], this.rows = [], this.tree = [], this.flatten = [], this.nodeMap = /* @__PURE__ */ new Map(), this.VISIBLE_ROWS_COUNT = 0, this.TOTAL_VISIBLE_ROWS = 0, this.TBODY_START_Y = 0, this.selectedNodes = /* @__PURE__ */ new Set(), this.selectedCells = /* @__PURE__ */ new Set(), this.selectedColumns = /* @__PURE__ */ new Set(), this.$lastHighlightedRow = null, this.$columns = [], this.lastScrollTopIndex = -1, this.onDrop = () => {
-    }, this.onCellClicked = () => {
-    }, this.onRowClicked = () => {
-    }, this.onColumnClicked = () => {
-    }, this.onCellRightClicked = () => {
-    }, this.onRowRightClicked = () => {
-    }, this.onColumnRightClicked = () => {
-    }, this.onEmptySpaceRightClicked = () => {
-    }, this.onCellEdited = () => {
-    }, this.options = { ...g.DEFAULT_OPTIONS, ...e }, this.ROW_HEIGHT = this.options.rowHeight, this.columns = s.map((i) => ({
-      ...i,
+  constructor(container, columnsDef, options = {}) {
+    this.container = container;
+    this.columns = [];
+    /** Les lignes de la vue, leur position et la référence vers leur données à afficher */
+    this.rows = [];
+    /** Un arbre multi-root de noeuds ayant des données fournies par `setData` */
+    this.tree = [];
+    /** Une liste plate des données filtrées provenant d'un arbre, préservant l'ordre des éléments */
+    this.flatten = [];
+    /** Un hashmap sur les nodes de l'arbre afin d'accéder à n'importe quel noeud en O(1) à partir de son ID */
+    this.nodeMap = /* @__PURE__ */ new Map();
+    this.VISIBLE_ROWS_COUNT = 0;
+    this.TOTAL_VISIBLE_ROWS = 0;
+    this.TBODY_START_Y = 0;
+    /** Indexes des noeuds sélectionnés dans `this.flatten` */
+    this.selectedNodes = /* @__PURE__ */ new Set();
+    /** Indexes des cellules sélectionnées et de leur node dans `this.flatten` */
+    this.selectedCells = /* @__PURE__ */ new Set();
+    /** Indexes des colonnes sélectionnées dans `this.columns` */
+    this.selectedColumns = /* @__PURE__ */ new Set();
+    this.$lastHighlightedRow = null;
+    this.$columns = [];
+    this.lastScrollTopIndex = -1;
+    /**
+     * Si makeDroppable a été appelé, cette fonction sera appelée
+     * en callback de l'évènement drop sur le conteneur de la table.
+     */
+    this.onDrop = /* @__PURE__ */ __name(() => {
+    }, "onDrop");
+    /**
+     *
+     */
+    this.onCellClicked = /* @__PURE__ */ __name(() => {
+    }, "onCellClicked");
+    /**
+     *
+     */
+    this.onRowClicked = /* @__PURE__ */ __name(() => {
+    }, "onRowClicked");
+    /**
+     *
+     */
+    this.onColumnClicked = /* @__PURE__ */ __name(() => {
+    }, "onColumnClicked");
+    /**
+     *
+     */
+    this.onCellRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onCellRightClicked");
+    /**
+     *
+     */
+    this.onRowRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onRowRightClicked");
+    /**
+     *
+     */
+    this.onColumnRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onColumnRightClicked");
+    /**
+     *
+     */
+    this.onEmptySpaceRightClicked = /* @__PURE__ */ __name(() => {
+    }, "onEmptySpaceRightClicked");
+    /**
+     *
+     */
+    this.onCellEdited = /* @__PURE__ */ __name(() => {
+    }, "onCellEdited");
+    this.options = { ..._VirtualTable.DEFAULT_OPTIONS, ...options };
+    this.ROW_HEIGHT = this.options.rowHeight;
+    this.columns = columnsDef.map((col) => ({
+      ...col,
       id: crypto.randomUUID(),
-      type: i.type || "string"
-    })), this.$table = document.createElement("div"), this.$table.classList.add("table"), this.$tableHead = document.createElement("div"), this.$tableHead.classList.add("thead"), this.$tableBody = document.createElement("div"), this.$tableBody.classList.add("tbody"), this.$table.append(this.$tableHead, this.$tableBody), this.container.classList.add("virtual-table"), this.container.appendChild(this.$table), this.options.id && (this.$table.id = this.options.id), this.options.stickyHeader && this.$table.classList.add("sticky-header"), this.DOM_createColumns(), this.DOM_computeViewbox(), this.container.addEventListener("scroll", (i) => this.DOM_EVENT_onScroll(i), { passive: !0 }), this.container.addEventListener("click", (i) => this.DOM_EVENT_onClick(i), { passive: !0 }), this.container.addEventListener("contextmenu", (i) => this.DOM_EVENT_onContextMenu(i)), this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+      type: col.type || "string"
+    }));
+    this.$table = document.createElement("div");
+    this.$table.classList.add("table");
+    this.$tableHead = document.createElement("div");
+    this.$tableHead.classList.add("thead");
+    this.$tableBody = document.createElement("div");
+    this.$tableBody.classList.add("tbody");
+    this.$table.append(this.$tableHead, this.$tableBody);
+    this.container.classList.add("virtual-table");
+    this.container.appendChild(this.$table);
+    if (this.options.id) {
+      this.$table.id = this.options.id;
+    }
+    if (this.options.stickyHeader) {
+      this.$table.classList.add("sticky-header");
+    }
+    this.DOM_createColumns();
+    this.DOM_computeViewbox();
+    this.container.addEventListener("scroll", (e) => this.DOM_EVENT_onScroll(e), { passive: true });
+    this.container.addEventListener("click", (e) => this.DOM_EVENT_onClick(e), { passive: true });
+    this.container.addEventListener("contextmenu", (e) => this.DOM_EVENT_onContextMenu(e));
+    this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
   }
   // ------------------------------------------------------------------------------
   // Table DOM manager
@@ -86,17 +205,29 @@ const g = class g {
    * des données appartenant à ces colonnes.
    */
   DOM_createColumns() {
-    const t = document.createElement("div");
-    t.classList.add("tr");
-    for (const s of this.columns) {
-      if (s.hidden)
+    const $tr = document.createElement("div");
+    $tr.classList.add("tr");
+    for (const columnDef of this.columns) {
+      if (columnDef.hidden) {
         return;
-      const e = document.createElement("div");
-      e.dataset.type = s.type, e.dataset.id = s.id, e.classList.add("th", ...s.cssClasses || []), e.style.width = s.width + this.columnUnits, s.field && e.classList.add(s.field.toString());
-      const i = document.createElement("span");
-      i.classList.add("cell-value"), i.innerHTML = s.title, e.appendChild(i), t.appendChild(e), this.$columns.push(e);
+      }
+      const $th = document.createElement("div");
+      $th.dataset.type = columnDef.type;
+      $th.dataset.id = columnDef.id;
+      $th.classList.add("th", ...columnDef.cssClasses || []);
+      $th.style.width = columnDef.width + this.columnUnits;
+      if (columnDef.field) {
+        $th.classList.add(columnDef.field.toString());
+      }
+      const $span = document.createElement("span");
+      $span.classList.add("cell-value");
+      $span.innerHTML = columnDef.title;
+      $th.appendChild($span);
+      $tr.appendChild($th);
+      this.$columns.push($th);
     }
-    this.$tableHead.innerHTML = "", this.$tableHead.appendChild(t);
+    this.$tableHead.innerHTML = "";
+    this.$tableHead.appendChild($tr);
   }
   /**
    * Sert à recalculer le nombre de lignes visibles dans le conteneur.
@@ -105,15 +236,20 @@ const g = class g {
    * Ensuite, appelle computeInViewVisibleRows.
    */
   DOM_computeViewbox() {
-    const t = this.container.clientHeight;
-    if (this.VISIBLE_ROWS_COUNT = Math.ceil(t / this.ROW_HEIGHT) + 4, this.flatten.length > 0) {
-      const s = this.flatten.length, e = Math.min(s, this.VISIBLE_ROWS_COUNT);
-      if (this.rows.length < e)
-        for (let i = this.rows.length; i < e; i++)
+    const CONTAINER_HEIGHT = this.container.clientHeight;
+    this.VISIBLE_ROWS_COUNT = Math.ceil(CONTAINER_HEIGHT / this.ROW_HEIGHT) + 4;
+    if (this.flatten.length > 0) {
+      const rowsCount = this.flatten.length;
+      const max = Math.min(rowsCount, this.VISIBLE_ROWS_COUNT);
+      if (this.rows.length < max) {
+        for (let i = this.rows.length; i < max; i++) {
           this.DOM_createEmptyRow();
-      else if (this.rows.length > e)
-        for (let i = this.rows.length - 1; i >= e; i--)
+        }
+      } else if (this.rows.length > max) {
+        for (let i = this.rows.length - 1; i >= max; i--) {
           this.DOM_removeRow(this.rows[i]);
+        }
+      }
     }
     this.TBODY_START_Y = this.$tableHead.clientHeight - 1;
   }
@@ -127,105 +263,143 @@ const g = class g {
    */
   DOM_computeInViewVisibleRows() {
     this.DOM_resetSelections();
-    for (const e of this.flatten)
-      e.flatIndex = -1;
+    for (const row of this.flatten) {
+      row.flatIndex = -1;
+    }
     this.flatten.length = 0;
-    let t = 0;
-    const s = (e) => {
-      if (this.flatten.push(e), e.flatIndex = t++, e.expanded)
-        for (const i of e.children)
-          s(i);
-    };
-    for (const e of this.tree)
-      s(e);
-    this.DOM_computeViewbox(), this.DOM_updateViewBoxHeight(), this.DOM_resetTableRows(), this.DOM_updateScroll(!0);
+    let i = 0;
+    const rec = /* @__PURE__ */ __name((node) => {
+      this.flatten.push(node);
+      node.flatIndex = i++;
+      if (node.expanded) {
+        for (const child of node.children) {
+          rec(child);
+        }
+      }
+    }, "rec");
+    for (const node of this.tree) {
+      rec(node);
+    }
+    this.DOM_computeViewbox();
+    this.DOM_updateViewBoxHeight();
+    this.DOM_resetTableRows();
+    this.DOM_updateScroll(true);
   }
   /**
    *
    */
   DOM_resetSelections() {
-    this.unselectAllCells(), this.unselectAllRows(), this.unselectAllColumns();
+    this.unselectAllCells();
+    this.unselectAllRows();
+    this.unselectAllColumns();
   }
   /**
    * Retourne le nœud de l'arbre de la vue correspondant à l'élément `<tr>` donné.
    * en O(1)
    */
-  getRowFromHTMLRow(t) {
-    if (t == null || this.rows.length === 0)
+  getRowFromHTMLRow($row) {
+    if ($row === null || $row === void 0 || this.rows.length === 0) {
       return null;
-    const s = parseInt(t.dataset.index || "-1", 10), e = +(this.rows[0].$.dataset.index ?? 0);
-    return this.rows[s - e] || null;
+    }
+    const index = parseInt($row.dataset.index || "-1", 10);
+    const firstIndex = +(this.rows[0].$.dataset.index ?? 0);
+    return this.rows[index - firstIndex] || null;
   }
   /**
    *
    */
-  DOM_getRowIndex(t) {
-    return +(t.$.dataset.index ?? "-1");
+  DOM_getRowIndex(row) {
+    return +(row.$.dataset.index ?? "-1");
   }
   /**
    * Appelé APRES avoir mis à jour this.flatten
    */
   DOM_updateViewBoxHeight() {
     this.TOTAL_VISIBLE_ROWS = this.flatten.length;
-    const t = this.totalVirtualHeight + this.$tableHead.clientHeight - 1;
-    this.$table.style.height = t + "px";
+    const totalHeight = this.totalVirtualHeight + this.$tableHead.clientHeight - 1;
+    this.$table.style.height = totalHeight + "px";
   }
   /**
    *
    */
   DOM_updateRowsContent() {
-    for (const t of this.rows)
-      this.DOM_updateRowContent(t);
-  }
-  /**
-   *
-   */
-  DOM_updateRowContent(t) {
-    var n;
-    if (!t.ref)
-      return;
-    const s = t.ref.children.length > 0;
-    let e = "tr ";
-    this.rowCssClassesCallback !== void 0 && (e += this.rowCssClassesCallback(t)), t.$.className = e, t.$.classList.toggle("has-children", s), t.$.classList.toggle("expanded", t.ref.expanded), t.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(t))), t.$.style.setProperty("--depth", `${t.ref.depth}`);
-    const i = this.columns.filter((l) => !l.hidden);
-    for (const l in i) {
-      const d = i[l];
-      if (d.hidden)
-        continue;
-      const r = t.cells[+l], c = r.$;
-      if (!c)
-        continue;
-      const a = d.field !== void 0 ? t.ref.data[d.field] : void 0, h = this.options.allowCellEditing === !0 && d.readonly !== !0 && d.required === !0 && (a == null || d.type === "string" && a === "" || d.type === "number" && a === 0 && this.options.treatZeroAsEmpty === !0), p = a === 0 && this.options.treatZeroAsEmpty === !0 ? void 0 : a;
-      r.value = p, r.node = t.ref, r.column = d, r.rowIndex = t.y, r.columnIndex = +l;
-      let u;
-      if (d.transform !== void 0) {
-        const f = (n = d.transform) == null ? void 0 : n.call(d, r);
-        f == null ? u = "" : f instanceof HTMLElement ? u = f.outerHTML : u = f;
-      } else
-        u = this.formatCellValue(a);
-      let m = "";
-      if (s && c.classList.contains("expand") && this.options.allowExpandCollapse) {
-        const f = t.ref.expanded ? "expanded" : "collapsed";
-        m += `<button class="btn-expand"><span class="expand-icon ${f}"></span></button>`;
-      }
-      m += `<div class="cell-value">${u}</div>`, c.innerHTML = m, c.classList.toggle("validator-required", h);
+    for (const row of this.rows) {
+      this.DOM_updateRowContent(row);
     }
   }
   /**
    *
    */
-  DOM_getTableRowFromNode(t) {
-    if (!(t.flatIndex < 0 || t.flatIndex >= this.flatten.length))
-      return this.rows.find((s) => {
-        var e;
-        return ((e = s.ref) == null ? void 0 : e.data.id) === t.data.id;
-      });
+  DOM_updateRowContent(row) {
+    if (!row.ref) {
+      return;
+    }
+    const hasChildren = row.ref.children.length > 0;
+    let rowClasses = "tr ";
+    if (this.rowCssClassesCallback !== void 0) {
+      rowClasses += this.rowCssClassesCallback(row);
+    }
+    row.$.className = rowClasses;
+    row.$.classList.toggle("has-children", hasChildren);
+    row.$.classList.toggle("expanded", row.ref.expanded);
+    row.$.classList.toggle("selected", this.selectedNodes.has(this.DOM_getRowIndex(row)));
+    row.$.style.setProperty("--depth", `${row.ref.depth}`);
+    const visibleColumns = this.columns.filter((c) => !c.hidden);
+    for (const i in visibleColumns) {
+      const col = visibleColumns[i];
+      if (col.hidden) {
+        continue;
+      }
+      const cell = row.cells[+i];
+      const $cell = cell.$;
+      if (!$cell)
+        continue;
+      const hasField = col.field !== void 0;
+      const value = hasField ? row.ref.data[col.field] : void 0;
+      const showRequired = this.options.allowCellEditing === true && col.readonly !== true && col.required === true && (value === void 0 || value === null || (col.type === "string" && value === "" || col.type === "number" && value === 0 && this.options.treatZeroAsEmpty === true));
+      const realValue = value === 0 && this.options.treatZeroAsEmpty === true ? void 0 : value;
+      cell.value = realValue;
+      cell.node = row.ref;
+      cell.column = col;
+      cell.rowIndex = row.y;
+      cell.columnIndex = +i;
+      let transformedValue;
+      if (col.transform !== void 0) {
+        const v = col.transform?.(cell);
+        if (v === void 0 || v === null) {
+          transformedValue = "";
+        } else if (v instanceof HTMLElement) {
+          transformedValue = v.outerHTML;
+        } else {
+          transformedValue = v;
+        }
+      } else {
+        transformedValue = this.formatCellValue(value);
+      }
+      let html = "";
+      if (hasChildren && $cell.classList.contains("expand") && this.options.allowExpandCollapse) {
+        const cls = row.ref.expanded ? "expanded" : "collapsed";
+        html += `<button class="btn-expand"><span class="expand-icon ${cls}"></span></button>`;
+      }
+      html += `<div class="cell-value">${transformedValue}</div>`;
+      $cell.innerHTML = html;
+      $cell.classList.toggle("validator-required", showRequired);
+    }
   }
   /**
    *
    */
-  formatCellValue(t) {
-    return (t == null ? void 0 : t.toString()) || "";
+  DOM_getTableRowFromNode(node) {
+    if (node.flatIndex < 0 || node.flatIndex >= this.flatten.length) {
+      return void 0;
+    }
+    return this.rows.find((r) => r.ref?.data.id === node.data.id);
+  }
+  /**
+   *
+   */
+  formatCellValue(value) {
+    return value?.toString() || "";
   }
   /**
    * Réinitialise les lignes du tableau.
@@ -234,15 +408,21 @@ const g = class g {
    * défini par VISIBLE_ROWS_COUNT.
    */
   DOM_resetTableRows() {
-    for (const e of this.rows)
-      e.$.remove();
-    this.rows.length = 0;
-    const t = Math.min(this.flatten.length, this.VISIBLE_ROWS_COUNT), s = document.createDocumentFragment();
-    for (let e = 0; e < t; e++) {
-      const i = this.DOM_createEmptyRow(!1);
-      s.appendChild(i.$), this.DOM_setRowPosition(i, { top: e, left: 0 });
+    for (const row of this.rows) {
+      row.$.remove();
     }
-    this.$tableBody.appendChild(s), this.rows.length > 0 && (this.mostTopRow = this.rows[0]);
+    this.rows.length = 0;
+    const max = Math.min(this.flatten.length, this.VISIBLE_ROWS_COUNT);
+    const $fragment = document.createDocumentFragment();
+    for (let i = 0; i < max; i++) {
+      const row = this.DOM_createEmptyRow(false);
+      $fragment.appendChild(row.$);
+      this.DOM_setRowPosition(row, { top: i, left: 0 });
+    }
+    this.$tableBody.appendChild($fragment);
+    if (this.rows.length > 0) {
+      this.mostTopRow = this.rows[0];
+    }
   }
   /**
    * Créé une <tr> vide et l'ajoute à la fin du <tbody>.
@@ -250,56 +430,97 @@ const g = class g {
    *
    * @returns La ligne vide créée.
    */
-  DOM_createEmptyRow(t = !0) {
-    const s = {
+  DOM_createEmptyRow(shouldAddDirectly = true) {
+    const row = {
       $: document.createElement("div"),
       x: 0,
       y: 0,
       cells: []
     };
-    return s.$.classList.add("tr"), s.nextElement = s, s.previousElement = s, this.rows.length > 0 && (s.previousElement = this.rows[this.rows.length - 1], s.previousElement.nextElement = s, s.nextElement = this.rows[0], s.nextElement.previousElement = s), this.rows.push(s), this.DOM_createEmptyCells(s), t && this.$tableBody.appendChild(s.$), s;
+    row.$.classList.add("tr");
+    row.nextElement = row;
+    row.previousElement = row;
+    if (this.rows.length > 0) {
+      row.previousElement = this.rows[this.rows.length - 1];
+      row.previousElement.nextElement = row;
+      row.nextElement = this.rows[0];
+      row.nextElement.previousElement = row;
+    }
+    this.rows.push(row);
+    this.DOM_createEmptyCells(row);
+    if (shouldAddDirectly) {
+      this.$tableBody.appendChild(row.$);
+    }
+    return row;
   }
   /**
    * Créé les <td> vides correspondant aux colonnes.
    *
    * @param row La ligne à laquelle ajouter les cellules vides.
    */
-  DOM_createEmptyCells(t) {
-    const s = document.createDocumentFragment();
-    for (const e of this.columns) {
-      if (e.hidden)
+  DOM_createEmptyCells(row) {
+    const $fragment = document.createDocumentFragment();
+    for (const columnDef of this.columns) {
+      if (columnDef.hidden) {
         continue;
-      const i = document.createElement("div");
-      i.classList.add("td", ...e.cssClasses || []), e.field && i.classList.add("field", `field-${e.field.toString()}`), i.style.setProperty("--width", e.width + this.columnUnits), i.dataset.type = e.type, s.appendChild(i);
-      const n = {
-        $: i,
+      }
+      const $td = document.createElement("div");
+      $td.classList.add("td", ...columnDef.cssClasses || []);
+      if (columnDef.field) {
+        $td.classList.add("field", `field-${columnDef.field.toString()}`);
+      }
+      $td.style.setProperty("--width", columnDef.width + this.columnUnits);
+      $td.dataset.type = columnDef.type;
+      $fragment.appendChild($td);
+      const cell = {
+        $: $td,
         value: "",
-        row: t,
-        node: t.ref,
-        column: e,
-        rowIndex: t.y,
-        columnIndex: this.columns.indexOf(e)
+        row,
+        node: row.ref,
+        column: columnDef,
+        rowIndex: row.y,
+        columnIndex: this.columns.indexOf(columnDef)
       };
-      t.cells.push(n);
+      row.cells.push(cell);
     }
-    t.$.appendChild(s);
+    row.$.appendChild($fragment);
   }
-  DOM_removeRow(t) {
-    let s = -1;
-    typeof t == "number" ? (s = t, t = this.rows[t]) : s = this.rows.findIndex((e) => e === t), !(!t || s === -1) && (t.$.parentNode && t.$.remove(), this.rows.splice(s, 1), t.previousElement && (t.previousElement.nextElement = t.nextElement), t.nextElement && (t.nextElement.previousElement = t.previousElement));
+  DOM_removeRow(row) {
+    let rowIndex = -1;
+    if (typeof row === "number") {
+      rowIndex = row;
+      row = this.rows[row];
+    } else {
+      rowIndex = this.rows.findIndex((r) => r === row);
+    }
+    if (!row || rowIndex === -1)
+      return;
+    if (row.$.parentNode) {
+      row.$.remove();
+    }
+    this.rows.splice(rowIndex, 1);
+    if (row.previousElement) {
+      row.previousElement.nextElement = row.nextElement;
+    }
+    if (row.nextElement) {
+      row.nextElement.previousElement = row.previousElement;
+    }
   }
   /**
    * Supprime la cellule à l'index donné de chaque ligne.
    * L'élément HTML de l'entête de la colonne est également enlevé
    */
-  DOM_removeCell(t) {
-    if (t < 0 || t >= this.columns.length || this.columns[t].hidden)
+  DOM_removeCell(columnIndex) {
+    if (columnIndex < 0 || columnIndex >= this.columns.length || this.columns[columnIndex].hidden) {
       return;
-    this.columns[t].hidden = !0, this.$columns[t].remove();
-    const s = this.columns.slice(0, t).filter((i) => i.hidden).length, e = t - s;
-    for (const i of this.rows) {
-      const n = i.$.children.item(e);
-      n == null || n.remove();
+    }
+    this.columns[columnIndex].hidden = true;
+    this.$columns[columnIndex].remove();
+    const hiddenCount = this.columns.slice(0, columnIndex).filter((c) => c.hidden).length;
+    const cellIndex = columnIndex - hiddenCount;
+    for (const row of this.rows) {
+      const $cell = row.$.children.item(cellIndex);
+      $cell?.remove();
     }
     this.DOM_updateRowsContent();
   }
@@ -310,87 +531,129 @@ const g = class g {
    * @param row La ligne à mettre à jour.
    * @param position La nouvelle position de la ligne.
    */
-  DOM_setRowPosition(t, s) {
-    var i, n, l;
-    const e = this.TBODY_START_Y + s.top * (this.ROW_HEIGHT - 1);
-    t.y = s.top, t.ref = this.flatten[t.y], t.$.dataset.index = `${t.y}`, t.$.dataset.treeIndex = `${(i = t.ref) == null ? void 0 : i.flatIndex}`, t.$.dataset.id = ((l = (n = t.ref) == null ? void 0 : n.data.id) == null ? void 0 : l.toString()) || "", t.$.style.setProperty("--y", e + "px");
+  DOM_setRowPosition(row, position) {
+    const top = this.TBODY_START_Y + position.top * (this.ROW_HEIGHT - 1);
+    row.y = position.top;
+    row.ref = this.flatten[row.y];
+    row.$.dataset.index = `${row.y}`;
+    row.$.dataset.treeIndex = `${row.ref?.flatIndex}`;
+    row.$.dataset.id = row.ref?.data.id?.toString() || "";
+    row.$.style.setProperty("--y", top + "px");
   }
   /**
    * Met à jour la position des lignes visibles.
    * Appelé lors d'un scroll.
    */
-  DOM_updateScroll(t) {
-    var d;
-    if (this.rows.length === 0)
+  DOM_updateScroll(force) {
+    if (this.rows.length === 0) {
       return;
-    const s = ((d = this.mostTopRow) == null ? void 0 : d.y) ?? 0, e = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2), i = this.TBODY_START_Y + s * (this.ROW_HEIGHT - 1), n = i + this.ROW_HEIGHT, l = this.totalVirtualHeight > this.container.clientHeight;
-    if (!(this.scrollTop >= i && this.scrollTop <= n) && !(!t && l && e + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) && !(!t && e === this.lastScrollTopIndex)) {
-      this.lastScrollTopIndex = e;
-      for (let r = 0; r < this.rows.length; r++) {
-        const c = this.rows[r];
-        this.DOM_setRowPosition(c, { top: e + r, left: c.x });
-      }
-      this.DOM_updateRowsContent();
     }
+    const y = this.mostTopRow?.y ?? 0;
+    const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
+    const topMin = this.TBODY_START_Y + y * (this.ROW_HEIGHT - 1);
+    const topMax = topMin + this.ROW_HEIGHT;
+    const isOverflow = this.totalVirtualHeight > this.container.clientHeight;
+    if (this.scrollTop >= topMin && this.scrollTop <= topMax) {
+      return;
+    }
+    if (!force && isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
+      return;
+    }
+    if (!force && scrollTopIndex === this.lastScrollTopIndex) {
+      return;
+    }
+    this.lastScrollTopIndex = scrollTopIndex;
+    for (let i = 0; i < this.rows.length; i++) {
+      const row = this.rows[i];
+      this.DOM_setRowPosition(row, { top: scrollTopIndex + i, left: row.x });
+    }
+    this.DOM_updateRowsContent();
   }
   /**
    * Gère l'événement de scroll du conteneur.
    * Met à jour les positions des lignes visibles.
    */
-  DOM_EVENT_onScroll(t) {
-    this.DOM_updateScroll(), this.container.querySelectorAll(".td.editing").forEach((s) => {
-      s.classList.remove("editing");
+  DOM_EVENT_onScroll(e) {
+    this.DOM_updateScroll();
+    this.container.querySelectorAll(".td.editing").forEach(($cell) => {
+      $cell.classList.remove("editing");
     });
   }
   /**
    *
    */
-  DOM_EVENT_onClick(t) {
-    !t.shiftKey && !t.ctrlKey && this.DOM_resetSelections(), this.cancelCellEdition();
-    const s = t.target;
-    if (s.closest(".th")) {
-      const e = s.closest(".th"), i = this.$columns.indexOf(e), n = this.columns[i];
-      n && this.onColumnClicked(n, t, e);
+  DOM_EVENT_onClick(e) {
+    if (!e.shiftKey && !e.ctrlKey) {
+      this.DOM_resetSelections();
+    }
+    this.cancelCellEdition();
+    const $target = e.target;
+    if ($target.closest(".th")) {
+      const target = $target.closest(".th");
+      const targetIndex = this.$columns.indexOf(target);
+      const column = this.columns[targetIndex];
+      if (column) {
+        this.onColumnClicked(column, e, target);
+      }
     } else {
-      const e = s.closest(".tr"), i = this.getRowFromHTMLRow(e);
-      i && this.DOM_EVENT_onRowClick(t, i, s);
+      const $closestRow = $target.closest(".tr");
+      const closestRow = this.getRowFromHTMLRow($closestRow);
+      if (closestRow) {
+        this.DOM_EVENT_onRowClick(e, closestRow, $target);
+      }
     }
   }
   /**
    *
    */
-  DOM_EVENT_onContextMenu(t) {
-    const s = t.target;
-    if (s.closest(".th")) {
-      const e = s.closest(".th"), i = this.$columns.indexOf(e), n = this.columns[i];
-      n && this.onColumnRightClicked(n, t, e);
-    } else if (s.closest(".tr")) {
-      const e = s.closest(".tr"), i = this.getRowFromHTMLRow(e);
-      if (i) {
-        const n = s.closest(".td");
-        if (n) {
-          const l = Array.from(i.$.children).indexOf(n), d = i.cells[l];
-          this.onCellRightClicked(d, t);
-        }
-        this.onRowRightClicked(i, t);
+  DOM_EVENT_onContextMenu(e) {
+    const $target = e.target;
+    if ($target.closest(".th")) {
+      const target = $target.closest(".th");
+      const targetIndex = this.$columns.indexOf(target);
+      const column = this.columns[targetIndex];
+      if (column) {
+        this.onColumnRightClicked(column, e, target);
       }
-    } else
-      this.onEmptySpaceRightClicked(t);
+    } else if ($target.closest(".tr")) {
+      const $closestRow = $target.closest(".tr");
+      const closestRow = this.getRowFromHTMLRow($closestRow);
+      if (closestRow) {
+        const $cell = $target.closest(".td");
+        if ($cell) {
+          const cellIndex = Array.from(closestRow.$.children).indexOf($cell);
+          const cell = closestRow.cells[cellIndex];
+          this.onCellRightClicked(cell, e);
+        }
+        this.onRowRightClicked(closestRow, e);
+      }
+    } else {
+      this.onEmptySpaceRightClicked(e);
+    }
   }
   /**
    *
    */
-  DOM_EVENT_onRowClick(t, s, e) {
-    if (e.closest(".btn-expand")) {
-      this.toggleRowExpand(s);
+  DOM_EVENT_onRowClick(e, row, $target) {
+    if ($target.closest(".btn-expand")) {
+      this.toggleRowExpand(row);
       return;
     }
-    const i = e.closest(".td");
-    if (i) {
-      const n = Array.from(s.$.children).indexOf(i), l = s.cells[n];
-      this.options.allowCellEditing && this.editCell(l), this.options.allowCellSelection, this.options.allowRowSelection && this.selectRow(t, s), this.onCellClicked(l, t);
+    const $cell = $target.closest(".td");
+    if ($cell) {
+      const cellIndex = Array.from(row.$.children).indexOf($cell);
+      const cell = row.cells[cellIndex];
+      if (this.options.allowCellEditing) {
+        this.editCell(cell);
+      }
+      if (this.options.allowCellSelection) {
+      }
+      if (this.options.allowRowSelection) {
+        this.selectRow(e, row);
+      }
+      this.onCellClicked(cell, e);
     }
-    this.onRowClicked(s, t);
+    this.onRowClicked(row, e);
   }
   /**
    * Gère l'événement de clic sur une ligne.
@@ -399,48 +662,65 @@ const g = class g {
    * @param row La ligne sur laquelle on a cliqué.
    * @param expandBtn Le bouton d'expansion/réduction.
    */
-  toggleRowExpand(t) {
-    if (!this.options.allowExpandCollapse)
+  toggleRowExpand(row) {
+    if (!this.options.allowExpandCollapse) {
       return;
-    if (!t.ref) {
+    }
+    if (!row.ref) {
       console.warn("Cannot toggle expand on a row without a reference to the data node.");
       return;
     }
-    const s = t.ref;
-    s.expanded = !s.expanded, t.$.classList.toggle("expanded", s.expanded), this.DOM_computeInViewVisibleRows();
+    const node = row.ref;
+    node.expanded = !node.expanded;
+    row.$.classList.toggle("expanded", node.expanded);
+    this.DOM_computeInViewVisibleRows();
   }
   // ------------------------------------------------------------------------------
   /**
    * Convertit les données d'un nœud en un nœud de l'arbre,
    * utilisable en interne.
    */
-  dataToTreeNodeRec(t, s = void 0) {
-    const e = {
-      data: t,
+  dataToTreeNodeRec(data, parent = void 0) {
+    const node = {
+      data,
       expanded: this.options.defaultExpanded,
-      depth: s ? s.depth + 1 : 0,
-      parent: s,
+      depth: parent ? parent.depth + 1 : 0,
+      parent,
       flatIndex: -1,
       children: []
     };
-    return Array.isArray(t.children) && (e.children = this.computeTree(t.children, e)), e;
-  }
-  /**
-   *
-   */
-  computeTree(t, s = void 0) {
-    const e = new Array(t.length);
-    for (let i = 0; i < t.length; i++) {
-      const n = t[i], l = this.dataToTreeNodeRec(n, s);
-      e[i] = l, this.nodeMap.set(n.id.toString(), l), i > 0 && e.length > 1 && (l.left = e[i - 1], e[i - 1].right = l);
+    if (Array.isArray(data.children)) {
+      node.children = this.computeTree(data.children, node);
     }
-    return e.length > 1 && (e[0].left = e[e.length - 1], e[e.length - 1].right = e[0]), e;
+    return node;
   }
   /**
    *
    */
-  recomputeDataTree(t) {
-    this.tree = this.computeTree(t), console.debug("Recomputed data tree:", this.tree);
+  computeTree(data, parent = void 0) {
+    const root = new Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const node = this.dataToTreeNodeRec(d, parent);
+      root[i] = node;
+      this.nodeMap.set(d.id.toString(), node);
+      if (i > 0 && root.length > 1) {
+        node.left = root[i - 1];
+        root[i - 1].right = node;
+      }
+    }
+    if (root.length > 1) {
+      root[0].left = root[root.length - 1];
+      root[root.length - 1].right = root[0];
+    }
+    return root;
+  }
+  /**
+   *
+   */
+  recomputeDataTree(data) {
+    this.tree = this.computeTree(data);
+    console.debug("Recomputed data tree:", this.tree);
   }
   // ----------------------------------------------------------------------
   // PUBLIC API
@@ -449,74 +729,111 @@ const g = class g {
   /**
    *
    */
-  deleteNode(t) {
-    return this.deleteNodes([t]);
+  deleteNode(nodeId) {
+    return this.deleteNodes([nodeId]);
   }
   /**
    *
    */
-  deleteNodes(t) {
-    if (t.length === 0)
+  deleteNodes(nodeIds) {
+    if (nodeIds.length === 0) {
       return this;
-    for (const s of t) {
-      const e = this.nodeMap.get(s);
-      if (!e)
+    }
+    for (const id of nodeIds) {
+      const node = this.nodeMap.get(id);
+      if (!node) {
         continue;
-      if (e.left && (e.left.right = e.right), e.right && (e.right.left = e.left), e.parent) {
-        const n = e.parent.children.indexOf(e);
-        n !== -1 && e.parent.children.splice(n, 1);
+      }
+      if (node.left)
+        node.left.right = node.right;
+      if (node.right)
+        node.right.left = node.left;
+      if (node.parent) {
+        const idx = node.parent.children.indexOf(node);
+        if (idx !== -1) {
+          node.parent.children.splice(idx, 1);
+        }
       } else {
-        const n = this.tree.indexOf(e);
-        n !== -1 && this.tree.splice(n, 1);
+        const idx = this.tree.indexOf(node);
+        if (idx !== -1) {
+          this.tree.splice(idx, 1);
+        }
       }
-      const i = [e];
-      for (; i.length > 0; ) {
-        const n = i.pop();
-        this.nodeMap.delete(n.data.id.toString());
-        for (const l of n.children)
-          i.push(l);
+      const stack = [node];
+      while (stack.length > 0) {
+        const currentNode = stack.pop();
+        this.nodeMap.delete(currentNode.data.id.toString());
+        for (const child of currentNode.children) {
+          stack.push(child);
+        }
       }
-      e.parent = void 0, e.left = void 0, e.right = void 0, e.children.length = 0;
+      node.parent = void 0;
+      node.left = void 0;
+      node.right = void 0;
+      node.children.length = 0;
     }
-    return this.DOM_computeInViewVisibleRows(), this;
+    this.DOM_computeInViewVisibleRows();
+    return this;
   }
   /**
    *
    */
-  addNode(t, s, e) {
-    return this.addNodes(t, s, [e]);
+  addNode(relativeTo, asChildren, element) {
+    return this.addNodes(relativeTo, asChildren, [element]);
   }
   /**
    *
    */
-  addNodes(t, s, e) {
-    if (e.length === 0)
+  addNodes(relativeTo, asChildren, elements) {
+    if (elements.length === 0) {
       return this;
-    const i = this.nodeMap.get(t);
-    if (!i && s)
-      return console.warn(`Reference node with ID "${t}" not found.`), this;
-    const n = this.verifyDuplicateIds(e);
-    if (n.size > 0)
-      return console.warn("Duplicate IDs found in the elements to add:", Array.from(n).join(", ")), this;
-    const l = s ? i : i == null ? void 0 : i.parent, d = this.computeTree(e, l);
-    let r, c = 0;
-    if (s)
-      Array.isArray(i.children) || (i.children = []), r = i.children, c = r.length, r.push(...d);
-    else {
-      r = (l == null ? void 0 : l.children) ?? this.tree;
-      const a = i ? r.indexOf(i) : -1;
-      if (a === -1 && i !== void 0)
-        return console.warn(`Reference node with ID "${t}" not found in the parent.`), this;
-      c = r.length, r.splice(a + 1, 0, ...d);
     }
-    const o = c + d.length;
-    return c > 0 && (r[c - 1].right = r[c], r[c].left = r[c - 1], r[o - 1].right = r[0], r[0].left = r[o - 1]), this.DOM_computeInViewVisibleRows(), this;
+    const referenceNode = this.nodeMap.get(relativeTo);
+    if (!referenceNode && asChildren) {
+      console.warn(`Reference node with ID "${relativeTo}" not found.`);
+      return this;
+    }
+    const duplicateIds = this.verifyDuplicateIds(elements);
+    if (duplicateIds.size > 0) {
+      console.warn("Duplicate IDs found in the elements to add:", Array.from(duplicateIds).join(", "));
+      return this;
+    }
+    const parentNode = asChildren ? referenceNode : referenceNode?.parent;
+    const newNodes = this.computeTree(elements, parentNode);
+    let nodes;
+    let childCount = 0;
+    if (asChildren) {
+      if (!Array.isArray(referenceNode.children)) {
+        referenceNode.children = [];
+      }
+      nodes = referenceNode.children;
+      childCount = nodes.length;
+      nodes.push(...newNodes);
+    } else {
+      nodes = parentNode?.children ?? this.tree;
+      const index = referenceNode ? nodes.indexOf(referenceNode) : -1;
+      if (index === -1 && referenceNode !== void 0) {
+        console.warn(`Reference node with ID "${relativeTo}" not found in the parent.`);
+        return this;
+      }
+      childCount = nodes.length;
+      nodes.splice(index + 1, 0, ...newNodes);
+    }
+    const newChildCount = childCount + newNodes.length;
+    if (childCount > 0) {
+      nodes[childCount - 1].right = nodes[childCount];
+      nodes[childCount].left = nodes[childCount - 1];
+      nodes[newChildCount - 1].right = nodes[0];
+      nodes[0].left = nodes[newChildCount - 1];
+    }
+    this.DOM_computeInViewVisibleRows();
+    return this;
   }
   /**
    *
    */
-  updateNode(t) {
-    return this.updateNodes([t]);
+  updateNode(node) {
+    return this.updateNodes([node]);
   }
   /**
    * Met à jour les données d'un ou plusieurs nœuds.
@@ -528,18 +845,21 @@ const g = class g {
    * Si un nœud est renseigné plusieurs fois, tout sera pris en compte,
    * à chaque itération le nœud sera mis à jour.
    */
-  updateNodes(t) {
-    if (t.length === 0)
+  updateNodes(nodes) {
+    if (nodes.length === 0) {
       return this;
-    for (const s of t) {
-      const e = this.nodeMap.get(s.id.toString());
-      if (!e) {
-        console.warn(`Node with ID "${s.id}" not found.`);
+    }
+    for (const nodeData of nodes) {
+      const existingNode = this.nodeMap.get(nodeData.id.toString());
+      if (!existingNode) {
+        console.warn(`Node with ID "${nodeData.id}" not found.`);
         continue;
       }
-      e.data = { ...e.data, ...s };
-      const i = this.DOM_getTableRowFromNode(e);
-      i && this.DOM_updateRowContent(i);
+      existingNode.data = { ...existingNode.data, ...nodeData };
+      const tableRow = this.DOM_getTableRowFromNode(existingNode);
+      if (tableRow) {
+        this.DOM_updateRowContent(tableRow);
+      }
     }
     return this;
   }
@@ -548,33 +868,46 @@ const g = class g {
    * entre eux, et avec les IDs déjà présents dans le hashmap.
    * @returns Un Set contenant les IDs dupliqués.
    */
-  verifyDuplicateIds(t) {
-    const s = /* @__PURE__ */ new Set(), e = (i) => {
-      for (const n of i) {
-        const l = n.id.toString();
-        (this.nodeMap.has(l) || s.has(l)) && s.add(l), Array.isArray(n.children) && e(n.children);
+  verifyDuplicateIds(elements) {
+    const duplicateIds = /* @__PURE__ */ new Set();
+    const recursiveCheck = /* @__PURE__ */ __name((elements2) => {
+      for (const element of elements2) {
+        const id = element.id.toString();
+        if (this.nodeMap.has(id) || duplicateIds.has(id)) {
+          duplicateIds.add(id);
+        }
+        if (Array.isArray(element.children)) {
+          recursiveCheck(element.children);
+        }
       }
-    };
-    return e(t), s;
+    }, "recursiveCheck");
+    recursiveCheck(elements);
+    return duplicateIds;
   }
   /**
    * Reset et redéfini les données de la table.
    * Recalcule tout, excepté les colonnes.
    */
-  setData(t) {
-    t = structuredClone(t);
-    const s = this.verifyDuplicateIds(t);
-    if (s.size > 0) {
-      console.warn("Duplicate IDs found in the data:", Array.from(s).join(", "));
+  setData(data) {
+    data = structuredClone(data);
+    const dups = this.verifyDuplicateIds(data);
+    if (dups.size > 0) {
+      console.warn("Duplicate IDs found in the data:", Array.from(dups).join(", "));
       return;
     }
-    this.recomputeDataTree(t), this.DOM_computeInViewVisibleRows();
+    this.recomputeDataTree(data);
+    this.DOM_computeInViewVisibleRows();
   }
   /**
    *
    */
   clear() {
-    this.tree.length = 0, this.flatten.length = 0, this.rows.length = 0, this.nodeMap.clear(), this.$tableBody.innerHTML = "", this.DOM_computeInViewVisibleRows();
+    this.tree.length = 0;
+    this.flatten.length = 0;
+    this.rows.length = 0;
+    this.nodeMap.clear();
+    this.$tableBody.innerHTML = "";
+    this.DOM_computeInViewVisibleRows();
   }
   /**
    *
@@ -586,55 +919,78 @@ const g = class g {
   /**
    * Déplace le scroll jusqu'à l'index de la ligne spécifié.
    */
-  scrollTo(t) {
-    return this.container.scrollTo({
-      top: this.TBODY_START_Y + t * (this.ROW_HEIGHT - 1),
+  scrollTo(index) {
+    this.container.scrollTo({
+      top: this.TBODY_START_Y + index * (this.ROW_HEIGHT - 1),
       behavior: "smooth"
-    }), this;
+    });
+    return this;
   }
   // ---- selection ----
   /**
    *
    */
-  selectRow(t, s) {
-    var i;
-    if (!s.ref)
-      return console.warn("Cannot select a row without a reference to the data node."), this;
-    const e = this.DOM_getRowIndex(s);
-    if (t.shiftKey) {
-      const n = Array.from(this.selectedNodes).reduce((o, a) => e === -1 ? o : Math.abs(a - e) < Math.abs(o - e) ? a : o, -1);
-      if (n === -1)
+  selectRow(event, row) {
+    if (!row.ref) {
+      console.warn("Cannot select a row without a reference to the data node.");
+      return this;
+    }
+    const rowIndex = this.DOM_getRowIndex(row);
+    if (event.shiftKey) {
+      const nearestSelectedIndex = Array.from(this.selectedNodes).reduce((nearest, current) => {
+        if (rowIndex === -1) {
+          return nearest;
+        }
+        return Math.abs(current - rowIndex) < Math.abs(nearest - rowIndex) ? current : nearest;
+      }, -1);
+      if (nearestSelectedIndex === -1) {
         return this;
-      const l = Math.min(n, e), d = Math.max(n, e), r = this.DOM_getRowIndex(this.rows[0]), c = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
-      for (let o = l; o <= d; o++) {
-        const a = this.flatten[o];
-        if (this.selectedNodes.add(a.flatIndex), o >= r && o <= c) {
-          const h = (i = this.rows[o - r]) == null ? void 0 : i.$;
-          h == null || h.classList.add("selected");
+      }
+      const from = Math.min(nearestSelectedIndex, rowIndex);
+      const to = Math.max(nearestSelectedIndex, rowIndex);
+      const firstElIndex = this.DOM_getRowIndex(this.rows[0]);
+      const lastElIndex = this.DOM_getRowIndex(this.rows[this.rows.length - 1]);
+      for (let i = from; i <= to; i++) {
+        const rowToSelect = this.flatten[i];
+        this.selectedNodes.add(rowToSelect.flatIndex);
+        if (i >= firstElIndex && i <= lastElIndex) {
+          const $row = this.rows[i - firstElIndex]?.$;
+          $row?.classList.add("selected");
         }
       }
       return this;
     }
-    return this.selectedNodes.has(e) ? (s.$.classList.remove("selected"), this.selectedNodes.delete(e)) : (s.$.classList.add("selected"), this.selectedNodes.add(e)), this;
+    if (this.selectedNodes.has(rowIndex)) {
+      row.$.classList.remove("selected");
+      this.selectedNodes.delete(rowIndex);
+    } else {
+      row.$.classList.add("selected");
+      this.selectedNodes.add(rowIndex);
+    }
+    return this;
   }
   /**
    *
    */
   selectAllRows() {
-    this.$tableBody.querySelectorAll(".tr").forEach((t) => {
-      t.classList.add("selected");
-    }), this.selectedNodes.clear();
-    for (let t = 0; t < this.rows.length; t++)
-      this.selectedNodes.add(t);
+    this.$tableBody.querySelectorAll(".tr").forEach(($row) => {
+      $row.classList.add("selected");
+    });
+    this.selectedNodes.clear();
+    for (let i = 0; i < this.rows.length; i++) {
+      this.selectedNodes.add(i);
+    }
     return this;
   }
   /**
    *
    */
   unselectAllRows() {
-    return this.$tableBody.querySelectorAll(".tr.selected").forEach((t) => {
-      t.classList.remove("selected");
-    }), this.selectedNodes.clear(), this;
+    this.$tableBody.querySelectorAll(".tr.selected").forEach(($row) => {
+      $row.classList.remove("selected");
+    });
+    this.selectedNodes.clear();
+    return this;
   }
   /**
    *
@@ -646,106 +1002,190 @@ const g = class g {
    *
    */
   unselectAllCells() {
-    return this.$tableBody.querySelectorAll(".td.selected").forEach((t) => {
-      t.classList.remove("selected");
-    }), this.selectedCells.clear(), this;
+    this.$tableBody.querySelectorAll(".td.selected").forEach(($cell) => {
+      $cell.classList.remove("selected");
+    });
+    this.selectedCells.clear();
+    return this;
   }
   /**
    *
    */
-  selectColumn(t) {
-    const s = this.columns.findIndex((e) => e.title === t.title);
-    return s === -1 ? (console.warn(`Column "${t.title}" not found.`), this) : (this.selectedColumns.has(s) ? (this.$tableHead.querySelectorAll(".th.selected").forEach((e) => {
-      e.classList.remove("selected");
-    }), this.selectedColumns.delete(s)) : (this.$tableHead.querySelectorAll(".th").forEach((e) => {
-      e.textContent === t.title && e.classList.add("selected");
-    }), this.selectedColumns.add(s)), this);
+  selectColumn(column) {
+    const columnIndex = this.columns.findIndex((c) => c.title === column.title);
+    if (columnIndex === -1) {
+      console.warn(`Column "${column.title}" not found.`);
+      return this;
+    }
+    if (this.selectedColumns.has(columnIndex)) {
+      this.$tableHead.querySelectorAll(".th.selected").forEach(($th) => {
+        $th.classList.remove("selected");
+      });
+      this.selectedColumns.delete(columnIndex);
+    } else {
+      this.$tableHead.querySelectorAll(".th").forEach(($th) => {
+        if ($th.textContent === column.title) {
+          $th.classList.add("selected");
+        }
+      });
+      this.selectedColumns.add(columnIndex);
+    }
+    return this;
   }
   /**
    *
    */
   unselectAllColumns() {
-    return this.$tableHead.querySelectorAll(".th.selected").forEach((t) => {
-      t.classList.remove("selected");
-    }), this.selectedColumns.clear(), this;
+    this.$tableHead.querySelectorAll(".th.selected").forEach(($th) => {
+      $th.classList.remove("selected");
+    });
+    this.selectedColumns.clear();
+    return this;
   }
   /**
    *
    */
-  editCell(t) {
-    if (!this.options.allowCellEditing || t.column.readonly || t.$.classList.contains("editing"))
+  editCell(cell) {
+    if (!this.options.allowCellEditing || cell.column.readonly || cell.$.classList.contains("editing")) {
       return this;
-    let s;
-    const e = t.node.data[t.column.field];
-    if (t.column.type === "string" || t.column.type === "number")
-      s = document.createElement("input"), s.type = "text", s.value = (e == null ? void 0 : e.toString().trim()) || "", t.column.type === "number" && (s.oninput = () => {
-        s.value = s.value.replace(/[^0-9.-]/g, "");
-      });
-    else if (t.column.type === "boolean")
-      s = document.createElement("input"), s.type = "checkbox", s.checked = !!e;
-    else if (t.column.type === "date")
-      s = document.createElement("input"), s.type = "date", s.value = e && (e instanceof Date || typeof e == "string" || typeof e == "number") ? new Date(e).toISOString().split("T")[0] : "";
-    else if (t.column.type === "enum" && t.column.enumValues !== void 0) {
-      s = document.createElement("select");
-      for (const o of t.column.enumValues) {
-        const a = document.createElement("option");
-        a.value = o.toString(), a.textContent = o.toString(), o.toString() === (e == null ? void 0 : e.toString()) && (a.selected = !0), s.appendChild(a);
-      }
-    } else
-      return console.warn(`Unsupported column type: ${t.column.type}`), this;
-    if (t.column.type !== "enum" && t.column.editTransformedValue === !0 && t.column.transform !== void 0) {
-      const o = t.column.transform(t);
-      o instanceof HTMLElement || (s.value = (o == null ? void 0 : o.toString().trim()) || "");
     }
-    s.classList.add("cell-editor"), t.$.classList.add("editing");
-    const i = () => {
-      var o;
-      s instanceof HTMLInputElement ? s.removeEventListener("keydown", r) : s.removeEventListener("change", n), s.removeEventListener("blur", n);
-      try {
-        (o = t.$) == null || o.classList.remove("editing"), s == null || s.remove();
-      } catch {
+    let $input;
+    const value = cell.node.data[cell.column.field];
+    if (cell.column.type === "string" || cell.column.type === "number") {
+      $input = document.createElement("input");
+      $input.type = "text";
+      $input.value = value?.toString().trim() || "";
+      if (cell.column.type === "number") {
+        $input.oninput = () => {
+          $input.value = $input.value.replace(/[^0-9.-]/g, "");
+        };
       }
-    }, n = () => {
-      i();
-      const o = s instanceof HTMLInputElement ? s.value.trim() : s.value;
-      if (o === (e == null ? void 0 : e.toString().trim()))
+    } else if (cell.column.type === "boolean") {
+      $input = document.createElement("input");
+      $input.type = "checkbox";
+      $input.checked = !!value;
+    } else if (cell.column.type === "date") {
+      $input = document.createElement("input");
+      $input.type = "date";
+      $input.value = value && (value instanceof Date || typeof value === "string" || typeof value === "number") ? new Date(value).toISOString().split("T")[0] : "";
+    } else if (cell.column.type === "enum" && cell.column.enumValues !== void 0) {
+      $input = document.createElement("select");
+      for (const option of cell.column.enumValues) {
+        const $option = document.createElement("option");
+        $option.value = option.toString();
+        $option.textContent = option.toString();
+        if (option.toString() === value?.toString()) {
+          $option.selected = true;
+        }
+        $input.appendChild($option);
+      }
+    } else {
+      console.warn(`Unsupported column type: ${cell.column.type}`);
+      return this;
+    }
+    if (cell.column.type !== "enum" && cell.column.editTransformedValue === true && cell.column.transform !== void 0) {
+      const transformedValue = cell.column.transform(cell);
+      if (!(transformedValue instanceof HTMLElement)) {
+        $input.value = transformedValue?.toString().trim() || "";
+      }
+    }
+    $input.classList.add("cell-editor");
+    cell.$.classList.add("editing");
+    const cancelEdition = /* @__PURE__ */ __name(() => {
+      if ($input instanceof HTMLInputElement) {
+        $input.removeEventListener("keydown", keydownHandler);
+      } else {
+        $input.removeEventListener("change", confirmEdition);
+      }
+      $input.removeEventListener("blur", confirmEdition);
+      try {
+        cell.$?.classList.remove("editing");
+        $input?.remove();
+      } catch (e) {
+      }
+    }, "cancelEdition");
+    const confirmEdition = /* @__PURE__ */ __name(() => {
+      cancelEdition();
+      const newValue = $input instanceof HTMLInputElement ? $input.value.trim() : $input.value;
+      if (newValue === value?.toString().trim())
         return;
-      let a = o;
-      switch (t.column.type) {
+      let castedValue = newValue;
+      switch (cell.column.type) {
         case "number":
-          a = parseFloat(o), isNaN(a) && (a = null);
+          castedValue = parseFloat(newValue);
+          if (isNaN(castedValue)) {
+            castedValue = null;
+          }
           break;
         case "boolean":
-          a = s.checked;
+          castedValue = $input.checked;
           break;
         case "date":
-          a = new Date(o), isNaN(a.getTime()) && (a = null);
+          castedValue = new Date(newValue);
+          if (isNaN(castedValue.getTime())) {
+            castedValue = null;
+          }
           break;
       }
-      this.onCellEdited(t, a);
-    }, l = (o) => {
-      n();
-      let h = t.row.cells.indexOf(t) + o;
-      for (; h >= 0 && h < t.row.cells.length; ) {
-        const p = t.row.cells[h], u = p.column.type, m = p.column.readonly === !0;
-        if (u === "html" || m) {
-          h += o;
+      this.onCellEdited(cell, castedValue);
+    }, "confirmEdition");
+    const navigateToPreviousOrNextCell = /* @__PURE__ */ __name((vec) => {
+      confirmEdition();
+      const currentCellIndex = cell.row.cells.indexOf(cell);
+      let nextCellIndex = currentCellIndex + vec;
+      while (nextCellIndex >= 0 && nextCellIndex < cell.row.cells.length) {
+        const nextCell = cell.row.cells[nextCellIndex];
+        const colType = nextCell.column.type;
+        const isReadonly = nextCell.column.readonly === true;
+        if (colType === "html" || isReadonly) {
+          nextCellIndex += vec;
           continue;
         }
-        this.editCell(p);
+        this.editCell(nextCell);
         break;
       }
-    }, d = (o) => {
-      n();
-      const h = this.DOM_getRowIndex(t.row) + o;
-      if (h >= 0 && h < this.rows.length) {
-        const u = this.rows[h].cells[t.columnIndex];
-        this.editCell(u);
+    }, "navigateToPreviousOrNextCell");
+    const navigateToPreviousOrNextRow = /* @__PURE__ */ __name((vec) => {
+      confirmEdition();
+      const rowIndex = this.DOM_getRowIndex(cell.row);
+      const nextRowIndex = rowIndex + vec;
+      if (nextRowIndex >= 0 && nextRowIndex < this.rows.length) {
+        const nextRow = this.rows[nextRowIndex];
+        const nextCell = nextRow.cells[cell.columnIndex];
+        this.editCell(nextCell);
       }
-    }, r = (o) => {
-      o.key === "Enter" ? (o.preventDefault(), n()) : o.key === "Escape" ? (o.preventDefault(), i()) : o.key === "Tab" ? (o.preventDefault(), l(o.shiftKey ? -1 : 1)) : o.key === "ArrowLeft" || o.key === "ArrowRight" ? (o.preventDefault(), l(o.key === "ArrowLeft" ? -1 : 1)) : (o.key === "ArrowUp" || o.key === "ArrowDown") && (o.preventDefault(), d(o.key === "ArrowUp" ? -1 : 1));
-    };
-    return s instanceof HTMLInputElement ? s.addEventListener("keydown", r) : s instanceof HTMLSelectElement && s.addEventListener("change", n, { once: !0, passive: !0 }), s.addEventListener("blur", n, { once: !0, passive: !0 }), t.$.appendChild(s), s.focus(), s instanceof HTMLInputElement && (t.column.type === "string" || t.column.type === "number") && s.select(), this;
+    }, "navigateToPreviousOrNextRow");
+    const keydownHandler = /* @__PURE__ */ __name((event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        confirmEdition();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancelEdition();
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        navigateToPreviousOrNextCell(event.shiftKey ? -1 : 1);
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        navigateToPreviousOrNextCell(event.key === "ArrowLeft" ? -1 : 1);
+      } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        navigateToPreviousOrNextRow(event.key === "ArrowUp" ? -1 : 1);
+      }
+    }, "keydownHandler");
+    if ($input instanceof HTMLInputElement) {
+      $input.addEventListener("keydown", keydownHandler);
+    } else if ($input instanceof HTMLSelectElement) {
+      $input.addEventListener("change", confirmEdition, { once: true, passive: true });
+    }
+    $input.addEventListener("blur", confirmEdition, { once: true, passive: true });
+    const $cell = cell.$;
+    $cell.appendChild($input);
+    $input.focus();
+    if ($input instanceof HTMLInputElement && (cell.column.type === "string" || cell.column.type === "number")) {
+      $input.select();
+    }
+    return this;
   }
   /**
    *
@@ -757,33 +1197,49 @@ const g = class g {
   /**
    *
    */
-  allowColumnResizing(t) {
-    return this.options.allowColumnResize = t, this;
+  allowColumnResizing(allow) {
+    this.options.allowColumnResize = allow;
+    return this;
   }
   /**
    *
    */
-  allowRowSelection(t) {
-    return this.options.allowRowSelection = t, this;
+  allowRowSelection(allow) {
+    this.options.allowRowSelection = allow;
+    return this;
   }
   /**
    *
    */
-  allowCellSelection(t) {
-    return this.options.allowCellSelection = t, this;
+  allowCellSelection(allow) {
+    this.options.allowCellSelection = allow;
+    return this;
   }
   /**
    *
    */
-  allowCellEditing(t) {
-    return this.options.allowCellEditing = t, this;
+  allowCellEditing(allow) {
+    this.options.allowCellEditing = allow;
+    return this;
   }
-  hideColumn(t) {
-    let s;
-    if (typeof t == "number" ? s = t : s = this.columns.findIndex((i) => i.id === t), s < 0 || s >= this.columns.length)
-      return console.warn(`Column index ${s} is out of bounds.`), this;
-    const e = this.columns[s];
-    return e.hidden ? (console.warn(`Column "${e.title}" is already hidden.`), this) : (this.DOM_removeCell(s), this);
+  hideColumn(columnIndexOrId) {
+    let columnIndex;
+    if (typeof columnIndexOrId === "number") {
+      columnIndex = columnIndexOrId;
+    } else {
+      columnIndex = this.columns.findIndex((c) => c.id === columnIndexOrId);
+    }
+    if (columnIndex < 0 || columnIndex >= this.columns.length) {
+      console.warn(`Column index ${columnIndex} is out of bounds.`);
+      return this;
+    }
+    const column = this.columns[columnIndex];
+    if (column.hidden) {
+      console.warn(`Column "${column.title}" is already hidden.`);
+      return this;
+    }
+    this.DOM_removeCell(columnIndex);
+    return this;
   }
   // ---- drag & drop ----
   /**
@@ -792,41 +1248,76 @@ const g = class g {
    * Permet d'identifier quelle ligne a reçu le drop.
    */
   makeDroppable() {
-    return this.container.setAttribute("dropzone", "move"), this.container.addEventListener("dragover", (t) => {
-      t.preventDefault(), t.dataTransfer.dropEffect = "move";
-      const s = t.target, e = s.closest(".tr"), i = !s.closest(".thead");
-      e && i && e !== this.$lastHighlightedRow ? (this.$lastHighlightedRow && this.$lastHighlightedRow.classList.remove("dragging-hover"), e.classList.add("dragging-hover"), this.$lastHighlightedRow = e) : (!e || !i) && this.$lastHighlightedRow && (this.$lastHighlightedRow.classList.remove("dragging-hover"), this.$lastHighlightedRow = null);
-    }, { capture: !0 }), this.container.addEventListener("drop", (t) => {
-      var l, d;
-      t.preventDefault();
-      const e = t.target.closest(".tr"), i = (l = t.dataTransfer) == null ? void 0 : l.getData("text/plain");
-      (d = this.$lastHighlightedRow) == null || d.classList.remove("dragging-hover"), this.$lastHighlightedRow = null;
-      const n = this.rows.find((r) => r.$ === e);
-      this.onDrop(i, n);
-    }), this;
+    this.container.setAttribute("dropzone", "move");
+    this.container.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      const target = event.target;
+      const closestRow = target.closest(".tr");
+      const isNotHead = !target.closest(".thead");
+      if (closestRow && isNotHead && closestRow !== this.$lastHighlightedRow) {
+        if (this.$lastHighlightedRow) {
+          this.$lastHighlightedRow.classList.remove("dragging-hover");
+        }
+        closestRow.classList.add("dragging-hover");
+        this.$lastHighlightedRow = closestRow;
+      } else if (!closestRow || !isNotHead) {
+        if (this.$lastHighlightedRow) {
+          this.$lastHighlightedRow.classList.remove("dragging-hover");
+          this.$lastHighlightedRow = null;
+        }
+      }
+    }, { capture: true });
+    this.container.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const target = event.target;
+      const closestRow = target.closest(".tr");
+      const data = event.dataTransfer?.getData("text/plain");
+      this.$lastHighlightedRow?.classList.remove("dragging-hover");
+      this.$lastHighlightedRow = null;
+      const row = this.rows.find((r) => r.$ === closestRow);
+      this.onDrop(data, row);
+    });
+    return this;
   }
 };
-g.DEFAULT_OPTIONS = {
+__name(_VirtualTable, "VirtualTable");
+_VirtualTable.DEFAULT_OPTIONS = {
   id: "",
   rowHeight: 30,
-  columnSizeInPercentage: !1,
-  defaultExpanded: !0,
-  treatZeroAsEmpty: !1,
+  columnSizeInPercentage: false,
+  defaultExpanded: true,
+  treatZeroAsEmpty: false,
   // --
-  stickyHeader: !1,
+  stickyHeader: false,
   // -- allowed actions
-  allowExpandCollapse: !0,
-  allowColumnSelection: !1,
-  allowRowSelection: !1,
-  allowCellSelection: !1,
-  allowCellEditing: !1,
-  allowColumnResize: !1,
-  allowColumnReorder: !1,
-  allowRowReorder: !1
+  allowExpandCollapse: true,
+  allowColumnSelection: false,
+  allowRowSelection: false,
+  allowCellSelection: false,
+  allowCellEditing: false,
+  allowColumnResize: false,
+  allowColumnReorder: false,
+  allowRowReorder: false
 };
-let w = g;
-export {
-  E as EventManager,
-  w as VirtualTable
-};
-//# sourceMappingURL=VirtualTable.js.map
+var VirtualTable = _VirtualTable;
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  EventManager,
+  VirtualTable
+});
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ * 
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
+/**
+ * @copyright Copyright (c) 2025 NoxFly
+ * @license AGPL-3.0
+ *
+ * Entry point for the virtualization module.
+ * Exports the main VirtualTable component and related type definitions.
+ */
+//# sourceMappingURL=virtualTable.js.map

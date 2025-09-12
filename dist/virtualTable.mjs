@@ -1080,8 +1080,6 @@ var _VirtualTable = class _VirtualTable {
       }
     }, "cancelEdition");
     const confirmEdition = /* @__PURE__ */ __name(() => {
-      const stack = new Error().stack;
-      console.debug(stack);
       cancelEdition();
       const newValue = $input instanceof HTMLInputElement ? $input.value.trim() : $input.value;
       if (newValue === value?.toString().trim())

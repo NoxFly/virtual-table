@@ -1,6 +1,41 @@
-declare type Any = string | number | boolean | null | undefined | Date | object;
+declare class EventManager {
+    private readonly listeners;
+    listenTo<K extends keyof DocumentEventMap>(target: EventTarget, type: K, callback: (this: Document, ev: DocumentEventMap[K]) => void, options?: boolean | AddEventListenerOptions): symbol;
+    stopListenTo<K extends keyof DocumentEventMap>(target: EventTarget, type: K, symbolId: symbol | ((this: Document, ev: DocumentEventMap[K]) => void), options?: boolean | EventListenerOptions): void;
+    removeAllListeners(target: EventTarget, type?: string): void;
+}
 
-declare interface Cell<T extends Type> {
+type Any = string | number | boolean | null | undefined | Date | object;
+type Type = {
+    id: string | number;
+    children?: Type[];
+    [key: string]: Any;
+};
+type UpdatedRow<T extends Type> = Partial<Omit<T, 'children'>> & Pick<T, 'id'>;
+interface TreeNode<T extends Type> {
+    data: T;
+    expanded: boolean;
+    depth: number;
+    children: TreeNode<T>[];
+    parent?: TreeNode<T>;
+    left?: TreeNode<T>;
+    right?: TreeNode<T>;
+    flatIndex: number;
+}
+interface Position {
+    top: number;
+    left: number;
+}
+interface TableRow<T extends Type> {
+    $: HTMLElement;
+    ref?: TreeNode<T>;
+    previousElement?: TableRow<T>;
+    nextElement?: TableRow<T>;
+    x: number;
+    y: number;
+    cells: Cell<T>[];
+}
+interface Cell<T extends Type> {
     $: HTMLElement;
     value: Any;
     row: TableRow<T>;
@@ -9,8 +44,8 @@ declare interface Cell<T extends Type> {
     rowIndex: number;
     columnIndex: number;
 }
-
-declare interface ColumnDef<T extends Type> {
+type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html' | 'enum';
+interface ColumnDef<T extends Type> {
     id: string;
     title: string;
     field?: keyof T;
@@ -25,41 +60,25 @@ declare interface ColumnDef<T extends Type> {
     sortable?: boolean;
     transform?: (cell: Cell<T>) => string | HTMLElement | undefined;
 }
-
-declare type ColumnsDefs<T extends Type> = (Omit<ColumnDef<T>, 'id' | 'type'> & Partial<Pick<ColumnDef<T>, 'type'>>)[];
-
-declare type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'html' | 'enum';
-
-declare interface TableRow<T extends Type> {
-    $: HTMLElement;
-    ref?: TreeNode<T>;
-    previousElement?: TableRow<T>;
-    nextElement?: TableRow<T>;
-    x: number;
-    y: number;
-    cells: Cell<T>[];
+type ColumnsDefs<T extends Type> = (Omit<ColumnDef<T>, 'id' | 'type'> & Partial<Pick<ColumnDef<T>, 'type'>>)[];
+interface VirtualTableOptions {
+    id: string;
+    rowHeight: number;
+    defaultExpanded: boolean;
+    columnSizeInPercentage: boolean;
+    treatZeroAsEmpty: boolean;
+    stickyHeader: boolean;
+    allowExpandCollapse: boolean;
+    allowColumnSelection: boolean;
+    allowRowSelection: boolean;
+    allowCellSelection: boolean;
+    allowCellEditing: boolean;
+    allowColumnResize: boolean;
+    allowColumnReorder: boolean;
+    allowRowReorder: boolean;
 }
 
-declare interface TreeNode<T extends Type> {
-    data: T;
-    expanded: boolean;
-    depth: number;
-    children: TreeNode<T>[];
-    parent?: TreeNode<T>;
-    left?: TreeNode<T>;
-    right?: TreeNode<T>;
-    flatIndex: number;
-}
-
-declare type Type = {
-    id: string | number;
-    children?: Type[];
-    [key: string]: Any;
-};
-
-declare type UpdatedRow<T extends Type> = Partial<Omit<T, 'children'>> & Pick<T, 'id'>;
-
-export declare class VirtualTable<T extends Type> {
+declare class VirtualTable<T extends Type> {
     readonly container: HTMLElement;
     protected static readonly DEFAULT_OPTIONS: VirtualTableOptions;
     readonly columns: ColumnDef<T>[];
@@ -112,34 +131,34 @@ export declare class VirtualTable<T extends Type> {
     private dataToTreeNodeRec;
     private computeTree;
     private recomputeDataTree;
-    deleteNode(nodeId: string): typeof VirtualTable;
-    deleteNodes(nodeIds: string[]): typeof VirtualTable;
-    addNode(relativeTo: string, asChildren: boolean, element: T): typeof VirtualTable;
-    addNodes(relativeTo: string, asChildren: boolean, elements: T[]): typeof VirtualTable;
-    updateNode(node: UpdatedRow<T>): typeof VirtualTable;
-    updateNodes(nodes: UpdatedRow<T>[]): typeof VirtualTable;
+    deleteNode(nodeId: string): typeof this;
+    deleteNodes(nodeIds: string[]): typeof this;
+    addNode(relativeTo: string, asChildren: boolean, element: T): typeof this;
+    addNodes(relativeTo: string, asChildren: boolean, elements: T[]): typeof this;
+    updateNode(node: UpdatedRow<T>): typeof this;
+    updateNodes(nodes: UpdatedRow<T>[]): typeof this;
     private verifyDuplicateIds;
     setData(data: T[]): void;
     clear(): void;
     rowCssClassesCallback?: (row: TableRow<T>) => string;
     getNodes(): readonly TreeNode<T>[];
-    scrollTo(index: number): typeof VirtualTable;
-    selectRow(event: MouseEvent, row: TableRow<T>): typeof VirtualTable;
-    selectAllRows(): typeof VirtualTable;
-    unselectAllRows(): typeof VirtualTable;
-    selectCell(): typeof VirtualTable;
-    unselectAllCells(): typeof VirtualTable;
-    selectColumn(column: ColumnDef<T>): typeof VirtualTable;
-    unselectAllColumns(): typeof VirtualTable;
-    editCell(cell: Cell<T>): typeof VirtualTable;
-    cancelCellEdition(): typeof VirtualTable;
-    allowColumnResizing(allow: boolean): typeof VirtualTable;
-    allowRowSelection(allow: boolean): typeof VirtualTable;
-    allowCellSelection(allow: boolean): typeof VirtualTable;
-    allowCellEditing(allow: boolean): typeof VirtualTable;
-    hideColumn(columnIndex: number): typeof VirtualTable;
-    hideColumn(columnId: string): typeof VirtualTable;
-    makeDroppable(): typeof VirtualTable;
+    scrollTo(index: number): typeof this;
+    selectRow(event: MouseEvent, row: TableRow<T>): typeof this;
+    selectAllRows(): typeof this;
+    unselectAllRows(): typeof this;
+    selectCell(): typeof this;
+    unselectAllCells(): typeof this;
+    selectColumn(column: ColumnDef<T>): typeof this;
+    unselectAllColumns(): typeof this;
+    editCell(cell: Cell<T>): typeof this;
+    cancelCellEdition(): typeof this;
+    allowColumnResizing(allow: boolean): typeof this;
+    allowRowSelection(allow: boolean): typeof this;
+    allowCellSelection(allow: boolean): typeof this;
+    allowCellEditing(allow: boolean): typeof this;
+    hideColumn(columnIndex: number): typeof this;
+    hideColumn(columnId: string): typeof this;
+    makeDroppable(): typeof this;
     onDrop: (data: string | undefined, row: TableRow<T>) => void;
     onCellClicked: (cell: Cell<T>, event: MouseEvent) => void;
     onRowClicked: (row: TableRow<T>, event: MouseEvent) => void;
@@ -151,21 +170,4 @@ export declare class VirtualTable<T extends Type> {
     onCellEdited: (cell: Cell<T>, value: Any) => void;
 }
 
-declare interface VirtualTableOptions {
-    id: string;
-    rowHeight: number;
-    defaultExpanded: boolean;
-    columnSizeInPercentage: boolean;
-    treatZeroAsEmpty: boolean;
-    stickyHeader: boolean;
-    allowExpandCollapse: boolean;
-    allowColumnSelection: boolean;
-    allowRowSelection: boolean;
-    allowCellSelection: boolean;
-    allowCellEditing: boolean;
-    allowColumnResize: boolean;
-    allowColumnReorder: boolean;
-    allowRowReorder: boolean;
-}
-
-export { }
+export { type Any, type Cell, type ColumnDef, type ColumnType, type ColumnsDefs, EventManager, type Position, type TableRow, type TreeNode, type Type, type UpdatedRow, VirtualTable, type VirtualTableOptions };
