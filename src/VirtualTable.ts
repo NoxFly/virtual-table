@@ -1380,13 +1380,6 @@ export class VirtualTable<T extends Type> {
         cell.$.classList.add('editing');
 
         const cancelEdition = (): void => {
-
-            try {
-                cell.$?.classList.remove('editing');
-                $input?.remove();
-            }
-            catch(e) {}
-
             if($input instanceof HTMLInputElement) {
                 $input.removeEventListener('keydown', keydownHandler);
             }
@@ -1395,9 +1388,17 @@ export class VirtualTable<T extends Type> {
             }
 
             $input.removeEventListener('blur', confirmEdition);
+
+            try {
+                cell.$?.classList.remove('editing');
+                $input?.remove();
+            }
+            catch(e) {}
         };
 
         const confirmEdition = (): void => {
+            const stack = new Error().stack;
+            console.debug(stack);
             cancelEdition();
 
             const newValue = $input instanceof HTMLInputElement
@@ -1513,6 +1514,10 @@ export class VirtualTable<T extends Type> {
         const $cell = cell.$;
         $cell.appendChild($input);
         $input.focus();
+
+        if($input instanceof HTMLInputElement && (cell.column.type === 'string' || cell.column.type === 'number')) {
+            $input.select();
+        }
 
         return this;
     }

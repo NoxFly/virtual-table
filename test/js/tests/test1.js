@@ -120,6 +120,12 @@ export class Test1 extends Test {
         this.createDraggableElement('Update', this.onUpdateActionDrop, 'action-update');
 
         this.createButtonsContainer();
+
+        this.virtualTable.onCellEdited = this.onCellEdited.bind(this);
+    }
+
+    onCellEdited(cell, value) {
+        this.virtualTable.updateNode({ id: cell.node.data.id, [cell.column.field]: value });
     }
 
     createButtonsContainer() {
