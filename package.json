@@ -1,7 +1,7 @@
 {
   "name": "@noxfly/virtual-table",
   "main": "dist/VirtualTable.js",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "license": "AGPL-3.0-only",
   "author": {
