@@ -97,7 +97,7 @@ export class Test1 extends Test {
      *
      */
     execute() {
-        this.data = generateRandomContacts(25, false);
+        this.data = generateRandomContacts(10000, false);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             stickyHeader: true,
