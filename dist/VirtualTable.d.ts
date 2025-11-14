@@ -100,6 +100,7 @@ declare class VirtualTable<T extends Type> {
     private $lastHighlightedRow;
     readonly options: VirtualTableOptions;
     private readonly $columns;
+    private lastScrollTopIndex;
     constructor(container: HTMLElement, columnsDef: ColumnsDefs<T>, options?: Partial<VirtualTableOptions>);
     private get scrollTop();
     private get totalVirtualHeight();
@@ -122,7 +123,6 @@ declare class VirtualTable<T extends Type> {
     private DOM_removeCell;
     private DOM_setRowPosition;
     private DOM_updateScroll;
-    private lastScrollTopIndex;
     private DOM_EVENT_onScroll;
     private DOM_EVENT_onClick;
     private DOM_EVENT_onContextMenu;

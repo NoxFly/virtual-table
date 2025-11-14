@@ -63,6 +63,7 @@ export class VirtualTable<T extends Type> {
 
     private readonly $columns: HTMLElement[] = [];
 
+    private lastScrollTopIndex: number = -1;
 
     /**
      *
@@ -622,18 +623,19 @@ export class VirtualTable<T extends Type> {
         }
 
         const y = this.mostTopRow?.y ?? 0;
-        const scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
         const topMin = this.TBODY_START_Y + y * (this.ROW_HEIGHT - 1);
         const topMax = topMin + this.ROW_HEIGHT;
-
-        const isOverflow = this.totalVirtualHeight > this.container.clientHeight;
 
         if(this.scrollTop >= topMin && this.scrollTop <= topMax) {
             return;
         }
 
-        if(!force && isOverflow && scrollTopIndex + this.VISIBLE_ROWS_COUNT - 1 >= this.flatten.length) {
-            return;
+        let scrollTopIndex = Math.max(0, Math.floor(this.scrollTop / (this.ROW_HEIGHT - 1)) - 2);
+
+        const maxScrollableIndex = Math.max(0, this.flatten.length - this.rows.length);
+
+        if(scrollTopIndex > maxScrollableIndex) {
+            scrollTopIndex = maxScrollableIndex;
         }
 
         if(!force && scrollTopIndex === this.lastScrollTopIndex) {
@@ -648,9 +650,9 @@ export class VirtualTable<T extends Type> {
         }
 
         this.DOM_updateRowsContent();
-    }
 
-    private lastScrollTopIndex: number = -1;
+        this.mostTopRow = this.rows[0];
+    }
 
     /**
      * Gère l'événement de scroll du conteneur.
