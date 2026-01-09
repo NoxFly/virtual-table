@@ -77,6 +77,7 @@ var _VirtualTable = class _VirtualTable {
     this.selectedCells = /* @__PURE__ */ new Set();
     /** Indexes des colonnes sélectionnées dans `this.columns` */
     this.selectedColumns = /* @__PURE__ */ new Set();
+    this._depth = 0;
     this.$lastHighlightedRow = null;
     this.$columns = [];
     this.lastScrollTopIndex = -1;
@@ -154,6 +155,9 @@ var _VirtualTable = class _VirtualTable {
     this.container.addEventListener("click", (e) => this.DOM_EVENT_onClick(e), { passive: true });
     this.container.addEventListener("contextmenu", (e) => this.DOM_EVENT_onContextMenu(e));
     this.$table.style.setProperty("--row-height", this.ROW_HEIGHT + "px");
+  }
+  get depth() {
+    return this._depth;
   }
   // ------------------------------------------------------------------------------
   // Table DOM manager
@@ -735,6 +739,22 @@ var _VirtualTable = class _VirtualTable {
     this.tree = this.computeTree(data);
     console.debug("Recomputed data tree:", this.tree);
   }
+  /**
+   * Recalcule la profondeur actuelle de l'arbre.
+   */
+  computeDepth() {
+    if (this.nodeMap.size === 0) {
+      this._depth = 0;
+      return;
+    }
+    let maxDepth = -1;
+    for (const node of this.nodeMap.values()) {
+      if (node.depth > maxDepth) {
+        maxDepth = node.depth;
+      }
+    }
+    this._depth = maxDepth + 1;
+  }
   // ----------------------------------------------------------------------
   // PUBLIC API
   // ------------------------------------------------------------------------------
@@ -786,6 +806,7 @@ var _VirtualTable = class _VirtualTable {
       node.children.length = 0;
     }
     this.DOM_computeInViewVisibleRows();
+    this.computeDepth();
     return this;
   }
   /**
@@ -840,6 +861,7 @@ var _VirtualTable = class _VirtualTable {
       nodes[0].left = nodes[newChildCount - 1];
     }
     this.DOM_computeInViewVisibleRows();
+    this.computeDepth();
     return this;
   }
   /**
@@ -910,6 +932,7 @@ var _VirtualTable = class _VirtualTable {
     }
     this.recomputeDataTree(data);
     this.DOM_computeInViewVisibleRows();
+    this.computeDepth();
   }
   /**
    *
@@ -921,6 +944,7 @@ var _VirtualTable = class _VirtualTable {
     this.nodeMap.clear();
     this.$tableBody.innerHTML = "";
     this.DOM_computeInViewVisibleRows();
+    this.computeDepth();
   }
   /**
    *

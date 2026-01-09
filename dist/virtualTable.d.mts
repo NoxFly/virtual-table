@@ -96,6 +96,8 @@ declare class VirtualTable<T extends Type> {
     private readonly selectedNodes;
     private readonly selectedCells;
     private readonly selectedColumns;
+    private _depth;
+    get depth(): number;
     private mostTopRow;
     private $lastHighlightedRow;
     readonly options: VirtualTableOptions;
@@ -133,6 +135,7 @@ declare class VirtualTable<T extends Type> {
     private dataToTreeNodeRec;
     private computeTree;
     private recomputeDataTree;
+    private computeDepth;
     deleteNode(nodeId: string): typeof this;
     deleteNodes(nodeIds: string[]): typeof this;
     addNode(relativeTo: string, asChildren: boolean, element: T): typeof this;
