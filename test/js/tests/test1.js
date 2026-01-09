@@ -97,7 +97,7 @@ export class Test1 extends Test {
      *
      */
     execute() {
-        this.data = generateRandomContacts(10000, false);
+        this.data = generateRandomContacts(10000, true);
 
         this.virtualTable = new VirtualTable(this.table, this.columnsDef, {
             stickyHeader: true,
@@ -122,6 +122,38 @@ export class Test1 extends Test {
         this.createButtonsContainer();
 
         this.virtualTable.onCellEdited = this.onCellEdited.bind(this);
+
+        const btnGenerateData = document.createElement('button');
+        btnGenerateData.textContent = 'Regenerate data';
+        this.container.appendChild(btnGenerateData);
+
+        btnGenerateData.addEventListener('click', () => {
+            this.virtualTable.setData(this.data);
+        });
+
+        const btnToggleLevel0 = document.createElement('button');
+        btnToggleLevel0.textContent = 'Level 0';
+        this.container.appendChild(btnToggleLevel0);
+
+        btnToggleLevel0.addEventListener('click', () => {
+            this.virtualTable.setLevel(0);
+        });
+
+        const btnToggleLevel1 = document.createElement('button');
+        btnToggleLevel1.textContent = 'Level 1';
+        this.container.appendChild(btnToggleLevel1);
+
+        btnToggleLevel1.addEventListener('click', () => {
+            this.virtualTable.setLevel(1);
+        });
+
+        const btnToggleLevel2 = document.createElement('button');
+        btnToggleLevel2.textContent = 'Level 2';
+        this.container.appendChild(btnToggleLevel2);
+
+        btnToggleLevel2.addEventListener('click', () => {
+            this.virtualTable.setLevel(2);
+        });
     }
 
     onCellEdited(cell, value) {

@@ -638,17 +638,54 @@ var _VirtualTable = class _VirtualTable {
    * @param row La ligne sur laquelle on a cliqué.
    * @param expandBtn Le bouton d'expansion/réduction.
    */
-  toggleRowExpand(row) {
+  toggleRowExpand(row, forceOpen = void 0, recompute = true) {
     if (!this.options.allowExpandCollapse) {
       return;
     }
-    if (!row.ref) {
+    const isTableRow = /* @__PURE__ */ __name((row2) => {
+      return row2.$ !== void 0;
+    }, "isTableRow");
+    const node = isTableRow(row) ? row.ref : row;
+    if (!node) {
       console.warn("Cannot toggle expand on a row without a reference to the data node.");
       return;
     }
-    const node = row.ref;
-    node.expanded = !node.expanded;
-    row.$.classList.toggle("expanded", node.expanded);
+    node.expanded = forceOpen !== void 0 ? forceOpen : !node.expanded;
+    if (isTableRow(row)) {
+      row.$.classList.toggle("expanded", node.expanded);
+    }
+    if (recompute) {
+      this.DOM_computeInViewVisibleRows();
+    }
+  }
+  /**
+   *
+   */
+  setLevel(level) {
+    let lvl;
+    if (typeof level === "number") {
+      lvl = level;
+    } else {
+      lvl = Infinity;
+    }
+    const setLevelRec = /* @__PURE__ */ __name((node, currentLevel = 0) => {
+      const shouldExpand = node.children && node.children.length > 0 && currentLevel < lvl;
+      this.toggleRowExpand(node, shouldExpand, false);
+      if (shouldExpand) {
+        for (const child of node.children) {
+          setLevelRec(child, currentLevel + 1);
+        }
+      }
+    }, "setLevelRec");
+    for (const node of this.getNodes()) {
+      setLevelRec(node);
+    }
+    this.DOM_computeInViewVisibleRows();
+  }
+  /**
+   *
+   */
+  refreshView() {
     this.DOM_computeInViewVisibleRows();
   }
   // ------------------------------------------------------------------------------

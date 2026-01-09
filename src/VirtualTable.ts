@@ -777,22 +777,73 @@ export class VirtualTable<T extends Type> {
      * @param row La ligne sur laquelle on a cliqué.
      * @param expandBtn Le bouton d'expansion/réduction.
      */
-    private toggleRowExpand(row: TableRow<T>): void {
+    public toggleRowExpand(row: TableRow<T> | TreeNode<T>, forceOpen: boolean | undefined = undefined, recompute: boolean = true): void {
         if(!this.options.allowExpandCollapse) {
             return;
         }
 
-        if(!row.ref) {
+        const isTableRow = (row: TableRow<T> | TreeNode<T>): row is TableRow<T> => {
+            return (row as TableRow<T>).$ !== undefined;
+        };
+
+        const node = isTableRow(row)
+            ? row.ref
+            : row;
+
+        if(!node) {
             console.warn('Cannot toggle expand on a row without a reference to the data node.');
             return;
         }
 
-        const node = row.ref;
+        node.expanded = forceOpen !== undefined
+            ? forceOpen
+            : !node.expanded;
 
-        node.expanded = !node.expanded;
+        if(isTableRow(row)) {
+            row.$.classList.toggle('expanded', node.expanded);
+        }
 
-        row.$.classList.toggle('expanded', node.expanded);
+        if(recompute) {
+            this.DOM_computeInViewVisibleRows();
+        }
+    }
 
+    /**
+     *
+     */
+    public setLevel(level: number): void {
+        let lvl: number;
+
+        if(typeof level === "number") {
+            lvl = level;
+        }
+        else {
+            lvl = Infinity;
+        }
+
+        const setLevelRec = (node: any, currentLevel: number = 0): void => {
+            const shouldExpand = node.children && node.children.length > 0 && currentLevel < lvl;
+
+            this.toggleRowExpand(node, shouldExpand, false);
+
+            if(shouldExpand) {
+                for(const child of node.children) {
+                    setLevelRec(child, currentLevel + 1);
+                }
+            }
+        };
+
+        for(const node of this.getNodes()) {
+            setLevelRec(node);
+        }
+
+        this.DOM_computeInViewVisibleRows();
+    }
+
+    /**
+     *
+     */
+    public refreshView(): void {
         this.DOM_computeInViewVisibleRows();
     }
 
