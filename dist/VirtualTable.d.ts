@@ -127,7 +127,9 @@ declare class VirtualTable<T extends Type> {
     private DOM_EVENT_onClick;
     private DOM_EVENT_onContextMenu;
     private DOM_EVENT_onRowClick;
-    private toggleRowExpand;
+    toggleRowExpand(row: TableRow<T> | TreeNode<T>, forceOpen?: boolean | undefined, recompute?: boolean): void;
+    setLevel(level: number): void;
+    refreshView(): void;
     private dataToTreeNodeRec;
     private computeTree;
     private recomputeDataTree;
