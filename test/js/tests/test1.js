@@ -154,6 +154,8 @@ export class Test1 extends Test {
         btnToggleLevel2.addEventListener('click', () => {
             this.virtualTable.setLevel(2);
         });
+
+        console.log(this.virtualTable.depth);
     }
 
     onCellEdited(cell, value) {

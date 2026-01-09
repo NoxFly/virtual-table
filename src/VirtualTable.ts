@@ -55,6 +55,12 @@ export class VirtualTable<T extends Type> {
     /** Indexes des colonnes sélectionnées dans `this.columns` */
     private readonly selectedColumns = new Set<number>();
 
+    private _depth: number = 0;
+
+    public get depth(): number {
+        return this._depth;
+    }
+
     private mostTopRow!: TableRow<T>;
     private $lastHighlightedRow: HTMLElement | null = null;
 
@@ -910,6 +916,26 @@ export class VirtualTable<T extends Type> {
         console.debug("Recomputed data tree:", this.tree);
     }
 
+    /**
+     * Recalcule la profondeur actuelle de l'arbre.
+     */
+    private computeDepth(): void {
+        if(this.nodeMap.size === 0) {
+            this._depth = 0;
+            return;
+        }
+
+        let maxDepth = -1;
+
+        for(const node of this.nodeMap.values()) {
+            if(node.depth > maxDepth) {
+                maxDepth = node.depth;
+            }
+        }
+
+        this._depth = maxDepth + 1;
+    }
+
 
 
 
@@ -992,6 +1018,8 @@ export class VirtualTable<T extends Type> {
         // 2. Reconstruction de `this.flatten`
         this.DOM_computeInViewVisibleRows();
 
+        this.computeDepth();
+
         return this;
     }
 
@@ -1073,6 +1101,8 @@ export class VirtualTable<T extends Type> {
         }
 
         this.DOM_computeInViewVisibleRows();
+
+        this.computeDepth();
 
         return this;
     }
@@ -1166,6 +1196,7 @@ export class VirtualTable<T extends Type> {
         this.recomputeDataTree(data);
 
         this.DOM_computeInViewVisibleRows();
+        this.computeDepth();
     }
 
     /**
@@ -1180,6 +1211,7 @@ export class VirtualTable<T extends Type> {
         this.$tableBody.innerHTML = '';
 
         this.DOM_computeInViewVisibleRows();
+        this.computeDepth();
     }
 
     public rowCssClassesCallback?: (row: TableRow<T>) => string;
